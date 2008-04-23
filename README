@@ -1,0 +1,14 @@
+This is rBuild, the unified interface for Conary, rMake,
+and rBuilder.  The purpose of this tool is to provide a single,
+unified, and fully-documented interface (command line and Python
+API) to developers using rPath technologies, using an extensible
+plugin framework.
+
+A shell script written using the command-line interface should be
+relatively easy to transform to a Python program that uses the Python
+API.  You can provide your own plugins that follow the same model.
+
+Note that until version 1.0 is released, public APIs are subject to
+change.  All documentation regarding stable interfaces is relevant
+only to published stable releases; it is not in force for alpha
+and beta releases, including 0.x releases and any automated builds.

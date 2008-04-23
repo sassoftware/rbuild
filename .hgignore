@@ -1,0 +1,8 @@
+(^|/)\.hg($|/)
+.*\.pyc$
+.*\~$
+.*\.o$
+.*\.so$
+^tmp/
+bin/conary-wrapper$
+^rbuild-.*.tar.bz2
