@@ -39,9 +39,12 @@ class RbuildMain(mainhandler.MainHandler):
     useConaryOptions = False
     def main(self, argv=sys.argv, *args, **kw):
         cfg = self.getConfigFile(argv, ignoreErrors=True)
+        return mainhandler.MainHandler.main(self, argv, *args, **kw)
+
+    def getCommand(self, argv, cfg):
         self.plugins = pluginloader.getPlugins(argv, cfg.pluginDirs)
         self.plugins.initializeCommands(self)
-        return mainhandler.MainHandler.main(self, argv, *args, **kw)
+        return mainhandler.MainHandler.getCommand(self, argv, cfg)
 
     def usage(self, rc=1, showAll=False):
         print 'rbuild: description here'
