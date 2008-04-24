@@ -21,6 +21,9 @@ that implement rBuild functionality, and by which plugins communicate
 with each other.
 """
 
+from rbuild import rbuildcfg
+from rbuild.internal import pluginloader
+
 class rBuildClient(object):
     def __init__(self, pluginMgr, cfg):
         self.cfg = cfg
@@ -28,7 +31,8 @@ class rBuildClient(object):
         for plugin in pluginMgr.plugins:
             setattr(self, plugin.__class__.__name__, plugin)
 
-def getClient(disabledPlugins=None):
-    cfg = rbuild.rBuildConfiguration(ignoreErrors=True)
-    plugins = pluginloader.getPlugins(cfg, disabledPlugins)
-    return rbuildClient(cfg, plugins)
+def getClient(disabledPlugins=None, root=None):
+    cfg = rbuildcfg.rBuildConfiguration(readConfigFiles=True,
+                                        ignoreErrors=True, root=root)
+    plugins = pluginloader.getPlugins([], cfg.pluginDirs, disabledPlugins)
+    return rBuildClient(plugins, cfg)
