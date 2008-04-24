@@ -13,43 +13,56 @@
 #
 
 from conary.lib import command
+from conary.lib import options
+
+(NO_PARAM,  ONE_PARAM)  = (options.NO_PARAM, options.ONE_PARAM)
+(OPT_PARAM, MULT_PARAM) = (options.OPT_PARAM, options.MULT_PARAM)
+(NORMAL_HELP, VERBOSE_HELP)  = (options.NORMAL_HELP, options.VERBOSE_HELP)
 
 class BaseCommand(command.AbstractCommand):
-    def requireParameters(self, args, expected=None, allowExtra=False,
-                          appendExtra=False, maxExtra=None):
-        args = args[1:] # cut off argv[0]
-        command = repr(args[0])
-        if isinstance(expected, str):
-            expected = [expected]
-        if expected is None:
-            expected = ['command']
-        else:
-            expected = ['command'] + expected
-        if expected:
-            missing = expected[len(args):]
-            if missing:
-                raise errors.BadParameters('%s missing %s command'
-                                           ' parameter(s): %s' % (
-                                            command, len(missing),
-                                            ', '.join(missing)))
-        extra = len(args) - len(expected)
-        if not allowExtra and not appendExtra:
-            maxExtra = 0
-        if maxExtra is not None and extra > maxExtra:
-            if maxExtra:
-                numParams = '%s-%s' % (len(expected)-1,
-                                       len(expected) + maxExtra - 1)
-            else:
-                 numParams = '%s' % (len(expected)-1)
-            raise errors.BadParameters('%s takes %s arguments, received %s' % (command, numParams, len(args)-1))
 
-        if appendExtra:
-            # final parameter is list 
-            return args[:len(expected)-1] + [args[len(expected)-1:]]
-        elif allowExtra:
-            return args[:len(expected)] + [args[len(expected):]]
-        else:
-            return args
+    docs = {'config'             : (VERBOSE_HELP,
+                                    "Set config KEY to VALUE", "'KEY VALUE'"),
+            'config-file'        : (VERBOSE_HELP,
+                                    "Read PATH config file", "PATH"),
+            'skip-default-config': (VERBOSE_HELP,
+                                    "Don't read default configs"),
+            'verbose'            : (VERBOSE_HELP,
+                                "Display more detailed information where available") }
+
+    def addParameters(self, argDef):
+        d = {}
+        d["config"] = MULT_PARAM
+        d["config-file"] = MULT_PARAM
+        d["skip-default-config"] = NO_PARAM
+        d["verbose"] = NO_PARAM
+        argDef[self.defaultGroup] = d
+
+    def processConfigOptions(self, rbuildConfig, cfgMap, argSet):
+        """
+            Manage any config maps we've set up, converting 
+            assigning them to the config object.
+        """ 
+
+        configFileList = argSet.pop('config-file', [])
+
+        for path in configFileList:
+            rbuildConfig.read(path, exception=True)
+
+        for (arg, data) in cfgMap.items():
+            cfgName, paramType = data[0:2]
+            value = argSet.pop(arg, None)
+            if value is not None:
+                if arg.startswith('no-'):
+                    value = not value
+
+                rbuildConfig.configLine("%s %s" % (cfgName, value))
+
+        for line in argSet.pop('config', []):
+            rbuildConfig.configLine(line)
+
+        if argSet.pop('verbose', False):
+            log.setVerbosity(log.DEBUG)
 
 
 class CommandWithSubCommands(BaseCommand):
@@ -60,7 +73,7 @@ class CommandWithSubCommands(BaseCommand):
         myClass._subCommands[name] = class_
 
     def runCommand(self, client, cfg, argSet, args):
-        if hasattr(self, '_subCommands'):
+        if not hasattr(self, '_subCommands'):
             self.usage()
         commandName = args[1]
         if commandName not in self._subCommands:
