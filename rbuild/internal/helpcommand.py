@@ -26,7 +26,7 @@ class HelpCommand(BaseCommand):
     help = 'Display help information'
     commandGroup = 'Information Display'
 
-    def runCommand(self, _, _, _, args):
+    def runCommand(self, client, cfg, argSet, args):
         """
             Runs the help command, displaying either general help or 
             help on a specific command.
