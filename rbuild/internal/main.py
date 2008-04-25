@@ -36,7 +36,7 @@ from rbuild.internal import pluginloader
 from rbuild.internal import helpcommand
 from rbuild.pluginapi import command
 
-if 'BaseException' not in __builtins__.__dict__:
+if 'BaseException' not in __builtins__:
     #pylint: disable-msg=C0103,W0622
     BaseException = Exception
 
