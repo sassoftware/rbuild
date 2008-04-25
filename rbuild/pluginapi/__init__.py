@@ -22,6 +22,7 @@ major versions of rBuild.
 Module functions, classes, and class methods that do not start
 with a C{_} character are public.
 """
+import weakref
 
 # Note that if rmake.lib.pluginlib diverges, we may have to
 # override or include a replacement here in order to maintain
@@ -32,6 +33,17 @@ class Plugin(pluginlib.Plugin):
     """
         Base plugin class for all rbuild plugins.
     """
+    def __init__(self, *args, **kw):
+        pluginlib.Plugin.__init__(self, *args, **kw)
+        self._client = None
+
+    def setClient(self, client):
+        # avoid a cycle
+        self._client = weakref.ref(client)
+
+    def getClient(self):
+        return self._client()
+
     def initializeCommands(self, handler, main):
         """
             Use this method to register command line arguments.

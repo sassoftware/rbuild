@@ -38,7 +38,11 @@ class RbuildClient(object):
 
         if pluginManager is None:
             pluginManager = pluginloader.getPlugins([], cfg.pluginDirs)
-        self.cfg = cfg
-        self.pluginManager = pluginManager
+        self._cfg = cfg
+        self._pluginManager = pluginManager
         for plugin in pluginManager.plugins:
             setattr(self, plugin.__class__.__name__, plugin)
+            plugin.setClient(self)
+
+    def getConfig(self):
+        return self._cfg
