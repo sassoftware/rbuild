@@ -18,9 +18,17 @@ rBuild-specific errors.
 from conary.lib import util
 
 # make ParseError available from here as well
+# pylint: disable-msg=W0611
 from conary.errors import ParseError
 
 class InternalError(Exception):
+    """
+    B{C{InternalError}} - superclass for all errors that are not meant to be
+    seen.
+
+    Errors deriving from InternalError should never occur, but when they do
+    they indicate a failure within the code to handle some unexpected case.
+    """
     pass
 
 class BaseError(Exception):
@@ -52,7 +60,7 @@ class BadParameters(BaseError):
 
 # error that is output when a Python exception makes it to the command 
 # line.
-errorMessage = '''
+_ERROR_MESSAGE = '''
 ERROR: An unexpected condition has occurred in rBuild.  This is
 most likely due to insufficient handling of erroneous input, but
 may be some other bug.  In either case, please report the error at
@@ -75,7 +83,14 @@ The complete related traceback has been saved as %(stackfile)s
 '''
 
 def genExcepthook(*args, **kw):
-    return util.genExcepthook(error=errorMessage,
+    """
+        Generates an exception handling hook that brings up a debugger.
+
+        Example: sys.excepthook = genExceptHook(debugAll=True)
+    """
+    return util.genExcepthook(error=_ERROR_MESSAGE,
                               prefix='rbuild-error-', *args, **kw)
 
+#pylint: disable-msg=C0103
+# this shouldn't be upper case.
 _uncatchableExceptions = (KeyboardInterrupt, SystemExit)

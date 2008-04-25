@@ -4,5 +4,6 @@
 .*\.o$
 .*\.so$
 ^tmp/
+^pylint/reports/
 bin/conary-wrapper$
 ^rbuild-.*.tar.bz2

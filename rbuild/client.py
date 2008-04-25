@@ -24,15 +24,21 @@ with each other.
 from rbuild import rbuildcfg
 from rbuild.internal import pluginloader
 
-class rBuildClient(object):
-    def __init__(self, pluginMgr, cfg):
-        self.cfg = cfg
-        self.pluginMgr = pluginMgr
-        for plugin in pluginMgr.plugins:
-            setattr(self, plugin.__class__.__name__, plugin)
+class RbuildClient(object):
+    """
+        The rBuild Appliance Developer Process Toolkit client object.
+        @param cfg: rBuild Configuration object, or None to read config from 
+        disk.
+        @param pluginManager: a PluginManager object that contains the plugins
+        to use with this client, or None to load the plugins from disk.
+    """
+    def __init__(self, cfg=None, pluginManager=None):
+        if cfg is None:
+            cfg = rbuildcfg.RbuildConfiguration(readConfigFiles=True)
 
-def getClient(disabledPlugins=None, root=None):
-    cfg = rbuildcfg.rBuildConfiguration(readConfigFiles=True,
-                                        ignoreErrors=True, root=root)
-    plugins = pluginloader.getPlugins([], cfg.pluginDirs, disabledPlugins)
-    return rBuildClient(plugins, cfg)
+        if pluginManager is None:
+            pluginManager = pluginloader.getPlugins([], cfg.pluginDirs)
+        self.cfg = cfg
+        self.pluginManager = pluginManager
+        for plugin in pluginManager.plugins:
+            setattr(self, plugin.__class__.__name__, plugin)

@@ -29,5 +29,15 @@ with a C{_} character are public.
 from rmake.lib import pluginlib
 
 class Plugin(pluginlib.Plugin):
-    def initializeCommands(self):
+    """
+        Base plugin class for all rbuild plugins.
+    """
+    def initializeCommands(self, handler, main):
+        """
+            Use this method to register command line arguments.
+            Example:
+
+            def initializeCommands(self, handler, main):
+                main.registerCommand(MyCommandClass)
+        """
         pass

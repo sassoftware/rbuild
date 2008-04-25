@@ -13,6 +13,7 @@
 #
 
 from conary.lib import command
+from conary.lib import log
 from conary.lib import options
 
 (NO_PARAM,  ONE_PARAM)  = (options.NO_PARAM, options.ONE_PARAM)
@@ -28,7 +29,8 @@ class BaseCommand(command.AbstractCommand):
             'skip-default-config': (VERBOSE_HELP,
                                     "Don't read default configs"),
             'verbose'            : (VERBOSE_HELP,
-                                "Display more detailed information where available") }
+                                    "Display more detailed information where"
+                                    " available") }
 
     def addParameters(self, argDef):
         d = {}
@@ -49,28 +51,24 @@ class BaseCommand(command.AbstractCommand):
         for path in configFileList:
             rbuildConfig.read(path, exception=True)
 
-        for (arg, data) in cfgMap.items():
-            cfgName, paramType = data[0:2]
-            value = argSet.pop(arg, None)
-            if value is not None:
-                if arg.startswith('no-'):
-                    value = not value
-
-                rbuildConfig.configLine("%s %s" % (cfgName, value))
-
-        for line in argSet.pop('config', []):
-            rbuildConfig.configLine(line)
-
         if argSet.pop('verbose', False):
             log.setVerbosity(log.DEBUG)
+        return command.AbstractCommand.processConfigOptions(self, rbuildConfig,
+                                                            cfgMap, argSet)
+
+
+    def runCommand(self, client, cfg, argSet, args):
+        #pylint: disable-msg=W0221
+        # we're overriding this method for our program's needs
+        raise NotImplementedError
 
 
 class CommandWithSubCommands(BaseCommand):
     @classmethod
-    def registerSubCommand(myClass, name, class_):
-        if not '_subCommands' in myClass.__dict__:
-            myClass._subCommands = {}
-        myClass._subCommands[name] = class_
+    def registerSubCommand(cls, name, subCommandClass):
+        if not '_subCommands' in cls.__dict__:
+            cls._subCommands = {}
+        cls._subCommands[name] = subCommandClass
 
     def runCommand(self, client, cfg, argSet, args):
         if not hasattr(self, '_subCommands'):
@@ -78,5 +76,5 @@ class CommandWithSubCommands(BaseCommand):
         commandName = args[1]
         if commandName not in self._subCommands:
             return self.usage()
-        class_ = self._subCommands[commandName]
-        return class_().runCommand(client, cfg, argSet, args[2:])
+        subCommandClass = self._subCommands[commandName]
+        return subCommandClass().runCommand(client, cfg, argSet, args[2:])

@@ -22,6 +22,10 @@ class PluginManager(pluginlib.PluginManager):
             plugin.initializeCommands(self, main)
 
 def getPlugins(argv, pluginDirs, disabledPlugins=None):
+    # TODO: look for plugin-related options in argv, perhaps with our
+    # own lenient parser.
+    # until then, ignore unused argv argument
+    # pylint: disable-msg=W0613
     pluginMgr = PluginManager(pluginDirs, disabledPlugins,
                               pluginPrefix=PLUGIN_PREFIX)
     pluginMgr.loadPlugins()

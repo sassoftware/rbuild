@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2008 rPath, Inc.
+# Copyright (c) 2006-2008 rPath, Inc.
 #
 # This program is distributed under the terms of the Common Public License,
 # version 1.0. A copy of this license should have been distributed with this
@@ -11,16 +11,13 @@
 # or fitness for a particular purpose. See the Common Public License for
 # full details.
 #
+"""
+The rBuild Appliance Developer Process Toolkit Constants
 
-from rbuild import pluginapi
-from rbuild.pluginapi import command
+The module data elements in this module are a public interface.
+@var version: rBuild version
+@type version: string
+"""
 
-class BuildCommand(command.CommandWithSubCommands):
-    commands = ['build']
-
-
-class Build(pluginapi.Plugin):
-    name = 'build'
-
-    def initializeCommands(self, _, main):
-        main.registerCommand(BuildCommand)
+# NOTE: constants.py is auto generated from constants.py.in
+VERSION          = "0.1"        # rbuild version

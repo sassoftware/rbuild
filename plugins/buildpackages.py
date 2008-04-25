@@ -17,11 +17,15 @@ from rbuild import pluginapi
 from rbuild_plugins import build
 
 class BuildPackages(object):
+    #pylint: disable-msg=R0201,W0613,R0903
+    # could be a function, unused variables, and too few public methods
     def runCommand(self, client, cfg, argSet, args):
         print 'Building packages: %s' % ', '.join(args[1:])
 
 class BuildPackagesPlugin(pluginapi.Plugin):
 
     def initializeCommands(self, handler, main):
+        #pylint: disable-msg=W0613
+        #unused variables
         build.BuildCommand.registerSubCommand('build', BuildPackages)
 

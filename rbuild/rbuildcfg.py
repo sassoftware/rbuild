@@ -11,7 +11,6 @@
 # or fitness for a particular purpose. See the Common Public License for
 # full details.
 #
-
 """
 Describes a BuildConfiguration, which is close to, but neither a subset nor
 a superset of a conarycfg file.
@@ -19,14 +18,15 @@ a superset of a conarycfg file.
 import os
 import urllib2
 
-from conary.lib import cfg,cfgtypes
-from conary.conarycfg import ParseError
-from conary.lib.cfgtypes import CfgString,CfgPathList,CfgDict
+from conary.lib import cfg
+from conary.lib.cfgtypes import CfgString, CfgPathList, CfgDict
 
 from rmake.build.buildcfg import CfgUser
 
+#pylint: disable-msg=R0904
+# R0904: Too many public methods
 
-class rBuildConfiguration(cfg.ConfigFile):
+class RbuildConfiguration(cfg.ConfigFile):
     serverUrl            = CfgString
     user                 = CfgUser
     name                 = CfgString

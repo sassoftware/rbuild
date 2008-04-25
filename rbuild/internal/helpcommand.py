@@ -11,21 +11,31 @@
 # or fitness for a particular purpose. See the Common Public License for
 # full details.
 #
+"""
+    Built in "help" command
+"""
+import sys
 
-from conary.lib import options
 from rbuild.pluginapi.command import BaseCommand
 
 class HelpCommand(BaseCommand):
+    """
+        Displays help about this program or commands within the program.
+    """
     commands = ['help']
     help = 'Display help information'
     commandGroup = 'Information Display'
 
-    def runCommand(self, rbClient, cfg, argSet, args):
+    def runCommand(self, _, _, _, args):
+        """
+            Runs the help command, displaying either general help or 
+            help on a specific command.
+        """
         command, subCommands = self.requireParameters(args, allowExtra=True,
                                                       maxExtra=1)
         if subCommands:
             command = subCommands[0]
-            commands = self.mainHandler._supportedCommands
+            commands = self.mainHandler.getSupportedCommands()
             if not command in commands:
                 print "%s: no such command: '%s'" % (self.mainHandler.name,
                                                      command)

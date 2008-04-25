@@ -11,11 +11,14 @@
 # or fitness for a particular purpose. See the Common Public License for
 # full details.
 #
+"""
+    Constants that are only relevant to rbuild internals
+"""
 
 # TODO: would be nice if we could get this data from a server api
 # At that point, this should move out of constants
 # Note: this might belong in the buildimages plugin directly
-validBuildTypes = {
+VALID_BUILD_TYPES = {
     'BOOTABLE_IMAGE'    : 0,
     'INSTALLABLE_ISO'   : 1,
     'STUB_IMAGE'        : 2,
