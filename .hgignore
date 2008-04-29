@@ -1,9 +1,11 @@
 (^|/)\.hg($|/)
 .*\.pyc$
 .*\~$
+.*,cover$
 .*\.o$
 .*\.so$
+rbuild/constants.py
 ^tmp/
 ^pylint/reports/
-bin/conary-wrapper$
+bin/.*
 ^rbuild-.*.tar.bz2

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2006-2008 rPath, Inc.
+# Copyright (c) 2008 rPath, Inc.
 #
 # This program is distributed under the terms of the Common Public License,
 # version 1.0. A copy of this license should have been distributed with this
@@ -15,8 +15,8 @@
 The rBuild Appliance Developer Process Toolkit Constants
 
 The module data elements in this module are a public interface.
-@var version: rBuild version
-@type version: string
+@var VERSION: rBuild version
+@type VERSION: string
 """
 
 # NOTE: constants.py is auto generated from constants.py.in
