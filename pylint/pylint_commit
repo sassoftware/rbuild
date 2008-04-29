@@ -18,7 +18,7 @@ if [ -s pylint_errors.txt ]; then
         fi
         case $yn in 
             y | Y ) echo "Committing"
-                    exit 1 ;;
+                    exit 0 ;;
             [nN] ) echo "Errors for your files stored in `pwd`/pylint_errors.txt"
                   exit 1 ;;
             * ) echo "Answer y or n"
