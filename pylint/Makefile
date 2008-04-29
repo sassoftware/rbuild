@@ -14,7 +14,7 @@
 
 dist_files = init_pylint.py  Makefile  pylintrc  run_pylint
 
-all:
+all: pylint
 install:
 
 dist: default-dist
