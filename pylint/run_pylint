@@ -20,10 +20,18 @@ mkdir reports
 cp init_pylint.py reports
 cd reports
 
-pylint --init-hook='import sys; sys.path.append("."); import init_pylint' --rcfile='../pylintrc' rbuild $(ls $(realpath $(pwd)/../..)/plugins/*.py);
+if [ -z "$*" ]; then
+    files="rbuild $(ls $(realpath $(pwd)/../..)/plugins/*.py)"
+else
+    files=$@
+fi
+
+pylint --init-hook='import sys; sys.path.append("."); import init_pylint' --rcfile='../pylintrc' $files
+rc=$?
 rm init_pylint*;
 for file in `ls`; do
    if [ ! -s $file ]; then
       rm $file;
    fi
 done
+exit $rc
