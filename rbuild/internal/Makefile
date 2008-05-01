@@ -13,7 +13,6 @@
 #
 
 python_files =  __init__.py	\
-                constants.py	\
                 help.py		\
                 main.py		\
                 pluginloader.py
