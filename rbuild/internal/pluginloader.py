@@ -14,6 +14,8 @@
 
 from rmake.lib import pluginlib
 
+#: C{PLUGIN_PREFIX} is a synthetic namespace which plugins use to
+#: refer to each other: C{from rbuild_plugins import ...}
 PLUGIN_PREFIX = 'rbuild_plugins'
 
 class PluginManager(pluginlib.PluginManager):

@@ -31,7 +31,7 @@ from rmake.lib import pluginlib
 
 class Plugin(pluginlib.Plugin):
     """
-        Base plugin class for all rbuild plugins.
+    Base plugin class for all rbuild plugins.
     """
     def __init__(self, *args, **kw):
         pluginlib.Plugin.__init__(self, *args, **kw)
@@ -46,9 +46,8 @@ class Plugin(pluginlib.Plugin):
 
     def initializeCommands(self, handler, main):
         """
-            Use this method to register command line arguments.
-            Example:
-
+        Use this method to register command line arguments.
+        Example::
             def initializeCommands(self, handler, main):
                 main.registerCommand(MyCommandClass)
         """

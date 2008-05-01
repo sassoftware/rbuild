@@ -29,13 +29,13 @@ class Config(pluginapi.Plugin):
 
     def displayConfig(self, hidePasswords=True, prettyPrint=True):
         """
-            Display the current build configuration for this helper.
+        Display the current build configuration for this helper.
 
-            @param hidePasswords: If True, display <pasword> instead of
-            the password in the output.
-            @param prettyPrint: If True, print output in human-readable format
-            that may not be parsable by a config reader.  If False, the
-            configuration output should be valid as input.
+        @param hidePasswords: If C{True} (default), display C{<password>}
+        instead of the literal password in the output.
+        @param prettyPrint: If C{True} (default), print output in
+        human-readable format that may not be parsable by a config reader.
+        If C{False}, the configuration output should be valid as input.
         """
         cfg = self.getClient().getConfig()
         cfg.setDisplayOptions(hidePasswords=hidePasswords,

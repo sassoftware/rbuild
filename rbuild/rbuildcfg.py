@@ -12,8 +12,8 @@
 # full details.
 #
 """
-Describes a BuildConfiguration, which is close to, but neither a subset nor
-a superset of a conarycfg file.
+Implements an RbuildConfiguration object, which is similar to
+a C{conarycfg} object.
 """
 import os
 import urllib2
@@ -27,6 +27,9 @@ from rmake.build.buildcfg import CfgUser
 # R0904: Too many public methods
 
 class RbuildConfiguration(cfg.ConfigFile):
+    """
+    This is the base object for rbuild configuration.
+    """
     serverUrl            = CfgString
     user                 = CfgUser
     name                 = CfgString
@@ -44,9 +47,16 @@ class RbuildConfiguration(cfg.ConfigFile):
             self.readFiles(root=root)
 
     def validateServerUrl(self):
+        """
+        Tests whether a URL is readable by reading some data from it.
+        """
         urllib2.urlopen(self.serverUrl).read(1024)
 
     def readFiles(self, root=''):
+        """
+        Populate this configuration object with data from all
+        standard locations for rbuild configuration files.
+        """
         self.read(root + '/etc/rbuildrc', exception=False)
         if os.environ.has_key("HOME"):
             self.read(root + os.environ["HOME"] + "/" + ".rbuildrc",

@@ -12,15 +12,16 @@
 # full details.
 #
 """
-    Built in "help" command
+Built in "help" command
 """
+
 import sys
 
 from rbuild.pluginapi.command import BaseCommand
 
 class HelpCommand(BaseCommand):
     """
-        Displays help about this program or commands within the program.
+    Displays help about this program or commands within the program.
     """
     commands = ['help']
     help = 'Display help information'
@@ -28,8 +29,8 @@ class HelpCommand(BaseCommand):
 
     def runCommand(self, client, cfg, argSet, args):
         """
-            Runs the help command, displaying either general help or 
-            help on a specific command.
+        Runs the help command, displaying either general help including
+        a list of commonly-used command, or help on a specific command.
         """
         command, subCommands = self.requireParameters(args, allowExtra=True,
                                                       maxExtra=1)

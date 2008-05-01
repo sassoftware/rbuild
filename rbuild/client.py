@@ -26,11 +26,11 @@ from rbuild.internal import pluginloader
 
 class RbuildClient(object):
     """
-        The rBuild Appliance Developer Process Toolkit client object.
-        @param cfg: rBuild Configuration object, or None to read config from 
-        disk.
-        @param pluginManager: a PluginManager object that contains the plugins
-        to use with this client, or None to load the plugins from disk.
+    The rBuild Appliance Developer Process Toolkit client object.
+    @param cfg: rBuild Configuration object, or C{None} to read config
+    from disk.
+    @param pluginManager: a C{PluginManager} object that contains the plugins
+    to use with this client, or C{None} to load the plugins from disk.
     """
     def __init__(self, cfg=None, pluginManager=None):
         if cfg is None:
@@ -45,4 +45,7 @@ class RbuildClient(object):
             plugin.setClient(self)
 
     def getConfig(self):
+        """
+        @return: RbuildConfiguration object used by this client object.
+        """
         return self._cfg

@@ -14,10 +14,10 @@
 """
 Implements the main() method used for starting rbuild from the command line.
 
-Example:
-from rbuild.internal import main
-rv = main.main(['rbuild', 'build', 'packages'])
-sys.exit(rv)
+Example::
+    from rbuild.internal import main
+    rv = main.main(['rbuild', 'build', 'packages'])
+    sys.exit(rv)
 """
 
 import errno
@@ -42,9 +42,9 @@ if 'BaseException' not in __builtins__:
 
 class RbuildMain(mainhandler.MainHandler):
     """
-        RbuildMain loads plugins, reads configuration files from disk
-        and parses command line arguments and calls the corresponding
-        command object to perform the requested command.
+    RbuildMain loads plugins, reads configuration files from disk
+    and parses command line arguments and calls the corresponding
+    command object to perform the requested command.
     """
     name = 'rbuild'
     version = constants.VERSION
@@ -55,23 +55,32 @@ class RbuildMain(mainhandler.MainHandler):
 
     useConaryOptions = False
 
-    # this method is public.
-    registerCommand = mainhandler.MainHandler._registerCommand
-
     def __init__(self, *args, **kw):
         mainhandler.MainHandler.__init__(self, *args, **kw)
         self.plugins = None
 
     def getCommand(self, argv, cfg):
+        """
+        Initializes plugins so that all commands are available,
+        then returns the correct command based on argv.
+
+        @param argv: Argument vector as provided by C{sys.argv}
+        @param cfg: An C{RbuildConfiguration} object
+        @return: C{commandClass} instance selected by C{argv}
+        """
         self.plugins = pluginloader.getPlugins(argv, cfg.pluginDirs)
         self.plugins.initializeCommands(self)
         return mainhandler.MainHandler.getCommand(self, argv, cfg)
 
     def getSupportedCommands(self):
+        """
+        @return: C{dict} containing a mapping from name to command
+        objects for all commands currently registered.
+        """
         return self._supportedCommands
 
     def usage(self, rc=1, showAll=False):
-        print 'rbuild: description here'
+        print 'rbuild: Conary-based Product Development Tool'
         if not showAll:
             print
             print 'Common Commands (use "rbuild help" for the full list)'
@@ -87,7 +96,7 @@ class RbuildMain(mainhandler.MainHandler):
 
 def main(argv=None):
     """
-        Python hook for starting rbuild from the command line.
+    Python hook for starting rbuild from the command line.
     """
     if argv is None:
         argv = sys.argv

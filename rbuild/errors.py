@@ -37,7 +37,7 @@ class BaseError(Exception):
 
     If you create an error in rBuild, it should derive from this class,
     and have a str() that is acceptable output for the command line,
-    with an "error: " prompt before it.
+    with the string "C{error: }" prepended to it.
 
     Any relevant data for this error should be stored outside of the
     string so it can be accessed from non-command-line interfaces.
@@ -58,8 +58,8 @@ class BadParameters(BaseError):
     """
     pass
 
-# error that is output when a Python exception makes it to the command 
-# line.
+#: error that is output when a Python exception makes it to the command 
+#: line.
 _ERROR_MESSAGE = '''
 ERROR: An unexpected condition has occurred in rBuild.  This is
 most likely due to insufficient handling of erroneous input, but
@@ -84,9 +84,10 @@ The complete related traceback has been saved as %(stackfile)s
 
 def genExcepthook(*args, **kw):
     """
-        Generates an exception handling hook that brings up a debugger.
+    Generates an exception handling hook that brings up a debugger.
 
-        Example: sys.excepthook = genExceptHook(debugAll=True)
+    Example::
+        sys.excepthook = genExceptHook(debugAll=True)
     """
     return util.genExcepthook(error=_ERROR_MESSAGE,
                               prefix='rbuild-error-', *args, **kw)
