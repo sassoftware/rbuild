@@ -72,6 +72,19 @@ class RbuildMain(mainhandler.MainHandler):
         self.plugins.initializeCommands(self)
         return mainhandler.MainHandler.getCommand(self, argv, cfg)
 
+    def _getPreCommandOptions(self, argv, cfg):
+        """
+        Handles flags that exist before the actual command.  These get read
+        before the command is processed and thus can change things like
+        the configuration options to be used when loading the commands.
+        """
+        argSet, args = mainhandler.MainHandler._getPreCommandOptions(self, 
+                                                                argv, cfg)
+        thisCommand = self.abstractCommand()
+        _, cfgMap = thisCommand.prepare()
+        thisCommand.processConfigOptions(cfg, cfgMap, argSet)
+        return argSet, args
+
     def getSupportedCommands(self):
         """
         @return: C{dict} containing a mapping from name to command
@@ -80,6 +93,12 @@ class RbuildMain(mainhandler.MainHandler):
         return self._supportedCommands
 
     def usage(self, rc=1, showAll=False):
+        """
+        Displays usage message
+        @param rc: exit to to exit with
+        @param showAll: Defaults to False.  If False, display only common
+        commands, those commands without the C{hidden} attribute set to True.
+        """
         print 'rbuild: Conary-based Product Development Tool'
         if not showAll:
             print
@@ -87,6 +106,14 @@ class RbuildMain(mainhandler.MainHandler):
         return mainhandler.MainHandler.usage(self, rc, showAll=showAll)
 
     def runCommand(self, thisCommand, rbuildConfig, argSet, args):
+        """
+        Runs the command given with the parameters expected in rbuild
+        @param thisCommand: RbuildCommand subclass to run
+        @param rbuildConfig: configuration for this instance
+        @param argSet: C{dict} of flags passed to this command
+        @param args: C{list} of arguments to the command
+        @return: C{integer} exit code to use for rbuild
+        """
         #pylint: disable-msg=W0221
         # runCommand is an *args, **kw method and pylint doesn't like that
         # in the override we specify these explicitly
