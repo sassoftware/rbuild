@@ -32,6 +32,8 @@ class HelpCommand(BaseCommand):
         Runs the help command, displaying either general help including
         a list of commonly-used command, or help on a specific command.
         """
+        # W0613: unused variables cfg, client, argSet.  This is expected.
+        #pylint: disable-msg=W0613
         command, subCommands = self.requireParameters(args, allowExtra=True,
                                                       maxExtra=1)
         if subCommands:
@@ -42,6 +44,7 @@ class HelpCommand(BaseCommand):
                                                      command)
                 sys.exit(1)
             commands[command].usage()
+            return 0
         else:
             self.mainHandler.usage(showAll=True)
             return 0
