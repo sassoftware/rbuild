@@ -28,7 +28,7 @@ from conary.lib import mainhandler
 from conary import errors as conaryerrors
 
 
-from rbuild import client
+from rbuild import handle
 from rbuild import constants
 from rbuild import errors
 from rbuild import rbuildcfg
@@ -58,6 +58,7 @@ class RbuildMain(mainhandler.MainHandler):
     def __init__(self, *args, **kw):
         mainhandler.MainHandler.__init__(self, *args, **kw)
         self.plugins = None
+        self.handle = None
 
     def getCommand(self, argv, cfg):
         """
@@ -69,7 +70,9 @@ class RbuildMain(mainhandler.MainHandler):
         @return: C{commandClass} instance selected by C{argv}
         """
         self.plugins = pluginloader.getPlugins(argv, cfg.pluginDirs)
-        self.plugins.initializeCommands(self)
+        self.handle = handle.RbuildHandle(cfg, self.plugins)
+        self.plugins.registerCommands(self.handle, self)
+        self.plugins.initialize(self.handle)
         return mainhandler.MainHandler.getCommand(self, argv, cfg)
 
     def _getPreCommandOptions(self, argv, cfg):
@@ -117,8 +120,7 @@ class RbuildMain(mainhandler.MainHandler):
         #pylint: disable-msg=W0221
         # runCommand is an *args, **kw method and pylint doesn't like that
         # in the override we specify these explicitly
-        rbClient = client.RbuildClient(rbuildConfig, self.plugins)
-        return thisCommand.runCommand(rbClient, rbuildConfig, argSet, args)
+        return thisCommand.runCommand(self.handle, rbuildConfig, argSet, args)
 
 
 def main(argv=None):

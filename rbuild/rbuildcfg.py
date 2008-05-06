@@ -16,7 +16,6 @@ Implements an RbuildConfiguration object, which is similar to
 a C{conarycfg} object.
 """
 import os
-import urllib2
 
 from conary.lib import cfg
 from conary.lib.cfgtypes import CfgString, CfgPathList, CfgDict
@@ -46,12 +45,6 @@ class RbuildConfiguration(cfg.ConfigFile):
         if readConfigFiles:
             self.readFiles(root=root)
 
-    def validateServerUrl(self):
-        """
-        Tests whether a URL is readable by reading some data from it.
-        """
-        urllib2.urlopen(self.serverUrl).read(1024)
-
     def readFiles(self, root=''):
         """
         Populate this configuration object with data from all
@@ -62,11 +55,3 @@ class RbuildConfiguration(cfg.ConfigFile):
             self.read(root + os.environ["HOME"] + "/" + ".rbuildrc",
                       exception=False)
         self.read('rbuildrc', exception=False)
-
-    def getRbuilderHost(self):
-        return urllib2.splithost(urllib2.splittype(self.serverUrl)[1])[0]
-
-    def getRmakeUrl(self):
-        if not self.rmakeUrl:
-            return 'https://%s:9999' % self.getRbuilderHost()
-        return self.rmakeUrl

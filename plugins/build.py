@@ -11,6 +11,10 @@
 # or fitness for a particular purpose. See the Common Public License for
 # full details.
 #
+"""
+Build command, all build subcommands should register with this command using
+the C{registerSubCommand}
+"""
 
 from rbuild import pluginapi
 from rbuild.pluginapi import command
@@ -22,5 +26,5 @@ class BuildCommand(command.CommandWithSubCommands):
 class Build(pluginapi.Plugin):
     name = 'build'
 
-    def initializeCommands(self, _, main):
-        main.registerCommand(BuildCommand)
+    def registerCommands(self, handle):
+        handle.Commands.registerCommand(BuildCommand)

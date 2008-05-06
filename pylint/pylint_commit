@@ -1,12 +1,13 @@
-#!/bin/sh
+#!/bin/sh -e
 curdir=`pwd`
-files=`hg diff | diffstat -l -p1 | grep -v pylint | sed s,^,${curdir}/,g`
+files=`hg diff | diffstat -l -p1 | grep -v pylint | grep '\.py$' | sed s,^,${curdir}/,g`
+files=$(for f in $files; do [ -f $f ] && echo $f; done)
 if [ -z "$files" ] ; then
     exit 0;
 fi
 echo "Running pylint...."
 cd pylint;
-./run_pylint $files --files-output=n | tee pylint_errors.txt
+./run_pylint $files --files-output=n
 if [ -s pylint_errors.txt ]; then
     while true; do
         echo "Pylint errors were found."

@@ -17,17 +17,19 @@ from rbuild.pluginapi import command
 
 class ConfigCommand(command.BaseCommand):
     commands = ['config']
-    def runCommand(self, rbuildClient, cfg, argSet, args):
-        rbuildClient.Config.displayConfig()
+    def runCommand(self, handle, cfg, argSet, args):
+        # W0613: Unused variables
+        # pylint: disable-msg=W0613
+        handle.Config.displayConfig(handle)
 
 
 class Config(pluginapi.Plugin):
     name = 'config'
 
-    def initializeCommands(self, _, main):
-        main.registerCommand(ConfigCommand)
+    def registerCommands(self, handle):
+        handle.Commands.registerCommand(ConfigCommand)
 
-    def displayConfig(self, hidePasswords=True, prettyPrint=True):
+    def displayConfig(self, handle, hidePasswords=True, prettyPrint=True):
         """
         Display the current build configuration for this helper.
 
@@ -37,7 +39,9 @@ class Config(pluginapi.Plugin):
         human-readable format that may not be parsable by a config reader.
         If C{False}, the configuration output should be valid as input.
         """
-        cfg = self.getClient().getConfig()
+        # R0201: method could be a function.  No it couldn't.
+        # pylint: disable-msg=R0201
+        cfg = handle.getConfig()
         cfg.setDisplayOptions(hidePasswords=hidePasswords,
                               prettyPrint=prettyPrint)
         cfg.display()

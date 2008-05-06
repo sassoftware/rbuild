@@ -12,3 +12,18 @@ Note that until version 1.0 is released, public APIs are subject to
 change.  All documentation regarding stable interfaces is relevant
 only to published stable releases; it is not in force for alpha
 and beta releases, including 0.x releases and any automated builds.
+
+
+DEVELOPMENT
+
+* Pylint Hooks
+When developing rbuild and rbuild plugins, please consider using our pylint commit hook.  This hook will run pylint against the files you modified in your commit and warn you of any pylint problems.  Add the following lines to the file .hg/hgrc in your rbuild checkout:
+[hooks]
+precommit=./pylint/pylint_commit
+
+Pylint problems that were caused by your patch should either be fixed or disabled by adding a pylint pragma line.  The pyline pragma line should look like this:
+
+# W0611: unused variable ParseError - we want ParseError to be importable from
+# errors.py even though it is not used.
+# W0612: some other warning - reason why this warning is not being heeded
+# pylint: disable-msg=W0611,W0612

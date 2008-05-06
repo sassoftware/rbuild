@@ -12,10 +12,10 @@
 # full details.
 #
 """
-The rBuild Appliance Developer Process Toolkit client object
+The rBuild Appliance Developer Process Toolkit handle object
 
-The C{client} module provides the core objects used for consuming rBuild
-as a Python API.  Instances of C{rBuildClient} are the handles used as
+The C{handle} module provides the core objects used for consuming rBuild
+as a Python API.  Instances of C{RbuildHandle} are the handles used as
 the core API item by which consumers of the python API call the plugins
 that implement rBuild functionality, and by which plugins communicate
 with each other.
@@ -24,13 +24,13 @@ with each other.
 from rbuild import rbuildcfg
 from rbuild.internal import pluginloader
 
-class RbuildClient(object):
+class RbuildHandle(object):
     """
-    The rBuild Appliance Developer Process Toolkit client object.
+    The rBuild Appliance Developer Process Toolkit handle object.
     @param cfg: rBuild Configuration object, or C{None} to read config
     from disk.
     @param pluginManager: a C{PluginManager} object that contains the plugins
-    to use with this client, or C{None} to load the plugins from disk.
+    to use with this handle, or C{None} to load the plugins from disk.
     """
     def __init__(self, cfg=None, pluginManager=None):
         if cfg is None:
@@ -42,10 +42,36 @@ class RbuildClient(object):
         self._pluginManager = pluginManager
         for plugin in pluginManager.plugins:
             setattr(self, plugin.__class__.__name__, plugin)
-            plugin.setClient(self)
+            #plugin.setHandle(self)
+        # C0103: bad variable.  We want this variable to match the convention
+        # of variables accessible from the handle.  Like a plugin, which is 
+        # available under its class name, the commands are available under 
+        # handle.Commands.
+        # pylint: disable-msg=C0103
+        self.Commands = CommandManager()
 
     def getConfig(self):
         """
-        @return: RbuildConfiguration object used by this client object.
+        @return: RbuildConfiguration object used by this handle object.
         """
         return self._cfg
+
+
+class CommandManager(object):
+    """
+        Repository for Command objects available for execution from the
+        command line.  Accessible as handle.Commands.
+    """
+    def __init__(self):
+        self._commands = {}
+
+    def registerCommand(self, commandClass):
+        for name in commandClass.commands:
+            self._commands[name] = commandClass
+
+    def getCommandClass(self, name):
+        return self._commands[name]
+
+    def getAllCommandClasses(self):
+        return set(self._commands.values())
+

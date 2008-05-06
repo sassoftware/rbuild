@@ -13,7 +13,7 @@
 #
 
 python_files =  __init__.py	\
-                client.py	\
+                handle.py	\
                 errors.py	\
                 rbuildcfg.py
 

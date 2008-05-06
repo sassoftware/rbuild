@@ -19,9 +19,16 @@ from rmake.lib import pluginlib
 PLUGIN_PREFIX = 'rbuild_plugins'
 
 class PluginManager(pluginlib.PluginManager):
-    def initializeCommands(self, main):
+
+    def registerCommands(self, handle, main):
         for plugin in self.plugins:
-            plugin.initializeCommands(self, main)
+            plugin.registerCommands(handle)
+        for command in handle.Commands.getAllCommandClasses():
+            main.registerCommand(command)
+
+    def initialize(self, handle):
+        for plugin in self.plugins:
+            plugin.initialize(handle)
 
 def getPlugins(argv, pluginDirs, disabledPlugins=None):
     # TODO: look for plugin-related options in argv, perhaps with our

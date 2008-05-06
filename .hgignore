@@ -3,7 +3,13 @@
 .*\~$
 .*,cover$
 .*\.o$
+.*\.pyo$
+.*\.swp$
+.*\.swo$
+.*\.orig$
 .*\.so$
+pylint/commit_pylint.txt
+pylint/pylint_errors.txt
 rbuild/constants.py
 ^tmp/
 ^pylint/reports/
