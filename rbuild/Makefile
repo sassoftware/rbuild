@@ -19,7 +19,7 @@ python_files =  __init__.py	\
 
 dist_files = Makefile constants.py.in $(python_files)
 
-SUBDIRS = internal pluginapi
+SUBDIRS = internal pluginapi facade
 
 all: default-subdirs default-all constants.py
 
