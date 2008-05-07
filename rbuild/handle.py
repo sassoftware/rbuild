@@ -21,6 +21,7 @@ that implement rBuild functionality, and by which plugins communicate
 with each other.
 """
 
+from rbuild import errors
 from rbuild import rbuildcfg
 from rbuild.internal import pluginloader
 
@@ -43,10 +44,10 @@ class RbuildHandle(object):
         for plugin in pluginManager.plugins:
             setattr(self, plugin.__class__.__name__, plugin)
             #plugin.setHandle(self)
-        # C0103: bad variable.  We want this variable to match the convention
-        # of variables accessible from the handle.  Like a plugin, which is 
-        # available under its class name, the commands are available under 
-        # handle.Commands.
+        # C0103: bad variable name.  We want this variable to match the
+        # convention of variables accessible from the handle.  Like a plugin,
+        # which is available under its class name, the commands are available
+        # under handle.Commands.
         # pylint: disable-msg=C0103
         self.Commands = CommandManager()
 
@@ -56,6 +57,35 @@ class RbuildHandle(object):
         """
         return self._cfg
 
+    def installPrehook(self, apiMethod, hookFunction):
+        """
+        Installs a hook that will be called before the given apiMethod
+        is called.
+        @param apiMethod: api call to add the hook to.  This should be
+        a reference to the api object accessible from this handle.
+        @param hookFunction: a function that will be called before apiMethod.
+        The function must take the same parameters as apiMethod.
+        It may modify the parameters passed on to the underlying api method,
+        although they should also be valid.
+
+        The parameters may be changed by modifying the arguments passed
+        into the hook directly, or by returning the arguments to be passed
+        to the api method as a list consisting of a list of arguments, and
+        a dictionary of keywords.
+        """
+        pluginName = apiMethod.im_class.__name__
+        methodName = apiMethod.im_func.__name__
+        try:
+            plugin = getattr(self, pluginName)
+        except AttributeError:
+            raise errors.InternalError(
+                    'Could not install hook %r:'
+                    ' No such plugin %r' % (hookFunction.__name__, pluginName))
+        # W0212: Access to a protected member _installPrehook.  Since 
+        # we're calling into plugin, whose public methods are api calls,
+        # we need to do this here.
+        #pylint: disable-msg=W0212
+        plugin._installPrehook(methodName, hookFunction)
 
 class CommandManager(object):
     """
@@ -66,12 +96,23 @@ class CommandManager(object):
         self._commands = {}
 
     def registerCommand(self, commandClass):
+        """
+            Registers a command to make it available for the access by other 
+            plugins as well as from the command line.
+            @param commandClass: subclass of pluginapi.commands.BaseCommand
+        """
         for name in commandClass.commands:
             self._commands[name] = commandClass
 
     def getCommandClass(self, name):
+        """
+            @return: commandClass that matches the given command line command.
+        """
         return self._commands[name]
 
     def getAllCommandClasses(self):
+        """
+            @return: all registered command classes
+        """
         return set(self._commands.values())
 
