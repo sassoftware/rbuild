@@ -27,5 +27,5 @@ if [ -s pylint_errors.txt ]; then
     done
 else
     echo "Pylint passed."
-    exit 1
+    exit 0
 fi
