@@ -24,6 +24,13 @@ with each other.
 from rbuild import errors
 from rbuild import rbuildcfg
 from rbuild.internal import pluginloader
+import rbuild.facade.conaryfacade
+
+class _Facade(object):
+    """
+    Private internal container for facades provided via the handle
+    """
+    pass
 
 class RbuildHandle(object):
     """
@@ -44,6 +51,9 @@ class RbuildHandle(object):
         for plugin in pluginManager.plugins:
             setattr(self, plugin.__class__.__name__, plugin)
             #plugin.setHandle(self)
+        # Provide access to facades
+        self.facade = _Facade()
+        self.facade.conary = rbuild.facade.conaryfacade.ConaryFacade(self)
         # C0103: bad variable name.  We want this variable to match the
         # convention of variables accessible from the handle.  Like a plugin,
         # which is available under its class name, the commands are available
