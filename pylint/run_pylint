@@ -13,6 +13,11 @@
 # full details.
 #
 
+if ! which pylint > /dev/null 2>&1; then
+   echo "pylint is not installed"
+   exit 0
+fi
+
 if [ -x reports ]; then
    rm -rf reports;
 fi
@@ -21,7 +26,7 @@ cp init_pylint.py reports
 cd reports
 
 if [ -z "$*" ]; then
-    files="rbuild $(ls $(realpath $(pwd)/../..)/plugins/*.py)"
+    files="rbuild $(ls $(cd $(pwd)/../..; pwd)/plugins/*.py)"
 else
     files=$@
 fi
