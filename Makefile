@@ -17,7 +17,7 @@ all: default-subdirs default-all
 export TOPDIR = $(shell pwd)
 export DISTDIR = $(TOPDIR)/rbuild-$(VERSION)
 
-SUBDIRS=commands rbuild plugins pylint
+SUBDIRS=commands rbuild plugins
 
 extra_files = \
 	Make.rules 		\
