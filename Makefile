@@ -12,12 +12,16 @@
 # full details.
 #
 
-all: default-subdirs default-all
+all: all-subdirs default-all
+
+all-subdirs:
+	for d in $(MAKEALLSUBDIRS); do make -C $$d DIR=$$d || exit 1; done
 
 export TOPDIR = $(shell pwd)
 export DISTDIR = $(TOPDIR)/rbuild-$(VERSION)
 
-SUBDIRS=commands rbuild plugins
+SUBDIRS=commands rbuild plugins pylint
+MAKEALLSUBDIRS=commands rbuild plugins
 
 extra_files = \
 	Make.rules 		\
