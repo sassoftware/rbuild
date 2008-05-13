@@ -50,7 +50,9 @@ class ConaryFacade(object):
         """
         Include conary configuration file provided by rBuilder
         """
-        cfg.includeConfigFile(self._handle.rbuildCfg.serverUrl + '/conaryrc')
+        serverUrl = self._handle.getConfig().serverUrl
+        if serverUrl:
+            cfg.includeConfigFile(serverUrl + '/conaryrc')
 
     def _getConaryClient(self):
         """
