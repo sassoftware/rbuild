@@ -180,7 +180,7 @@ class ConaryFacade(object):
         @rtype: (string, string, string)
         """
         version = cls._versionToString(version)
-        flavor = cls._flavorToString(version)
+        flavor = cls._flavorToString(flavor)
         return (name, version, flavor)
 #}
 
