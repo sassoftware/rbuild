@@ -312,5 +312,4 @@ class _QuietUpdateCallback(checkin.CheckinCallback):
     """
     def setUpdateJob(self, *args, **kw):
         'stifle update announcement for extract'
-        pass
-
+        return
