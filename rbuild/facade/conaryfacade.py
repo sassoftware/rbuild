@@ -310,6 +310,9 @@ class _QuietUpdateCallback(checkin.CheckinCallback):
     """
     Make checkout a bit quieter
     """
+    #pylint: disable-msg=W0613
+    # unused arguments
+    # implements an interface that may pass arguments that need to be ignored
     def setUpdateJob(self, *args, **kw):
         'stifle update announcement for extract'
         return
