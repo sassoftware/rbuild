@@ -50,7 +50,7 @@ class RbuildHandle(object):
         self._pluginManager = pluginManager
         for plugin in pluginManager.plugins:
             setattr(self, plugin.__class__.__name__, plugin)
-            #plugin.setHandle(self)
+            plugin.setHandle(self)
         # Provide access to facades
         self.facade = _Facade()
         self.facade.conary = rbuild.facade.conaryfacade.ConaryFacade(self)

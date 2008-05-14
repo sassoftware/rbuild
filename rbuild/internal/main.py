@@ -71,8 +71,8 @@ class RbuildMain(mainhandler.MainHandler):
         """
         self.plugins = pluginloader.getPlugins(argv, cfg.pluginDirs)
         self.handle = handle.RbuildHandle(cfg, self.plugins)
-        self.plugins.registerCommands(self.handle, self)
-        self.plugins.initialize(self.handle)
+        self.plugins.registerCommands(self, self.handle)
+        self.plugins.initialize()
         return mainhandler.MainHandler.getCommand(self, argv, cfg)
 
     def _getPreCommandOptions(self, argv, cfg):
@@ -108,11 +108,10 @@ class RbuildMain(mainhandler.MainHandler):
             print 'Common Commands (use "rbuild help" for the full list)'
         return mainhandler.MainHandler.usage(self, rc, showAll=showAll)
 
-    def runCommand(self, thisCommand, rbuildConfig, argSet, args):
+    def runCommand(self, thisCommand, _, argSet, args):
         """
         Runs the command given with the parameters expected in rbuild
         @param thisCommand: RbuildCommand subclass to run
-        @param rbuildConfig: configuration for this instance
         @param argSet: C{dict} of flags passed to this command
         @param args: C{list} of arguments to the command
         @return: C{integer} exit code to use for rbuild
@@ -120,7 +119,7 @@ class RbuildMain(mainhandler.MainHandler):
         #pylint: disable-msg=W0221
         # runCommand is an *args, **kw method and pylint doesn't like that
         # in the override we specify these explicitly
-        return thisCommand.runCommand(self.handle, rbuildConfig, argSet, args)
+        return thisCommand.runCommand(self.handle, argSet, args)
 
 
 def main(argv=None):

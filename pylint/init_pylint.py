@@ -17,6 +17,7 @@ import sys
 sys.path.insert(0, os.environ['CONARY_PATH'])
 sys.path.insert(0, os.environ['RMAKE_PATH'])
 sys.path.insert(0, os.environ['RBUILD_PATH'])
+sys.path.insert(0, os.environ['PRODUCT_DEFINITION_PATH'])
 
 from rbuild.internal import pluginloader
 pluginDir = os.path.realpath(os.environ['RBUILD_PATH'] + '/plugins')

@@ -126,9 +126,6 @@ class ConaryFacade(object):
         @rtype: (string, conary.versions.Version conary.deps.deps.Flavor)
         """
         repos = self._getRepositoryClient()
-        if labelPath is None:
-            # if labelPath is set, partial version strings are sought in it
-            version = self._getVersion(version)
         flavor = self._getFlavor(flavor)
         troveTup, = repos.findTrove(labelPath, (name, version, flavor))
         return troveTup

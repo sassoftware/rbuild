@@ -20,15 +20,15 @@ PLUGIN_PREFIX = 'rbuild_plugins'
 
 class PluginManager(pluginlib.PluginManager):
 
-    def registerCommands(self, handle, main):
+    def registerCommands(self, main, handle):
         for plugin in self.plugins:
-            plugin.registerCommands(handle)
+            plugin.registerCommands()
         for command in handle.Commands.getAllCommandClasses():
             main.registerCommand(command)
 
-    def initialize(self, handle):
+    def initialize(self):
         for plugin in self.plugins:
-            plugin.initialize(handle)
+            plugin.initialize()
 
 def getPlugins(argv, pluginDirs, disabledPlugins=None):
     # TODO: look for plugin-related options in argv, perhaps with our

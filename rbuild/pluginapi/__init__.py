@@ -43,27 +43,32 @@ class Plugin(pluginlib.Plugin):
 
     def __init__(self, *args, **kw):
         pluginlib.Plugin.__init__(self, *args, **kw)
-        self.prehooks = {}
+
+        self._prehooks = {}
+        self._handle = None
         for methodName in self.__class__.__dict__:
             if methodName[0] == '_' or hasattr(Plugin, methodName):
                 continue
             method = getattr(self, methodName)
             if not inspect.ismethod(method):
                 continue
-            self.prehooks[methodName] = []
-            newMethod = _apiWrapper(self, method, self.prehooks[methodName])
+            self._prehooks[methodName] = []
+            newMethod = _apiWrapper(self, method, self._prehooks[methodName])
             setattr(self, methodName, newMethod)
 
-    def registerCommands(self, handle):
+    def registerCommands(self):
         """
         Use this method to register command line arguments.
         Example::
-            def registerCommands(self, handle):
-                handle.registerCommand(MyCommandClass)
+            def registerCommands(self):
+                self._handle.registerCommand(MyCommandClass)
         """
         pass
 
-    def initialize(self, handle):
+    def setHandle(self, handle):
+        self._handle = handle
+
+    def initialize(self):
         """
         Command called to initialize plugins.  Called after registerCommands.
         All generic plugin initialization should happen here.
@@ -79,7 +84,7 @@ class Plugin(pluginlib.Plugin):
             hookFunction signature.
         """
         try:
-            self.prehooks[apiName].append(hookFunction)
+            self._prehooks[apiName].append(hookFunction)
         except KeyError:
             raise errors.InternalError('Cannot install prehook:'
                                        ' No such api method %r' % apiName)
@@ -91,7 +96,7 @@ class Plugin(pluginlib.Plugin):
             name C{apiName}.
         """
         try:
-            return self.prehooks[apiName]
+            return self._prehooks[apiName]
         except KeyError:
             raise errors.InternalError('Cannot get prehooks:'
                                        ' No such api method %r' % apiName)

@@ -90,7 +90,7 @@ class BaseCommand(command.AbstractCommand):
         return command.AbstractCommand.processConfigOptions(self, rbuildConfig,
                                                             cfgMap, argSet)
 
-    def runCommand(self, handle, cfg, argSet, args):
+    def runCommand(self, handle, argSet, args):
         """
         Stub method for running commands.  Should be replaced by subclasses.
         @param handle: rbuild handle object
@@ -124,7 +124,7 @@ class CommandWithSubCommands(BaseCommand):
             cls._subCommands = {}
         cls._subCommands[name] = subCommandClass
 
-    def runCommand(self, handle, cfg, argSet, args):
+    def runCommand(self, handle, argSet, args):
         """
         Takes the args list, determines the subcommand that is being called
         and calls that subcommand.
@@ -139,4 +139,4 @@ class CommandWithSubCommands(BaseCommand):
         if commandName not in self._subCommands:
             return self.usage()
         subCommandClass = self._subCommands[commandName]
-        return subCommandClass().runCommand(handle, cfg, argSet, args[2:])
+        return subCommandClass().runCommand(handle, argSet, args[2:])
