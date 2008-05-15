@@ -12,7 +12,7 @@
 # full details.
 #
 """
-    Checkout command and related utilities.
+Checkout command and related utilities.
 """
 import os
 import tempfile
@@ -26,16 +26,17 @@ from rbuild.pluginapi import command
 
 class CheckoutCommand(command.BaseCommand):
     """
-        Creates a working directory for working with the given product.
+    Creates a working directory for working with the given product.
 
-        Parameters: (repository namespace version|label)
+    Parameters: (repository namespace version|label)
 
-        Example: checkout foresight.rpath.org fl 2
-        Assuming that there were a product defined at
-        foresight.rpath.org@fl:proddef-2, this would create a product for
-
+    Example: checkout foresight.rpath.org fl 2
+    Assuming that there were a product defined at
+    foresight.rpath.org@fl:proddef-2, this would create a product for
     """
+
     commands = ['checkout']
+
     def runCommand(self, handle, _, args):
         if len(args) == 3:
             label, = self.requireParameters(args, ['label'])[1:]
@@ -89,9 +90,9 @@ class Checkout(pluginapi.Plugin):
         targetDir = checkoutDir + '/RBUILD'
         self._handle.facade.conary.checkout('product-definition', version,
                                            targetDir=targetDir)
-        productFile = targetDir + '/product-definition.xml'
-        productStore = self._handle.Product.getProductStoreFromFile(productFile)
-        product = productStore.getProduct()
+        productStore = self._handle.Product.getProductStoreFromDirectory(
+                                                                targetDir)
+        product = productStore.get()
         if tempDir:
             checkoutDir = product.getProductShortname()
             if os.path.exists(checkoutDir):
@@ -99,6 +100,7 @@ class Checkout(pluginapi.Plugin):
                 raise errors.RbuildError(
                                 'Directory %r already exists.' % checkoutDir)
             os.rename(tempDir, checkoutDir)
+            targetDir = checkoutDir + '/RBUILD'
 
         stages = product.getStages()
         for stage in stages:
@@ -106,5 +108,5 @@ class Checkout(pluginapi.Plugin):
             os.mkdir(stageDir)
             open(stageDir + '/.stage', 'w').write(stage.name + '\n')
         self._handle.getConfig().writeToFile(targetDir + '/rbuildrc')
-        return self._handle.Product.FileBasedProductStore(productFile)
+        return self._handle.Product.getProductStoreFromDirectory(targetDir)
 

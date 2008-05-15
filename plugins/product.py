@@ -13,7 +13,7 @@
 #
 import os
 
-from rpath_common import proddef
+from rpath_common.proddef import api1 as proddef
 
 from rbuild import errors
 from rbuild import pluginapi
@@ -26,23 +26,27 @@ class Product(pluginapi.Plugin):
             curDir = os.path.dirname(curDir)
         if curDir == '/':
             return None
-        productStore =  DirectoryBasedProductStore(curDir + '/RBUILD')
+        productStore =  DirectoryBasedProductStore(self._handle,
+                                                   curDir + '/RBUILD')
         if os.path.exists('.stage'):
             stageName = open('.stage').read(1024).split('\n', 1)[0]
             productStore.setActiveStageName(stageName)
         return productStore
 
     def getProductStoreFromDirectory(self, directoryName):
-        return DirectoryBasedProductStore(directoryName)
+        return DirectoryBasedProductStore(self._handle, directoryName)
 
 class DirectoryBasedProductStore(object):
     def __init__(self, handle, baseDirectory):
         self._handle = handle
-        self._baseDirectory = baseDirectory
+        self._baseDirectory = os.path.realpath(baseDirectory)
         self._currentStage = None
         if not os.path.exists(baseDirectory + '/product-definition.xml'):
-            raise errors.InternalError(
-                            'No product checkout at %s' % baseDirectory)
+            raise errors.RbuildError(
+                            'No product checkout at %r' % baseDirectory)
+
+    def getBaseDirectory(self):
+        return self._baseDirectory
 
     def update(self):
         return self._handle.facade.conary.updateCheckout(self._baseDirectory)

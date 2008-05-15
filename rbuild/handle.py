@@ -56,7 +56,7 @@ class RbuildHandle(object):
         # Provide access to facades
         self.facade = _Facade()
         self.facade.conary = rbuild.facade.conaryfacade.ConaryFacade(self)
-        self.facade.conary = rbuild.facade.rmakefacade.RmakeFacade(self)
+        self.facade.rmake = rbuild.facade.rmakefacade.RmakeFacade(self)
         # C0103: bad variable name.  We want this variable to match the
         # convention of variables accessible from the handle.  Like a plugin,
         # which is available under its class name, the commands are available
@@ -65,7 +65,9 @@ class RbuildHandle(object):
         self.Commands = CommandManager()
 
         if productStore is None:
+            # E1101: Instance of 'RbuildHandle' has no 'Product' member
             # Product is a required builtin plugin.
+            # pylint: disable-msg=E1101
             productStore = self.Product.getDefaultProductStore()
         self._productStore = productStore
 
