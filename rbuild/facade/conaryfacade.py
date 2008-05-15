@@ -302,7 +302,14 @@ class ConaryFacade(object):
         updatecmd.doUpdate(cfg, '%s=%s[%s]' % (name, version, flavor),
                            callback=callback, depCheck=False)
 
+    def _overrideFlavors(self, baseFlavor, flavorList):
+        baseFlavor = self._getFlavor(baseFlavor)
+        return [ deps.overrideFlavor(baseFlavor, self._getFlavor(x))
+                 for x in flavorList ]
 
+    def _getShortFlavorDescriptors(self, flavorList):
+        return deps.getShortFlavorDescriptors(
+                                  [ self._getFlavor(x) for x in flavorList ])
 
 #pylint: disable-msg=C0103,R0901,W0221,R0904
 # "The creature can't help its ancestry"

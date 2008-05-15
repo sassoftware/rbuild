@@ -25,6 +25,7 @@ from rbuild import errors
 from rbuild import rbuildcfg
 from rbuild.internal import pluginloader
 import rbuild.facade.conaryfacade
+import rbuild.facade.rmakefacade
 
 class _Facade(object):
     """
@@ -40,9 +41,10 @@ class RbuildHandle(object):
     @param pluginManager: a C{PluginManager} object that contains the plugins
     to use with this handle, or C{None} to load the plugins from disk.
     """
-    def __init__(self, cfg=None, pluginManager=None):
+    def __init__(self, cfg=None, pluginManager=None, productStore=None):
         if cfg is None:
             cfg = rbuildcfg.RbuildConfiguration(readConfigFiles=True)
+
 
         if pluginManager is None:
             pluginManager = pluginloader.getPlugins([], cfg.pluginDirs)
@@ -54,6 +56,7 @@ class RbuildHandle(object):
         # Provide access to facades
         self.facade = _Facade()
         self.facade.conary = rbuild.facade.conaryfacade.ConaryFacade(self)
+        self.facade.conary = rbuild.facade.rmakefacade.RmakeFacade(self)
         # C0103: bad variable name.  We want this variable to match the
         # convention of variables accessible from the handle.  Like a plugin,
         # which is available under its class name, the commands are available
@@ -61,11 +64,19 @@ class RbuildHandle(object):
         # pylint: disable-msg=C0103
         self.Commands = CommandManager()
 
+        if productStore is None:
+            # Product is a required builtin plugin.
+            productStore = self.Product.getDefaultProductStore()
+        self._productStore = productStore
+
     def getConfig(self):
         """
         @return: RbuildConfiguration object used by this handle object.
         """
         return self._cfg
+
+    def getProductStore(self):
+        return self._productStore
 
     def installPrehook(self, apiMethod, hookFunction):
         """

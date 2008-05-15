@@ -1,6 +1,6 @@
 [BASIC]
 # Regular expression which should only match correct class names
-class-rgx=[A-Z][a-zA-Z0-9]+$
+class-rgx=_?[A-Z][a-zA-Z0-9]+$
 
 # Regular expression which should only match correct function names
 function-rgx=[a-z_][a-zA-Z0-9]*$
@@ -32,4 +32,6 @@ reports=yes
 include-ids=yes
 
 [MESSAGES CONTROL]
-disable-msg=W0142,I0011
+# R0201: method could be a function
+# R0903: Too few public methods
+disable-msg=W0142,I0011,R0201,R0903

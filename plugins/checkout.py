@@ -19,7 +19,6 @@ import tempfile
 
 from conary.lib import util
 
-from rpath_common import proddef
 
 from rbuild import errors
 from rbuild import pluginapi
@@ -50,18 +49,16 @@ class CheckoutCommand(command.BaseCommand):
     def checkoutByLabelCommand(self, handle, label):
         #R0201: method could be a function
         #pylint: disable-msg=R0201
-        productStore = handle.Checkout.getProductStoreByLabel(label)
-        productStore.createCheckout()
-        # if we didn't get an exception, the command succeeded.
+        version = handle.Checkout.getProductVersionByLabel(label)
+        handle.Checkout.createProductCheckout(version)
         return 0
 
     def checkoutCommand(self, handle, repository, namespace, version):
         #R0201: method could be a function
         #pylint: disable-msg=R0201
-        productStore = handle.Checkout.getProductStoreByParts(
+        version = handle.Checkout.getProductVersionByParts(
                                             repository, namespace, version)
-        productStore.createCheckout()
-        # if we didn't get an exception, the command succeeded.
+        handle.Checkout.createProductCheckout(version)
         return 0
 
 class Checkout(pluginapi.Plugin):
@@ -70,27 +67,17 @@ class Checkout(pluginapi.Plugin):
     def registerCommands(self):
         self._handle.Commands.registerCommand(CheckoutCommand)
 
-    def getProductStoreByParts(self, repository, namespace, version):
+    def getProductVersionByParts(self, repository, namespace, version):
         labelStr = '%s@%s:proddef-%s' % (repository, namespace, version)
-        return self.getProductStoreByLabel(labelStr)
+        return self.getProductVersionByLabel(labelStr)
 
-    def getProductStoreByLabel(self, label):
+    def getProductVersionByLabel(self, label):
         version = self._handle.facade.conary._findTrove(
                                         'product-definition:source',
                                         str(label))[1]
-        return self.getProductStoreByVersion(version)
+        return str(version)
 
-    def getProductStoreByVersion(self, version):
-        return ProductStore(self._handle, version)
-
-
-class ProductStore(object):
-    def __init__(self, handle, version):
-        self.handle = handle
-        self.version = version
-        self.product = None
-
-    def createCheckout(self, checkoutDir=None):
+    def createProductCheckout(self, version, checkoutDir=None):
         if checkoutDir is None:
             checkoutDir = tempfile.mkdtemp(dir=os.getcwd())
             tempDir = checkoutDir
@@ -100,35 +87,24 @@ class ProductStore(object):
                 util.mkdirChain(checkoutDir)
 
         targetDir = checkoutDir + '/RBUILD'
-        self.handle.facade.conary.checkout('product-definition', self.version,
+        self._handle.facade.conary.checkout('product-definition', version,
                                            targetDir=targetDir)
         productFile = targetDir + '/product-definition.xml'
-        self.product = self.getProductFromFile(productFile)
+        productStore = self._handle.Product.getProductStoreFromFile(productFile)
+        product = productStore.getProduct()
         if tempDir:
-            checkoutDir = self.product.getProductShortname()
+            checkoutDir = product.getProductShortname()
             if os.path.exists(checkoutDir):
                 util.rmtree(tempDir)
                 raise errors.RbuildError(
                                 'Directory %r already exists.' % checkoutDir)
             os.rename(tempDir, checkoutDir)
 
-        stages = self.product.getStages()
+        stages = product.getStages()
         for stage in stages:
             stageDir = checkoutDir + '/' + stage.name
             os.mkdir(stageDir)
             open(stageDir + '/.stage', 'w').write(stage.name + '\n')
-        self.handle.getConfig().writeToFile(targetDir + '/rbuildrc')
+        self._handle.getConfig().writeToFile(targetDir + '/rbuildrc')
+        return self._handle.Product.FileBasedProductStore(productFile)
 
-    def getProductFromFile(self, path):
-        self.product = proddef.ProductDefinition(fromStream=open(path))
-        return self.product
-
-    def getProduct(self):
-        if self.product:
-            return self.product
-        fileObj = self.handle.facade.conary.getFileFromTrove(
-                                               'product-definition:source',
-                                               self.version,
-                                               ['product-definition.xml'])
-        self.product = proddef.ProductDefinition(fromStream=fileObj.get())
-        return self.product
