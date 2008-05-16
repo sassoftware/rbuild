@@ -40,23 +40,21 @@ class CheckoutCommand(command.BaseCommand):
     def runCommand(self, handle, _, args):
         if len(args) == 3:
             label, = self.requireParameters(args, ['label'])[1:]
-            self.checkoutByLabelCommand(handle, label)
+            self._checkoutByLabelCommand(handle, label)
         else:
             params = self.requireParameters(args, ['repository',
                                                    'namespace', 'version'])
             repository, namespace, version = params[1:]
-            self.checkoutCommand(handle, repository, namespace, version)
+            self._checkoutCommand(handle, repository, namespace, version)
 
-    def checkoutByLabelCommand(self, handle, label):
-        #R0201: method could be a function
-        #pylint: disable-msg=R0201
+    @staticmethod
+    def _checkoutByLabelCommand(handle, label):
         version = handle.Checkout.getProductVersionByLabel(label)
         handle.Checkout.createProductCheckout(version)
         return 0
 
-    def checkoutCommand(self, handle, repository, namespace, version):
-        #R0201: method could be a function
-        #pylint: disable-msg=R0201
+    @staticmethod
+    def _checkoutCommand(handle, repository, namespace, version):
         version = handle.Checkout.getProductVersionByParts(
                                             repository, namespace, version)
         handle.Checkout.createProductCheckout(version)
