@@ -1,0 +1,11 @@
+[epydoc]
+
+name: rBuild API Documentation
+
+parse: yes
+private: no
+sourcecode: yes
+introspect: yes
+
+output: html
+target: docs/developer

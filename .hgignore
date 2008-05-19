@@ -15,4 +15,4 @@ rbuild/constants.py
 ^pylint/reports/
 bin/.*
 ^rbuild-.*.tar.bz2
-docs/.*
+docs/developer/.*

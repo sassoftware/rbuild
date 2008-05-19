@@ -42,7 +42,7 @@ install: install-subdirs
 
 clean: clean-subdirs default-clean
 
-docs: html
+doc: html
 
 html:
 	scripts/generate_docs.sh
