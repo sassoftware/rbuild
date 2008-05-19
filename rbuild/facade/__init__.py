@@ -16,10 +16,10 @@ The rBuild Appliance Developer Process Toolkit Facades
 
 The C{rbuild.facade} modules provide public facades for lower-level
 rPath APIs.  These facades are intended to be APIs that are:
-- High-level: do not require many lines of boilerplate to accomplish
-  an action.
-- Very stable: when underlying APIs are modified, only the facade
-  should need to be adapted, not the plugins that use the facade.
+ - High-level: do not require many lines of boilerplate to accomplish
+   an action.
+ - Very stable: when underlying APIs are modified, only the facade
+   should need to be adapted, not the plugins that use the facade.
 
 These APIs will be backward-compatible within major versions of rBuild.
 

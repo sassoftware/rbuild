@@ -42,6 +42,11 @@ install: install-subdirs
 
 clean: clean-subdirs default-clean
 
+docs: html
+
+html:
+	scripts/generate_docs.sh
+
 dist:
 	if ! grep "^Changes in $(VERSION)" NEWS > /dev/null 2>&1; then \
 		echo "no NEWS entry"; \

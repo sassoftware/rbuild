@@ -18,7 +18,7 @@ for use by plugins.
 @var NO_PARAM: Command-line argument which takes no parameters; a flag
 in the form C{--flag}
 @var ONE_PARAM: Command-line argument which takes exactly one parameter,
-in the forms C{--argument=value} or C{--argument value}}
+in the forms C{--argument=value} or C{--argument value}
 @var OPT_PARAM: Command-line argument which takes zero or one parameters,
 in the forms C{--argument} or C{--argument=value} (note that this
 form cannot take C{--argument value}
@@ -94,7 +94,6 @@ class BaseCommand(command.AbstractCommand):
         """
         Stub method for running commands.  Should be replaced by subclasses.
         @param handle: rbuild handle object
-        @param cfg: rbuildcfg.RbuildConfigObject
         @param argSet: dictionary of flags passed to the command
         @param args: list of parameters passed (the first is the command name)
         """

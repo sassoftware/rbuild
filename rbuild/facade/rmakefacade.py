@@ -153,7 +153,7 @@ class RmakeFacade(object):
     def buildJob(self, job):
         """
         Submits the given job to the rMake server
-        @param: rMake job to submit
+        @param job: rMake job to submit
         @return: jobId of the job that is started
         """
         client = self._getRmakeHelper()
