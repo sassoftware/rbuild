@@ -27,11 +27,14 @@ good-names=i,j,k,n,v,f,ex,Run,_,db,cu,__
 
 
 [REPORTS]
-files-output=yes
-reports=yes
+#files-output=yes
+#reports=yes
 include-ids=yes
 
 [MESSAGES CONTROL]
 # R0201: method could be a function
 # R0903: Too few public methods
 disable-msg=W0142,I0011,R0201,R0903
+
+[MASTER]
+load-plugins=pylint_plugins.epydoc_checker
