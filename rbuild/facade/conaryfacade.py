@@ -289,6 +289,9 @@ class ConaryFacade(object):
         @param targetDir: subdirectory into which to check out the package,
         defaults to C{package}
         @type targetDir: string
+        @param quiet: (C{True}) determines whether to print update status
+        during the operation.
+        @type quiet: bool
         """
         version = self._versionToString(version)
         flavor = self._flavorToString(flavor)
@@ -321,5 +324,7 @@ class _QuietUpdateCallback(checkin.CheckinCallback):
     # unused arguments
     # implements an interface that may pass arguments that need to be ignored
     def setUpdateJob(self, *args, **kw):
+        #pylint: disable-msg=C0999
+        # arguments not documented: implements interface, ignores parameters
         'stifle update announcement for extract'
         return
