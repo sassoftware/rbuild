@@ -27,8 +27,8 @@ good-names=i,j,k,n,v,f,ex,Run,_,db,cu,__
 
 
 [REPORTS]
-#files-output=yes
-#reports=yes
+files-output=yes
+reports=yes
 include-ids=yes
 
 [MESSAGES CONTROL]
