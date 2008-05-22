@@ -31,8 +31,6 @@ class _Facade(object):
     """
     Private internal container for facades provided via the handle
     """
-    def __init__(self):
-        return
 
 class RbuildHandle(object):
     """

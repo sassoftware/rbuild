@@ -29,7 +29,6 @@ class InternalError(Exception):
     Errors deriving from InternalError should never occur, but when they do
     they indicate a failure within the code to handle some unexpected case.
     """
-    pass
 
 class BaseError(Exception):
     """
@@ -50,13 +49,11 @@ class RbuildError(BaseError):
     This error may be raised directly only by rBuild internals,
     not by plugins.
     """
-    pass
 
 class BadParameters(BaseError):
     """
     Raised when a command is given bad parameters at the command line.
     """
-    pass
 
 #: error that is output when a Python exception makes it to the command 
 #: line.
