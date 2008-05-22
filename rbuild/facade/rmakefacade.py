@@ -133,7 +133,7 @@ class RmakeFacade(object):
         cfg = self._getRmakeConfig()
         return helper.rMakeHelper(buildConfig=cfg)
 
-    def createBuildJobForStage(self, itemList, stageName, recurse=True):
+    def createBuildJobForStage(self, itemList, recurse=True):
         """
         @return: an rMakeHelper object suitable for use with the current
         product (without any contexts for use in starting a build)
