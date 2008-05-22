@@ -24,11 +24,11 @@ class Product(pluginapi.Plugin):
         curDir = os.getcwd()
         stageName = None
         while not os.path.exists(curDir + '/RBUILD') and curDir != '/':
-            curDir = os.path.dirname(curDir)
-            if curDir is None and os.path.exists(curDir + '/.stage'):
+            if stageName is None and os.path.exists(curDir + '/.stage'):
                 # found our current stage; might have been called
                 # from a stage directory or a package directory
                 stageName = open('.stage').read(1024).split('\n', 1)[0]
+            curDir = os.path.dirname(curDir)
         if curDir == '/':
             return None
         productStore =  self.getProductStoreFromDirectory(curDir)

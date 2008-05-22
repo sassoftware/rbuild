@@ -123,6 +123,17 @@ class CommandWithSubCommands(BaseCommand):
             cls._subCommands = {}
         cls._subCommands[name] = subCommandClass
 
+    @classmethod
+    def getSubCommandClass(cls, name):
+        """
+        Hook for fetching subCommand classes.
+        @param name: name for the subcommand.
+        @return: subCommand class or C{None}
+        """
+        if '_subCommands' in cls.__dict__ and name in cls._subCommands:
+            return cls._subCommands[name]
+        return None
+
     def runCommand(self, handle, argSet, args):
         """
         Takes the args list, determines the subcommand that is being called

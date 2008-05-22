@@ -63,7 +63,7 @@ class Plugin(pluginlib.Plugin):
             def registerCommands(self):
                 self.handle.registerCommand(MyCommandClass)
         """
-        pass
+        return
 
     def setHandle(self, handle):
         self.handle = handle
@@ -73,7 +73,7 @@ class Plugin(pluginlib.Plugin):
         Command called to initialize plugins.  Called after registerCommands.
         All generic plugin initialization should happen here.
         """
-        pass
+        return
 
     def _installPrehook(self, apiName, hookFunction):
         """

@@ -14,15 +14,14 @@
 
 from rbuild import pluginapi
 
-class BuildPackages(object):
+class BuildPackagesCommand(object):
     #pylint: disable-msg=R0201,W0613,R0903
     # could be a function, unused variables, and too few public methods
     def runCommand(self, handle, argSet, args):
         print 'Building packages: %s' % ', '.join(args[1:])
 
-class BuildPackagesPlugin(pluginapi.Plugin):
+class BuildPackages(pluginapi.Plugin):
 
     def initialize(self):
         self.handle.Commands.getCommandClass('build').registerSubCommand(
-                                                    'packages', BuildPackages)
-
+                                    'packages', BuildPackagesCommand)
