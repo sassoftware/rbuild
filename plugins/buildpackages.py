@@ -23,6 +23,6 @@ class BuildPackages(object):
 class BuildPackagesPlugin(pluginapi.Plugin):
 
     def initialize(self):
-        self._handle.Commands.getCommandClass('build').registerSubCommand(
+        self.handle.Commands.getCommandClass('build').registerSubCommand(
                                                     'packages', BuildPackages)
 

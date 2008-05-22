@@ -27,4 +27,4 @@ class Build(pluginapi.Plugin):
     name = 'build'
 
     def registerCommands(self):
-        self._handle.Commands.registerCommand(BuildCommand)
+        self.handle.Commands.registerCommand(BuildCommand)

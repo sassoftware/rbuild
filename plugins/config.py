@@ -27,7 +27,7 @@ class Config(pluginapi.Plugin):
     name = 'config'
 
     def registerCommands(self):
-        self._handle.Commands.registerCommand(ConfigCommand)
+        self.handle.Commands.registerCommand(ConfigCommand)
 
     def displayConfig(self, hidePasswords=True, prettyPrint=True):
         """
@@ -39,7 +39,7 @@ class Config(pluginapi.Plugin):
         human-readable format that may not be parsable by a config reader.
         If C{False}, the configuration output should be valid as input.
         """
-        cfg = self._handle.getConfig()
+        cfg = self.handle.getConfig()
         cfg.setDisplayOptions(hidePasswords=hidePasswords,
                               prettyPrint=prettyPrint)
         cfg.display()

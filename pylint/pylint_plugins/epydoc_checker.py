@@ -23,12 +23,12 @@ class EpyTextNode(object):
                 if tag == 'param':
                     paramName = self.getChild('arg', field).children[0]
                     params.append(paramName)
-                elif tag in ('type', 'return', 'rtype'):
+                elif tag in ('type', 'return', 'rtype', 'raise'):
                     continue
                 else:
-                    raise NotImplementedError('didnt see this case in testing')
+                    raise NotImplementedError("don't know how to handle tag '%s'" %tag)
             else:
-                raise NotImplementedError('didnt see this case in testing')
+                raise NotImplementedError("no tag found")
         return params
 
     def getChild(self, tag, docNode=None):
@@ -55,6 +55,8 @@ class EpydocParamsMatchChecker(BaseChecker):
             neededParams = node.argnames[1:]
         else:
             neededParams = node.argnames
+        # remove intentionally ignored arguments in common signatures
+        neededParams = [x for x in neededParams if x != '_']
         if docParams != neededParams:
             self.add_message('C0999', node=node)
 

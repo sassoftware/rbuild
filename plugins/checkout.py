@@ -64,14 +64,14 @@ class Checkout(pluginapi.Plugin):
     name = 'checkout'
 
     def registerCommands(self):
-        self._handle.Commands.registerCommand(CheckoutCommand)
+        self.handle.Commands.registerCommand(CheckoutCommand)
 
     def getProductVersionByParts(self, repository, namespace, version):
         labelStr = '%s@%s:proddef-%s' % (repository, namespace, version)
         return self.getProductVersionByLabel(labelStr)
 
     def getProductVersionByLabel(self, label):
-        version = self._handle.facade.conary._findTrove(
+        version = self.handle.facade.conary._findTrove(
                                         'product-definition:source',
                                         str(label))[1]
         return str(version)
@@ -86,10 +86,10 @@ class Checkout(pluginapi.Plugin):
                 util.mkdirChain(checkoutDir)
 
         targetDir = checkoutDir + '/RBUILD'
-        self._handle.facade.conary.checkout('product-definition', version,
+        self.handle.facade.conary.checkout('product-definition', version,
                                            targetDir=targetDir)
-        productStore = self._handle.Product.getProductStoreFromDirectory(
-                                                                targetDir)
+        productStore = self.handle.Product.getProductStoreFromDirectory(
+                                                                checkoutDir)
         product = productStore.get()
         if tempDir:
             checkoutDir = product.getProductShortname()
@@ -105,6 +105,6 @@ class Checkout(pluginapi.Plugin):
             stageDir = checkoutDir + '/' + stage.name
             os.mkdir(stageDir)
             open(stageDir + '/.stage', 'w').write(stage.name + '\n')
-        self._handle.getConfig().writeToFile(targetDir + '/rbuildrc')
-        return self._handle.Product.getProductStoreFromDirectory(targetDir)
+        self.handle.getConfig().writeToFile(targetDir + '/rbuildrc')
+        return self.handle.Product.getProductStoreFromDirectory(checkoutDir)
 

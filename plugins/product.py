@@ -22,26 +22,40 @@ class Product(pluginapi.Plugin):
 
     def getDefaultProductStore(self):
         curDir = os.getcwd()
+        stageName = None
         while not os.path.exists(curDir + '/RBUILD') and curDir != '/':
             curDir = os.path.dirname(curDir)
+            if curDir is None and os.path.exists(curDir + '/.stage'):
+                # found our current stage; might have been called
+                # from a stage directory or a package directory
+                stageName = open('.stage').read(1024).split('\n', 1)[0]
         if curDir == '/':
             return None
-        productStore =  DirectoryBasedProductStore(self._handle,
-                                                   curDir + '/RBUILD')
-        if os.path.exists('.stage'):
-            stageName = open('.stage').read(1024).split('\n', 1)[0]
+        productStore =  self.getProductStoreFromDirectory(curDir)
+        if stageName is not None:
             productStore.setActiveStageName(stageName)
         return productStore
 
     def getProductStoreFromDirectory(self, directoryName):
-        return DirectoryBasedProductStore(self._handle, directoryName)
+        return DirectoryBasedProductStore(self.handle, directoryName)
 
 class DirectoryBasedProductStore(object):
     def __init__(self, handle, baseDirectory):
         self._handle = handle
         self._baseDirectory = os.path.realpath(baseDirectory)
         self._currentStage = None
-        if not os.path.exists(baseDirectory + '/product-definition.xml'):
+        self._proddef = None
+        self._testProductCheckout(baseDirectory)
+
+    def _testProductCheckout(self, baseDirectory):
+        """
+        Test to see whether a product checkout exists
+        @param baseDirectory: name of product directory
+        @type baseDirectory: string
+        @raise errors.rRbuildError: If no product checkout exists in an
+        RBUILD directory under the product directory
+        """
+        if not os.path.exists(baseDirectory + '/RBUILD/product-definition.xml'):
             raise errors.RbuildError(
                             'No product checkout at %r' % baseDirectory)
 
@@ -49,11 +63,23 @@ class DirectoryBasedProductStore(object):
         return self._baseDirectory
 
     def update(self):
-        return self._handle.facade.conary.updateCheckout(self._baseDirectory)
+        """
+        This is the only acceptable way to update a product definition
+        checkout, because it invalidates the cached copy of the data.
+        """
+        # After an update, expire any cache
+        self._proddef = None
+        return self._handle.facade.conary.updateCheckout(
+            self._baseDirectory+'/RBUILD')
 
     def get(self):
-        path = self._baseDirectory + '/product-definition.xml'
-        return proddef.ProductDefinition(fromStream=open(path))
+        if self._proddef is None:
+            path = self._baseDirectory + '/RBUILD/product-definition.xml'
+            self._proddef = proddef.ProductDefinition(fromStream=open(path))
+        return self._proddef
+
+    def iterStageNames(self):
+        return (x.name for x in self.get().getStages())
 
     def getActiveStageName(self):
         return self._currentStage
@@ -61,5 +87,24 @@ class DirectoryBasedProductStore(object):
     def setActiveStageName(self, stageName):
         self._currentStage = stageName
 
+    def iterPackageDirsInStage(self, stageName = None):
+        """
+        Iterator which yields directory names containing Conary
+        source checkouts for a specified stage (the default stage
+        if not otherwise specified).
+        @param stageName: (None) Stage name to inspect relative to the
+        currentp product.
+        @type stageName: string
+        @return: iterator returning strings with directory names
+        """
+        if stageName is None:
+            stageName = self.getActiveStageName()
+        if stageName is not None:
+            for dirName in os.listdir('%s/%s' %(
+                                      self._baseDirectory, stageName)):
+                packageDir = ('%s/%s' %(dirName, 'CONARY'))
+                if os.path.exists(packageDir):
+                    yield dirName
+
     def getRmakeConfigPath(self):
-        return self._baseDirectory + '/rmakerc'
+        return self._baseDirectory + '/RBUILD/rmakerc'

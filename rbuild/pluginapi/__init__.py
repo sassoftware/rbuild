@@ -45,7 +45,7 @@ class Plugin(pluginlib.Plugin):
         pluginlib.Plugin.__init__(self, *args, **kw)
 
         self._prehooks = {}
-        self._handle = None
+        self.handle = None
         for methodName in self.__class__.__dict__:
             if methodName[0] == '_' or hasattr(Plugin, methodName):
                 continue
@@ -61,12 +61,12 @@ class Plugin(pluginlib.Plugin):
         Use this method to register command line arguments.
         Example::
             def registerCommands(self):
-                self._handle.registerCommand(MyCommandClass)
+                self.handle.registerCommand(MyCommandClass)
         """
         pass
 
     def setHandle(self, handle):
-        self._handle = handle
+        self.handle = handle
 
     def initialize(self):
         """
