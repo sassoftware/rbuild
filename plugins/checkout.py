@@ -19,6 +19,7 @@ import tempfile
 
 from conary.lib import util
 
+from rpath_common.proddef import api1 as proddef
 
 from rbuild import errors
 from rbuild import pluginapi
@@ -28,11 +29,13 @@ class CheckoutCommand(command.BaseCommand):
     """
     Creates a working directory for working with the given product.
 
-    Parameters: (repository namespace version|label)
+    Parameters: (repository namespace shortname version|label)
 
-    Example: checkout foresight.rpath.org fl 2
+    Example: checkout foresight.rpath.org fl prod 2
     Assuming that there were a product defined at
-    foresight.rpath.org@fl:proddef-2, this would create a product for
+    foresight.rpath.org@fl:prod-2, this would create a product
+    subdirectory tree representing the contents of that product
+    definition.
     """
 
     commands = ['checkout']
@@ -42,10 +45,10 @@ class CheckoutCommand(command.BaseCommand):
             label, = self.requireParameters(args, ['label'])[1:]
             self._checkoutByLabelCommand(handle, label)
         else:
-            params = self.requireParameters(args, ['repository',
-                                                   'namespace', 'version'])
-            repository, namespace, version = params[1:]
-            self._checkoutCommand(handle, repository, namespace, version)
+            params = self.requireParameters(args, ['repository', 'namespace',
+                                                   'shortname', 'version'])
+            repository, namespace, shortname, version = params[1:]
+            self._checkoutCommand(handle, repository, namespace, shortname, version)
 
     @staticmethod
     def _checkoutByLabelCommand(handle, label):
@@ -54,9 +57,9 @@ class CheckoutCommand(command.BaseCommand):
         return 0
 
     @staticmethod
-    def _checkoutCommand(handle, repository, namespace, version):
+    def _checkoutCommand(handle, repository, namespace, shortname, version):
         version = handle.Checkout.getProductVersionByParts(
-                                            repository, namespace, version)
+                                repository, namespace, shortname, version)
         handle.Checkout.createProductCheckout(version)
         return 0
 
@@ -66,13 +69,19 @@ class Checkout(pluginapi.Plugin):
     def registerCommands(self):
         self.handle.Commands.registerCommand(CheckoutCommand)
 
-    def getProductVersionByParts(self, repository, namespace, version):
-        labelStr = '%s@%s:proddef-%s' % (repository, namespace, version)
+    def getProductVersionByParts(self, repository, namespace, shortname, version):
+        prodDef = proddef.ProductDefinition()
+        prodDef.setConaryRepositoryHostname(repository)
+        prodDef.setConaryNamespace(namespace)
+        prodDef.setProductShortname(shortname)
+        prodDef.setProductVersion(version)
+        labelStr = prodDef.getProductDefinitionLabel()
         return self.getProductVersionByLabel(labelStr)
 
     def getProductVersionByLabel(self, label):
+        troveName = proddef.ProductDefinition.getTroveName() + ':source'
         version = self.handle.facade.conary._findTrove(
-                                        'product-definition:source',
+                                        troveName,
                                         str(label))[1]
         return str(version)
 
