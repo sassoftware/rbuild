@@ -27,12 +27,12 @@ class HelpCommand(BaseCommand):
     help = 'Display help information'
     commandGroup = 'Information Display'
 
-    def runCommand(self, handle, cfg, argSet, args):
+    def runCommand(self, handle, argSet, args):
         """
         Runs the help command, displaying either general help including
         a list of commonly-used command, or help on a specific command.
         """
-        # W0613: unused variables cfg, handle, argSet.  This is expected.
+        # W0613: unused variables handle, argSet.  This is expected.
         #pylint: disable-msg=W0613
         command, subCommands = self.requireParameters(args, allowExtra=True,
                                                       maxExtra=1)
