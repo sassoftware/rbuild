@@ -19,15 +19,22 @@ plugins.  It provides public methods which are only to be accessed
 via C{handle.facade.conary} which is automatically available to
 all plugins through the C{handle} object.
 """
-
 import copy
+import itertools
+import os
+import stat
 
 from conary import conarycfg
 from conary import conaryclient
 from conary import checkin
 from conary.deps import deps
+from conary import state
 from conary import updatecmd
 from conary import versions
+from conary.lib import util
+from conary.lib import log
+
+from conary.build import loadrecipe
 
 
 class ConaryFacade(object):
@@ -49,6 +56,8 @@ class ConaryFacade(object):
     def _parseRBuilderConfigFile(self, cfg):
         """
         Include conary configuration file provided by rBuilder
+        @param cfg: configuration file to add rbuilder configuration
+        data to.
         """
         serverUrl = self._handle.getConfig().serverUrl
         if serverUrl:
@@ -256,20 +265,37 @@ class ConaryFacade(object):
         version = self._getVersion(version)
         flavor = self._getFlavor()
         targetLabel = self._getLabel(targetLabel)
-        item = self._getConaryClient().createShadowChangeSet(
+        results = self._getConaryClient().createShadowChangeSet(
                         str(targetLabel),
                         [(name, version, flavor)])
-        if item:
-            existingShadow, cs = item
-            if cs and not cs.isEmpty():
-                self._getRepositoryClient().commitChangeSet(cs)
-            if existingShadow:
-                return self._troveTupToStrings(*existingShadow[0])
-            else:
-                return self._troveTupToStrings(
-                    *cs.iterNewTroveList().next().getNewNameVersionFlavor())
-        else:
+        if not results:
             return False
+        return self._commitShadowChangeSet(results[0], results[1])[0]
+
+    def shadowSourceForBinary(self, name, version, flavor, targetLabel):
+        version = self._getVersion(version)
+        flavor = self._getFlavor(flavor)
+        targetLabel = self._getLabel(targetLabel)
+        results = self._getConaryClient().createShadowChangeSet(
+                        str(targetLabel),
+                        [(name, version, flavor)],
+                        sourceOnly=True)
+        if not results:
+            return False
+        return self._commitShadowChangeSet(results[0], results[1])[0]
+
+    def _commitShadowChangeSet(self, existingShadow, cs):
+        if cs and not cs.isEmpty():
+            self._getRepositoryClient().commitChangeSet(cs)
+        allTroves = []
+        if existingShadow:
+            allTroves.extend(self._troveTupToStrings(*x)
+                             for x in existingShadow)
+        if cs:
+            allTroves.extend(
+                        self._troveTupToStrings(*x.getNewNameVersionFlavor())
+                        for x in cs.iterNewTroveList())
+        return allTroves
 
     #pylint: disable-msg=R0913
     # too many args, but still better than self, troveTup, targetDir
@@ -305,14 +331,74 @@ class ConaryFacade(object):
         updatecmd.doUpdate(cfg, '%s=%s[%s]' % (name, version, flavor),
                            callback=callback, depCheck=False)
 
+    def _findPackageInGroups(self, groupList, packageName):
+        repos = self._getRepositoryClient()
+        results = repos.findTroves(None, groupList, None)
+        troveTups = list(itertools.chain(*results.itervalues()))
+        if not troveTups:
+            return []
+        # we will get multiple flavors here.  We only want those
+        # flavors of these groups that have been built most recently
+        # to be taken into account
+        maxVersion = sorted(troveTups, key=lambda x:x[1])[-1][1]
+        troveTups = [ x for x in troveTups if x[1] == maxVersion ]
+
+        troves = repos.getTroves(troveTups, withFiles=False)
+        matchingTroveList = []
+        for trove in troves:
+            for troveTup in trove.iterTroveList(weakRefs=True,
+                                                strongRefs=True):
+                if troveTup[0] == packageName:
+                    matchingTroveList.append(troveTup)
+        return matchingTroveList
+
     def _overrideFlavors(self, baseFlavor, flavorList):
         baseFlavor = self._getFlavor(baseFlavor)
-        return [ deps.overrideFlavor(baseFlavor, self._getFlavor(x))
+        return [ str(deps.overrideFlavor(baseFlavor, self._getFlavor(x)))
                  for x in flavorList ]
 
     def _getShortFlavorDescriptors(self, flavorList):
         return deps.getShortFlavorDescriptors(
                                   [ self._getFlavor(x) for x in flavorList ])
+
+    def _loadRecipeClassFromCheckout(self, recipePath):
+        repos =  self._getRepositoryClient()
+        directory = os.path.dirname(recipePath)
+        conaryState = state.ConaryStateFromFile(directory + '/CONARY', repos)
+        sourceState = conaryState.getSourceState()
+
+        cfg = self.getConaryConfig()
+        loader = loadrecipe.RecipeLoader(recipePath, cfg=cfg,
+                                     repos=repos,
+                                     branch=sourceState.getBranch(),
+                                     buildFlavor=cfg.buildFlavor)
+        return loader.getRecipe()
+
+    def _removeNonRecipeFilesFromCheckout(self, recipePath):
+        recipeDir = os.path.dirname(recipePath)
+        recipeName = os.path.basename(recipePath)
+        repos =  self._getRepositoryClient()
+        conaryState = state.ConaryStateFromFile(recipeDir + '/CONARY', repos)
+        sourceState = conaryState.getSourceState()
+
+        for (pathId, path, _, _) in list(sourceState.iterFileList()):
+            if path == recipeName:
+                continue
+            path = recipeDir + '/' + path
+            sourceState.removeFile(pathId)
+
+            if util.exists(path):
+                statInfo = os.lstat(path)
+                try:
+                    if statInfo.st_mode & stat.S_IFDIR:
+                        os.rmdir(path)
+                    else:
+                        os.unlink(path)
+                except OSError, e:
+                    log.warning("cannot remove %s: %s" % (path, e.strerror))
+        conaryState.write('CONARY')
+
+
 
 #pylint: disable-msg=C0103,R0901,W0221,R0904
 # "The creature can't help its ancestry"

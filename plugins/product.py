@@ -84,6 +84,12 @@ class DirectoryBasedProductStore(object):
     def getActiveStageName(self):
         return self._currentStage
 
+    def getActiveStage(self):
+        return self.get().getStage(self._currentStage)
+
+    def getActiveStageLabel(self):
+        return self.getActiveStage().label
+
     def setActiveStageName(self, stageName):
         self._currentStage = stageName
 
