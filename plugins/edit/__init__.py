@@ -29,7 +29,24 @@ from rbuild_plugins.edit import derive
 # that checkout to allow for other interfaces
 
 class EditCommand(command.BaseCommand):
+    """
+    Creates a checkout of the package, creating it the package if necessary.
+
+    If an upstream version of the package is available, then the user must
+    specify whether the upstream version should be shadowed, derived, or
+    a new package should be created.
+    """
     commands = ['edit']
+    docs = {'derive' : "Create a derived package based on an upstream one",
+            'shadow' : "Create a shadowed package based on an upstream one",
+            'new' : ("Create a new version of the package regardless of"
+                     " whether an upstream one exists") }
+
+    def addParameters(self, argDef):
+        command.BaseCommand.addParameters(self, argDef)
+        argDef['derive'] = command.NO_PARAM
+        argDef['shadow'] = command.NO_PARAM
+        argDef['new']    = command.NO_PARAM
 
     def runCommand(self, handle, argSet, args):
         packageName, = self.requireParameters(args, ['packageName'])[1:]
@@ -74,7 +91,8 @@ class Edit(pluginapi.Plugin):
 
 
     def checkoutPackage(self, packageName):
-        self.handle.facade.conary.checkout(packageName)
+        currentLabel = self.handle.getProductStore().getActiveStageLabel()
+        self.handle.facade.conary.checkout(packageName, currentLabel)
         return True
 
     def derivePackage(self, packageName):
@@ -90,10 +108,12 @@ class Edit(pluginapi.Plugin):
             raise errors.RbuildError(
                         'cannot shadow %s: no upstream binary' % packageName)
         name, version = upstreamLatest[0:2]
-        self.handle.facade.conary.shadowSource(name, version.branch())
+        currentLabel = self.handle.getProductStore().getActiveStageLabel()
+        self.handle.facade.conary.shadowSource(name, version, currentLabel)
+        self.checkoutPackage(packageName)
 
     def newPackage(self, packageName):
-        currentLabel = self.handle.getProductStore().getActiveLabel()
+        currentLabel = self.handle.getProductStore().getActiveStageLabel()
         self.handle.facade.conary.createNewPackage(
                                             packageName, currentLabel)
         return
@@ -101,8 +121,11 @@ class Edit(pluginapi.Plugin):
 
     def _getUpstreamPackage(self, packageName):
         product = self.handle.getProductStore().get()
+        upstreamSources = product.getUpstreamSources()
+        upstreamSources = [(x.troveName, x.label, None)
+                            for x in upstreamSources]
         troveList =  self.handle.facade.conary._findPackageInGroups(
-                         product.getUpstreamSources(),
+                         upstreamSources,
                          packageName)
         if troveList:
             # FIXME: this could be multiple packages.  We need a good
@@ -113,4 +136,5 @@ class Edit(pluginapi.Plugin):
     def _getExistingPackage(self, packageName):
         currentLabel = self.handle.getProductStore().getActiveStageLabel()
         return self.handle.facade.conary._findTrove(packageName + ':source',
-                                                    currentLabel)
+                                                    currentLabel,
+                                                    allowMissing=True)

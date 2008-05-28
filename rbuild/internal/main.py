@@ -141,7 +141,10 @@ def main(argv=None):
             debuggerException = errors.InternalError
         sys.excepthook = errors.genExcepthook(debug=debugAll,
                                               debugCtrlC=debugAll)
-        return RbuildMain().main(argv, debuggerException=debuggerException)
+        rc =  RbuildMain().main(argv, debuggerException=debuggerException)
+        if rc is None:
+            return 0
+        return rc
     except debuggerException, err:
         raise
     except (errors.BaseError, conaryerrors.ConaryError, conaryerrors.ParseError,

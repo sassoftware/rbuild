@@ -49,18 +49,17 @@ def derive(handle, troveToDerive):
                                        targetLabel)
     troveName = troveName.split(':')[0]
     conaryFacade.checkout(troveName, targetLabel)
-    os.chdir(troveName)
-    _writeDerivedRecipe(conaryFacade, troveName)
+    _writeDerivedRecipe(conaryFacade, troveName, directory=troveName)
 
-    extractDir = os.getcwd() + '/_ROOT_'
+    extractDir = '%s/%s/_ROOT_' % (os.getcwd(), troveName)
     log.info('extracting files from %s=%s[%s]' % troveToDerive)
     troveName, version, flavor = troveToDerive
     conaryFacade.checkoutBinaryPackage(troveName, version, flavor,
                                        extractDir)
 
-def _writeDerivedRecipe(conaryFacade, troveName):
+def _writeDerivedRecipe(conaryFacade, troveName, directory):
     recipeName = troveName + '.recipe'
-    recipePath = os.getcwd() + '/' + recipeName
+    recipePath = os.path.realpath(directory + '/' + recipeName)
 
     log.info('Removing extra files from checkout')
     conaryFacade._removeNonRecipeFilesFromCheckout(recipePath)

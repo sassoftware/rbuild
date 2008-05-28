@@ -119,7 +119,8 @@ class ConaryFacade(object):
             return deps.parseFlavor(flavor)
         return flavor
 
-    def _findTrove(self, name, version, flavor=None, labelPath=None):
+    def _findTrove(self, name, version, flavor=None, labelPath=None,
+                   allowMissing=False):
         """
         Gets a reference to a trove in the repository.
         @param name: package to find
@@ -130,13 +131,19 @@ class ConaryFacade(object):
         @type flavor: string or C{deps.Flavor} B{opaque}
         @param labelPath: label(s) to find package on
         @type labelPath: None, conary.versions.Label, or list of conary.versions.Label
+        @type allowMissing: if True, allow None as a return value if the package
+        was not found.
         @return: C{(name, version, flavor)} tuple.
         Note that C{version} and C{flavor} objects are B{opaque}.
         @rtype: (string, conary.versions.Version conary.deps.deps.Flavor)
         """
         repos = self._getRepositoryClient()
         flavor = self._getFlavor(flavor)
-        troveTup, = repos.findTrove(labelPath, (name, version, flavor))
+        results = repos.findTroves(labelPath, [(name, version, flavor)],
+                                   allowMissing=allowMissing)
+        if not results:
+            return None
+        troveTup, = results[name, version, flavor]
         return troveTup
 
     @staticmethod
@@ -222,8 +229,6 @@ class ConaryFacade(object):
         @type targetDir: string
         """
         cfg = self.getConaryConfig()
-        # FIXME: remove this problematic workaround when CNY-2783 fixed
-        cfg.buildLabel = label
         checkin.checkout(self._getRepositoryClient(), cfg,
                          targetDir, ['%s=%s' % (package, label)])
 
@@ -276,10 +281,11 @@ class ConaryFacade(object):
         version = self._getVersion(version)
         flavor = self._getFlavor(flavor)
         targetLabel = self._getLabel(targetLabel)
-        results = self._getConaryClient().createShadowChangeSet(
+        client = self._getConaryClient()
+        results = client.createShadowChangeSet(
                         str(targetLabel),
                         [(name, version, flavor)],
-                        sourceOnly=True)
+                        branchType=client.BRANCH_SOURCE)
         if not results:
             return False
         return self._commitShadowChangeSet(results[0], results[1])[0]
@@ -333,6 +339,8 @@ class ConaryFacade(object):
 
     def _findPackageInGroups(self, groupList, packageName):
         repos = self._getRepositoryClient()
+        groupList = [ (str(x[0]), str(x[1]), self._getFlavor(x[2]))
+                      for x in groupList ]
         results = repos.findTroves(None, groupList, None)
         troveTups = list(itertools.chain(*results.itervalues()))
         if not troveTups:
