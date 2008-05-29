@@ -391,7 +391,7 @@ class ConaryFacade(object):
         sourceState = conaryState.getSourceState()
 
         cfg = self.getConaryConfig()
-        cfg.initializeFlavors()
+        self._initializeFlavors()
         loader = loadrecipe.RecipeLoader(recipePath, cfg=cfg,
                                      repos=repos,
                                      branch=sourceState.getBranch(),
