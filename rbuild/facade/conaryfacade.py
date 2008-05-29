@@ -51,6 +51,7 @@ class ConaryFacade(object):
         """
         self._handle = handle
         self._conaryCfg = None
+        self._initializedFlavors = False
 
 #{ Private Methods
     def _parseRBuilderConfigFile(self, cfg):
@@ -62,6 +63,11 @@ class ConaryFacade(object):
         serverUrl = self._handle.getConfig().serverUrl
         if serverUrl:
             cfg.includeConfigFile(serverUrl + '/conaryrc')
+
+    def _initializeFlavors(self):
+        if not self._initializedFlavors:
+            self.getConaryConfig().initializeFlavors()
+            self._initializedFlavors = True
 
     def _getConaryClient(self):
         """
@@ -385,6 +391,7 @@ class ConaryFacade(object):
         sourceState = conaryState.getSourceState()
 
         cfg = self.getConaryConfig()
+        cfg.initializeFlavors()
         loader = loadrecipe.RecipeLoader(recipePath, cfg=cfg,
                                      repos=repos,
                                      branch=sourceState.getBranch(),
