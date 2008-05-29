@@ -104,17 +104,23 @@ class ConaryFacade(object):
         return label
 
     @staticmethod
-    def _getFlavor(flavor=None):
+    def _getFlavor(flavor=None, keepNone=False):
         """
         Converts a version string into an B{opaque} Conary flavor object
         or returns the B{opaque} flavor object.
         @param flavor: conary flavor
         @type flavor: string or B{opaque} conary.deps.deps.Flavor
+        @param keepNone: if True, leave None objects as None instead
+        of converting to empty flavor
+        @type keepNone: boolean
         @return: B{opaque} Conary flavor object
         @rtype: conary.deps.deps.Flavor
         """
         if flavor is None:
-            return(deps.Flavor())
+            if keepNone:
+                return None
+            else:
+                return(deps.Flavor())
         if type(flavor) is str:
             return deps.parseFlavor(flavor)
         return flavor
@@ -130,8 +136,10 @@ class ConaryFacade(object):
         @param flavor: flavor of package to find (optional)
         @type flavor: string or C{deps.Flavor} B{opaque}
         @param labelPath: label(s) to find package on
-        @type labelPath: None, conary.versions.Label, or list of conary.versions.Label
-        @type allowMissing: if True, allow None as a return value if the package
+        @type labelPath: None, conary.versions.Label, or list of
+        conary.versions.Label
+        @param allowMissing: if True, allow None as a return value if 
+        the package
         was not found.
         @return: C{(name, version, flavor)} tuple.
         Note that C{version} and C{flavor} objects are B{opaque}.
@@ -339,7 +347,8 @@ class ConaryFacade(object):
 
     def _findPackageInGroups(self, groupList, packageName):
         repos = self._getRepositoryClient()
-        groupList = [ (str(x[0]), str(x[1]), self._getFlavor(x[2]))
+        groupList = [ (str(x[0]), str(x[1]), self._getFlavor(x[2],
+                                                             keepNone=True))
                       for x in groupList ]
         results = repos.findTroves(None, groupList, None)
         troveTups = list(itertools.chain(*results.itervalues()))
