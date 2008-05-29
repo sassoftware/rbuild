@@ -107,9 +107,10 @@ class Edit(pluginapi.Plugin):
         if not upstreamLatest:
             raise errors.RbuildError(
                         'cannot shadow %s: no upstream binary' % packageName)
-        name, version = upstreamLatest[0:2]
+        name, version, flavor = upstreamLatest
         currentLabel = self.handle.getProductStore().getActiveStageLabel()
-        self.handle.facade.conary.shadowSource(name, version, currentLabel)
+        self.handle.facade.conary.shadowSourceForBinary(name, version, flavor,
+                                                        currentLabel)
         self.checkoutPackage(packageName)
 
     def newPackage(self, packageName):
