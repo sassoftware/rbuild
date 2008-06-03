@@ -20,6 +20,7 @@ the core API item by which consumers of the python API call the plugins
 that implement rBuild functionality, and by which plugins communicate
 with each other.
 """
+from conary.lib import log
 
 from rbuild import errors
 from rbuild import rbuildcfg
@@ -67,7 +68,12 @@ class RbuildHandle(object):
             # E1101: Instance of 'RbuildHandle' has no 'Product' member
             # Product is a required builtin plugin.
             # pylint: disable-msg=E1101
-            productStore = self.Product.getDefaultProductStore()
+            if hasattr(self, 'Product'):
+                productStore = self.Product.getDefaultProductStore()
+            else:
+                log.warning('Product plugin not loaded - check'
+                            ' pluginDirs setting')
+                productStore = None
         self._productStore = productStore
 
     def getConfig(self):
@@ -128,6 +134,7 @@ class CommandManager(object):
 
     def getCommandClass(self, name):
         """
+            @param name: command name as specified on the command line
             @return: commandClass that matches the given command line command.
         """
         return self._commands[name]

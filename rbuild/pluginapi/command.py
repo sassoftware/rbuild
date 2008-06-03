@@ -49,6 +49,8 @@ class BaseCommand(command.AbstractCommand):
                                     "Read PATH config file", "PATH"),
             'skip-default-config': (VERBOSE_HELP,
                                     "Don't read default configs"),
+            'quiet'              : (VERBOSE_HELP,
+                                    "Quiet operation, intended for scripting"),
             'verbose'            : (VERBOSE_HELP,
                                     "Display more detailed information where"
                                     " available") }
@@ -58,16 +60,20 @@ class BaseCommand(command.AbstractCommand):
         Called by C{AbstractCommand}, this sets up default commands
         handled by all rbuild commands.  To extend this in a plugin,
         do::
-            argDef = {}
-            BaseCommand.addParameters(self, argDef)
-            argDef['localflag'] = command.NO_PARAM
-            argDef['localarg'] = command.ONE_PARAM
+            def addParameters(self, argDef):
+                BaseCommand.addParameters(self, argDef)
+                argDef['localflag'] = command.NO_PARAM
+                argDef['localarg'] = command.ONE_PARAM
+        The parameters will then be parsed and included in the C{argSet}o
+        provided to the plugin's C{runCommand} method.
+        @param argDef: dictionary to which command flags are added
         """
         d = {}
         d["config"] = MULT_PARAM
         d["config-file"] = MULT_PARAM
         d["skip-default-config"] = NO_PARAM
         d["verbose"] = NO_PARAM
+        d["quiet"] = NO_PARAM
         argDef[self.defaultGroup] = d
 
     def processConfigOptions(self, rbuildConfig, cfgMap, argSet):
@@ -78,6 +84,10 @@ class BaseCommand(command.AbstractCommand):
         configuration items specified explicitly on the command
         line, overriding all configuration files, including any
         specified with C{--config-file}.
+        @param rbuildConfig: rbuild configuration
+        @param cfgMap: legacy option - ignore
+        @param argSet: dictionary of option : value mapping based on options
+        passed in at the command line.
         """ 
 
         configFileList = argSet.pop('config-file', [])
@@ -85,10 +95,25 @@ class BaseCommand(command.AbstractCommand):
         for path in configFileList:
             rbuildConfig.read(path, exception=True)
 
+        command.AbstractCommand.processConfigOptions(self, rbuildConfig,
+                                                     cfgMap, argSet)
+        rbuildConfig.quiet = argSet.pop('quiet', False)
         if argSet.pop('verbose', False):
             log.setVerbosity(log.DEBUG)
-        return command.AbstractCommand.processConfigOptions(self, rbuildConfig,
-                                                            cfgMap, argSet)
+        self.processLocalConfigOptions(rbuildConfig, argSet)
+
+    def processLocalConfigOptions(self, rbuildConfig, argSet):
+        """
+        Stub method for doing special handling of arguments in plugins,
+        particularly arguments that affect C{rbuildConfig} or that
+        require default handling.
+        @param rbuildConfig: current rbuilder configuration
+        @type rbuildConfig: C{rbuildcfg.RbuildConfiguration}
+        @param argSet: flags passed to the command
+        @type argSet: dict
+        """
+        # W0221: unused variables: Expected unused variables in a stub method.
+        #pylint: disable-msg=W0221
 
     def runCommand(self, handle, argSet, args):
         """
@@ -123,6 +148,11 @@ class CommandWithSubCommands(BaseCommand):
             cls._subCommands = {}
         cls._subCommands[name] = subCommandClass
 
+    def addParameters(self, argDef):
+        BaseCommand.addParameters(self, argDef)
+        for cls in self._subCommands.values():
+            cls().addParameters(argDef)
+
     @classmethod
     def getSubCommandClass(cls, name):
         """
@@ -149,4 +179,4 @@ class CommandWithSubCommands(BaseCommand):
         if commandName not in self._subCommands:
             return self.usage()
         subCommandClass = self._subCommands[commandName]
-        return subCommandClass().runCommand(handle, argSet, args[2:])
+        return subCommandClass().runCommand(handle, argSet, args[1:])

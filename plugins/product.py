@@ -90,24 +90,53 @@ class DirectoryBasedProductStore(object):
     def setActiveStageName(self, stageName):
         self._currentStage = stageName
 
-    def iterPackageDirsInStage(self, stageName = None):
+    def getEditedRecipeDicts(self, stageName = None):
         """
-        Iterator which yields directory names containing Conary
-        source checkouts for a specified stage (the default stage
-        if not otherwise specified).
         @param stageName: (None) Stage name to inspect relative to the
         currentp product.
         @type stageName: string
-        @return: iterator returning strings with directory names
+        @return: Tuple of two C{dicts} containing, a mapping from package name
+        to recipe path and a mapping from group name to recipe path.
         """
+        packageDict = {}
+        groupDict = {}
+        conaryFacade = self._handle.facade.conary
         if stageName is None:
             stageName = self.getActiveStageName()
         if stageName is not None:
-            for dirName in os.listdir('%s/%s' %(
-                                      self._baseDirectory, stageName)):
-                packageDir = ('%s/%s' %(dirName, 'CONARY'))
-                if os.path.exists(packageDir):
-                    yield dirName
+            stageDir = '%s/%s' % (self._baseDirectory, stageName)
+            for dirName in os.listdir(stageDir):
+                packageDir = '%s/%s' % (stageDir, dirName)
+                if os.path.exists(packageDir + '/CONARY'):
+                    packageName = conaryFacade.getNameForCheckout(packageDir)
+                    recipePath = '%s/%s.recipe' % (packageDir,
+                                                   packageName)
+                    if conaryFacade.isGroupName(packageName):
+                        groupDict[packageName] = recipePath
+                    else:
+                        packageDict[packageName] =  recipePath
+        return packageDict, groupDict
+
+    def getGroupFlavors(self):
+        product = self.get()
+        groupFlavors = [ (str(x.getBuildImageGroup()),
+                          str(x.getBuildBaseFlavor()))
+                         for x in product.getBuildDefinitions() ]
+        fullFlavors = self._handle.facade.conary._overrideFlavors(
+                                             str(product.getBaseFlavor()),
+                                             [x[1] for x in groupFlavors])
+        fullFlavors = [ self._addInExtraFlavor(x) for x in fullFlavors ]
+        return [(x[0][0], x[1]) for x in zip(groupFlavors, fullFlavors)]
+
+    def _addInExtraFlavor(self, flavor):
+        majorArch = self._handle.facade.conary._getFlavorArch(flavor)
+        if majorArch == 'x86':
+            extraFlavor = '~!grub.static is: x86(~i486,~i586,~i686,~cmov)'
+        else:
+            extraFlavor = ('~grub.static is: x86_64'
+                           ' x86(~i486,~i586,~i686,~cmov)')
+        return self._handle.facade.conary._overrideFlavors(flavor,
+                                                           [extraFlavor])[0]
 
     def getRmakeConfigPath(self):
         return self._baseDirectory + '/RBUILD/rmakerc'

@@ -18,7 +18,8 @@ a C{conarycfg} object.
 import os
 
 from conary.lib import cfg
-from conary.lib.cfgtypes import CfgString, CfgPathList, CfgDict
+from conary.lib.cfgtypes import CfgString, CfgPathList, CfgBool
+from conary.conarycfg import CfgRepoMap
 
 from rmake.build.buildcfg import CfgUser
 
@@ -36,7 +37,8 @@ class RbuildConfiguration(cfg.ConfigFile):
     pluginDirs           = (CfgPathList, ['/usr/share/rbuild/plugins',
                                           '~/.rbuild/plugins.d'])
     rmakeUrl             = CfgString
-    repositoryMap        = CfgDict(CfgString)
+    repositoryMap        = CfgRepoMap
+    quiet                = (CfgBool, False)
 
     def __init__(self, readConfigFiles=False, ignoreErrors=False, root=''):
         cfg.ConfigFile.__init__(self)
@@ -49,6 +51,8 @@ class RbuildConfiguration(cfg.ConfigFile):
         """
         Populate this configuration object with data from all
         standard locations for rbuild configuration files.
+        @param root: if specified, search for config file under the given
+        root instead of on the base system.  Useful for testing.
         """
         self.read(root + '/etc/rbuildrc', exception=False)
         if os.environ.has_key("HOME"):

@@ -23,12 +23,15 @@ import copy
 import itertools
 import os
 import stat
+import types
 
 from conary import conarycfg
 from conary import conaryclient
+from conary.conaryclient import cmdline
 from conary import checkin
 from conary.deps import deps
 from conary import state
+from conary import trove
 from conary import updatecmd
 from conary import versions
 from conary.lib import util
@@ -91,8 +94,8 @@ class ConaryFacade(object):
         @return: B{opaque} Conary version object
         @rtype: conary.versions.Version
         """
-        if type(version) is str:
-            return versions.VersionFromString(version)
+        if isinstance(version, types.StringTypes):
+            return versions.VersionFromString(str(version))
         return version
 
     @staticmethod
@@ -105,8 +108,8 @@ class ConaryFacade(object):
         @return: B{opaque} Conary label object
         @rtype: conary.versions.Label
         """
-        if type(label) is str:
-            return versions.Label(label)
+        if isinstance(label, types.StringTypes):
+            return versions.Label(str(label))
         return label
 
     @staticmethod
@@ -127,9 +130,30 @@ class ConaryFacade(object):
                 return None
             else:
                 return(deps.Flavor())
-        if type(flavor) is str:
-            return deps.parseFlavor(flavor)
+        if isinstance(flavor, types.StringTypes):
+            return deps.parseFlavor(str(flavor), raiseError=True)
         return flavor
+
+    def _findTroves(self, specList, labelPath=None,
+                    allowMissing=False):
+        newSpecList = []
+        specMap = {}
+        for spec in specList:
+            if not isinstance(spec, tuple):
+                newSpec = cmdline.parseTroveSpec(spec)
+            else:
+                newSpec = spec
+            newSpecList.append(newSpec)
+            specMap[newSpec] = spec
+        repos = self._getRepositoryClient()
+        if isinstance(labelPath, (tuple, list)):
+            labelPath = [ self._getLabel(x) for x in labelPath ]
+        elif labelPath:
+            labelPath = self._getLabel(labelPath)
+
+        results = repos.findTroves(labelPath, newSpecList,
+                                   allowMissing=allowMissing)
+        return dict((specMap[x[0]], x[1]) for x in results.items())
 
     def _findTrove(self, name, version, flavor=None, labelPath=None,
                    allowMissing=False):
@@ -368,9 +392,9 @@ class ConaryFacade(object):
 
         troves = repos.getTroves(troveTups, withFiles=False)
         matchingTroveList = []
-        for trove in troves:
-            for troveTup in trove.iterTroveList(weakRefs=True,
-                                                strongRefs=True):
+        for trv in troves:
+            for troveTup in trv.iterTroveList(weakRefs=True,
+                                              strongRefs=True):
                 if troveTup[0] == packageName:
                     matchingTroveList.append(troveTup)
         return matchingTroveList
@@ -380,9 +404,14 @@ class ConaryFacade(object):
         return [ str(deps.overrideFlavor(baseFlavor, self._getFlavor(x)))
                  for x in flavorList ]
 
+    def _getFlavorArch(self, flavor):
+        flavor = self._getFlavor(flavor)
+        return deps.getMajorArch(flavor)
+
     def _getShortFlavorDescriptors(self, flavorList):
-        return deps.getShortFlavorDescriptors(
+        descriptions = deps.getShortFlavorDescriptors(
                                   [ self._getFlavor(x) for x in flavorList ])
+        return dict((str(x[0]), x[1]) for x in descriptions.items())
 
     def _loadRecipeClassFromCheckout(self, recipePath):
         repos =  self._getRepositoryClient()
@@ -422,7 +451,12 @@ class ConaryFacade(object):
                     log.warning("cannot remove %s: %s" % (path, e.strerror))
         conaryState.write('CONARY')
 
+    def getNameForCheckout(self, checkoutDir):
+        conaryState = state.ConaryStateFromFile(checkoutDir + '/CONARY')
+        return conaryState.getSourceState().getName().split(':', 1)[0]
 
+    def isGroupName(self, packageName):
+        return trove.troveIsGroup(packageName)
 
 #pylint: disable-msg=C0103,R0901,W0221,R0904
 # "The creature can't help its ancestry"
