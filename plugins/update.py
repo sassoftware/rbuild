@@ -75,7 +75,7 @@ class Update(pluginapi.Plugin):
         """
         if os.path.exists('CONARY'):
             self.updateCurrentDirectory()
-        elif os.path.exists('RBUILD'):
+        elif os.path.exists('.rbuild'):
             self.handle.getProductStore().update()
         else:
             self.updateCurrentStage()

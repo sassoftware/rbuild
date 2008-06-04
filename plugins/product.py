@@ -23,7 +23,7 @@ class Product(pluginapi.Plugin):
     def getDefaultProductStore(self):
         curDir = os.getcwd()
         stageName = None
-        while not os.path.exists(curDir + '/RBUILD') and curDir != '/':
+        while not os.path.exists(curDir + '/.rbuild') and curDir != '/':
             if stageName is None and os.path.exists(curDir + '/.stage'):
                 # found our current stage; might have been called
                 # from a stage directory or a package directory
@@ -53,9 +53,9 @@ class DirectoryBasedProductStore(object):
         @param baseDirectory: name of product directory
         @type baseDirectory: string
         @raise errors.rRbuildError: If no product checkout exists in an
-        RBUILD directory under the product directory
+        .rbuild directory under the product directory
         """
-        if not os.path.exists(baseDirectory + '/RBUILD/product-definition.xml'):
+        if not os.path.exists(baseDirectory + '/.rbuild/product-definition.xml'):
             raise errors.RbuildError(
                             'No product checkout at %r' % baseDirectory)
 
@@ -70,11 +70,11 @@ class DirectoryBasedProductStore(object):
         # After an update, expire any cache
         self._proddef = None
         return self._handle.facade.conary.updateCheckout(
-            self._baseDirectory+'/RBUILD')
+            self._baseDirectory+'/.rbuild')
 
     def get(self):
         if self._proddef is None:
-            path = self._baseDirectory + '/RBUILD/product-definition.xml'
+            path = self._baseDirectory + '/.rbuild/product-definition.xml'
             self._proddef = proddef.ProductDefinition(fromStream=open(path))
         return self._proddef
 
@@ -139,4 +139,4 @@ class DirectoryBasedProductStore(object):
                                                            [extraFlavor])[0]
 
     def getRmakeConfigPath(self):
-        return self._baseDirectory + '/RBUILD/rmakerc'
+        return self._baseDirectory + '/.rbuild/rmakerc'

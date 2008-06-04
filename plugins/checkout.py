@@ -94,7 +94,7 @@ class Checkout(pluginapi.Plugin):
             if not os.path.exists(checkoutDir):
                 util.mkdirChain(checkoutDir)
 
-        targetDir = checkoutDir + '/RBUILD'
+        targetDir = checkoutDir + '/.rbuild'
         self.handle.facade.conary.checkout('product-definition', version,
                                            targetDir=targetDir)
         productStore = self.handle.Product.getProductStoreFromDirectory(
@@ -107,7 +107,7 @@ class Checkout(pluginapi.Plugin):
                 raise errors.RbuildError(
                                 'Directory %r already exists.' % checkoutDir)
             os.rename(tempDir, checkoutDir)
-            targetDir = checkoutDir + '/RBUILD'
+            targetDir = checkoutDir + '/.rbuild'
 
         stages = product.getStages()
         for stage in stages:
