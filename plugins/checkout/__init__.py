@@ -23,20 +23,20 @@ from rbuild import errors
 from rbuild import pluginapi
 from rbuild.pluginapi import command
 
-from rbuild_plugins.edit import derive
+from rbuild_plugins.checkout import derive
 
 #TODO: separate out determining what checkout to get from actually creating
 # that checkout to allow for other interfaces
 
-class EditCommand(command.BaseCommand):
+class CheckoutCommand(command.BaseCommand):
     """
-    Creates a checkout of the package, creating it the package if necessary.
+    Creates a checkout of the package, creating a new package if necessary.
 
     If an upstream version of the package is available, then the user must
     specify whether the upstream version should be shadowed, derived, or
     a new package should be created.
     """
-    commands = ['edit']
+    commands = ['checkout']
     docs = {'derive' : "Create a derived package based on an upstream one",
             'shadow' : "Create a shadowed package based on an upstream one",
             'new' : ("Create a new version of the package regardless of"
@@ -53,40 +53,41 @@ class EditCommand(command.BaseCommand):
         derive = argSet.pop('derive', False)
         new = argSet.pop('new', False)
         shadow = argSet.pop('shadow', False)
-        self.runEditCommand(handle, packageName, new=new, shadow=shadow,
+        self.runCheckoutCommand(handle, packageName, new=new, shadow=shadow,
                             derive=derive)
 
-    def runEditCommand(self, handle, packageName, new=False, shadow=False, 
+    def runCheckoutCommand(self, handle, packageName, new=False, shadow=False, 
                        derive=False):
         if [new, shadow, derive].count(True) > 1:
             raise errors.ParseError(
-                'Only one of new, derive, or shadow may be specified')
+                'Only one of --new, --derive, or --shadow may be specified')
         if new:
-            return handle.Edit.newPackage(packageName)
+            return handle.Checkout.newPackage(packageName)
         elif shadow:
-            return handle.Edit.shadowPackage(packageName)
+            return handle.Checkout.shadowPackage(packageName)
         elif derive:
-            return handle.Edit.derivePackage(packageName)
+            return handle.Checkout.derivePackage(packageName)
         else:
-            return handle.Edit.editPackage(packageName)
+            return handle.Checkout.checkoutPackageDefault(packageName)
 
-class Edit(pluginapi.Plugin):
-    name = 'edit'
+class Checkout(pluginapi.Plugin):
+    name = 'checkout'
 
     def registerCommands(self):
-        self.handle.Commands.registerCommand(EditCommand)
+        self.handle.Commands.registerCommand(CheckoutCommand)
 
-    def editPackage(self, packageName):
+    def checkoutPackageDefault(self, packageName):
         existingPackage = self._getExistingPackage(packageName)
         if existingPackage:
             return self.checkoutPackage(packageName)
         upstreamLatest = self._getUpstreamPackage(packageName)
         if upstreamLatest:
-            raise errors.RbuildError('An upstream version of this package'
-                                     ' exists.  Please specify whether you'
-                                     ' would like to shadow this package,'
-                                     ' derive from it, or replace it with'
-                                     ' a new version')
+            raise errors.RbuildError('\n'.join((
+                    'The upstream source provides a version of this package.',
+                    'Please specify:',
+                    '  --shadow to shadow this package',
+                    '  --derive to derive from it',
+                    '  --new to replace it with a new version')))
         self.newPackage(packageName)
 
 
