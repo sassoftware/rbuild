@@ -22,13 +22,13 @@ from conary.lib import log
 
 def derive(handle, troveToDerive):
     """
-        Performs all the commands necessary to create a derived recipe.
-        First it shadows the package, then it creates a checkout of the shadow
-        and converts the checkout to a derived recipe package.
+    Performs all the commands necessary to create a derived recipe.
+    First it shadows the package, then it creates a checkout of the shadow
+    and converts the checkout to a derived recipe package.
 
-        @param handle: rbuild handle containing information about the
-        active stage.
-        @param troveToDerive: troveTuple of binary which we wish to derive
+    @param handle: rbuild handle containing information about the
+    active stage.
+    @param troveToDerive: troveTuple of binary which we wish to derive
     """
 
     targetLabel = handle.getProductStore().getActiveStageLabel()
@@ -71,8 +71,36 @@ class %(className)s(DerivedPackageRecipe):
     version = '%(version)s'
 
     def setup(r):
-        pass
+        '''
+        In this recipe, you can make modifications to the package,
+        starting with the contents of the parent (upstream) package.
+        When this package is built, it starts with the contents
+        of the parent package unpacked in %%(builddir)s, and you
+        can modify those contents, deleting or modifying existing
+        files.  You can also build new sources and add additional
+        files to the package.
 
+        Examples:
+
+        # This appliance has high-memory-use PHP scripts
+        r.Replace('memory_limit = 8M', 'memory_limit = 32M', '/etc/php.ini')
+
+        # This appliance uses PHP as a command interpreter but does
+        # not include a web server, so remove the file that creates
+        # a dependency on the web server
+        r.Remove('/etc/httpd/conf.d/php.conf')
+
+        # This appliance requires that a few binaries be replaced
+        # with binaries built from a custom archive that includes
+        # a Makefile that honors the DESTDIR variable for its
+        # install target.
+        r.addArchive('foo.tar.gz')
+        r.Make()
+        r.MakeInstall()
+
+        # This appliance requires an extra configuration file
+        r.Create('/etc/myconfigfile', contents='some data')
+        '''
 """ % dict(className=recipeClass.__name__,
            name=recipeClass.name,
            version=recipeClass.version)
