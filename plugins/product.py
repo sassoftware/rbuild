@@ -45,19 +45,19 @@ class DirectoryBasedProductStore(object):
         self._baseDirectory = os.path.realpath(baseDirectory)
         self._currentStage = None
         self._proddef = None
-        self._testProductCheckout(baseDirectory)
+        self._testProductDirectory(baseDirectory)
 
-    def _testProductCheckout(self, baseDirectory):
+    def _testProductDirectory(self, baseDirectory):
         """
-        Test to see whether a product checkout exists
+        Test to see whether a product directory has been checked out
         @param baseDirectory: name of product directory
         @type baseDirectory: string
-        @raise errors.rRbuildError: If no product checkout exists in an
-        .rbuild directory under the product directory
+        @raise errors.rRbuildError: If no product directory is checked out
+        in an .rbuild directory under the product directory
         """
         if not os.path.exists(baseDirectory + '/.rbuild/product-definition.xml'):
             raise errors.RbuildError(
-                            'No product checkout at %r' % baseDirectory)
+                            'No product directory at %r' % baseDirectory)
 
     def getBaseDirectory(self):
         return self._baseDirectory

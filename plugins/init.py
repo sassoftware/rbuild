@@ -12,7 +12,7 @@
 # full details.
 #
 """
-Checkout command and related utilities.
+init command and related utilities.
 """
 import os
 import tempfile
@@ -25,49 +25,49 @@ from rbuild import errors
 from rbuild import pluginapi
 from rbuild.pluginapi import command
 
-class CheckoutCommand(command.BaseCommand):
+class InitCommand(command.BaseCommand):
     """
     Creates a working directory for working with the given product.
 
     Parameters: (repository namespace shortname version|label)
 
-    Example: checkout foresight.rpath.org fl prod 2
+    Example: C{rbuild init foresight.rpath.org fl prod 2}
     Assuming that there were a product defined at
     foresight.rpath.org@fl:prod-2, this would create a product
     subdirectory tree representing the contents of that product
     definition.
     """
 
-    commands = ['checkout']
+    commands = ['init']
 
     def runCommand(self, handle, _, args):
         if len(args) == 3:
             label, = self.requireParameters(args, ['label'])[1:]
-            self._checkoutByLabelCommand(handle, label)
+            self._initByLabelCommand(handle, label)
         else:
             params = self.requireParameters(args, ['repository', 'namespace',
                                                    'shortname', 'version'])
             repository, namespace, shortname, version = params[1:]
-            self._checkoutCommand(handle, repository, namespace, shortname, version)
+            self._initCommand(handle, repository, namespace, shortname, version)
 
     @staticmethod
-    def _checkoutByLabelCommand(handle, label):
-        version = handle.Checkout.getProductVersionByLabel(label)
-        handle.Checkout.createProductCheckout(version)
+    def _initByLabelCommand(handle, label):
+        version = handle.Init.getProductVersionByLabel(label)
+        handle.Init.createProductDirectory(version)
         return 0
 
     @staticmethod
-    def _checkoutCommand(handle, repository, namespace, shortname, version):
-        version = handle.Checkout.getProductVersionByParts(
+    def _initCommand(handle, repository, namespace, shortname, version):
+        version = handle.Init.getProductVersionByParts(
                                 repository, namespace, shortname, version)
-        handle.Checkout.createProductCheckout(version)
+        handle.Init.createProductDirectory(version)
         return 0
 
-class Checkout(pluginapi.Plugin):
-    name = 'checkout'
+class Init(pluginapi.Plugin):
+    name = 'init'
 
     def registerCommands(self):
-        self.handle.Commands.registerCommand(CheckoutCommand)
+        self.handle.Commands.registerCommand(InitCommand)
 
     def getProductVersionByParts(self, repository, namespace, shortname, version):
         prodDef = proddef.ProductDefinition()
@@ -85,35 +85,35 @@ class Checkout(pluginapi.Plugin):
                                         str(label))[1]
         return str(version)
 
-    def createProductCheckout(self, version, checkoutDir=None):
-        if checkoutDir is None:
-            checkoutDir = tempfile.mkdtemp(dir=os.getcwd())
-            tempDir = checkoutDir
+    def createProductDirectory(self, version, productDir=None):
+        if productDir is None:
+            productDir = tempfile.mkdtemp(dir=os.getcwd())
+            tempDir = productDir
         else:
             tempDir = None
-            if not os.path.exists(checkoutDir):
-                util.mkdirChain(checkoutDir)
+            if not os.path.exists(productDir):
+                util.mkdirChain(productDir)
 
-        targetDir = checkoutDir + '/.rbuild'
+        targetDir = productDir + '/.rbuild'
         self.handle.facade.conary.checkout('product-definition', version,
                                            targetDir=targetDir)
         productStore = self.handle.Product.getProductStoreFromDirectory(
-                                                                checkoutDir)
+                                                                productDir)
         product = productStore.get()
         if tempDir:
-            checkoutDir = product.getProductShortname()
-            if os.path.exists(checkoutDir):
+            productDir = product.getProductShortname()
+            if os.path.exists(productDir):
                 util.rmtree(tempDir)
                 raise errors.RbuildError(
-                                'Directory %r already exists.' % checkoutDir)
-            os.rename(tempDir, checkoutDir)
-            targetDir = checkoutDir + '/.rbuild'
+                                'Directory %r already exists.' % productDir)
+            os.rename(tempDir, productDir)
+            targetDir = productDir + '/.rbuild'
 
         stages = product.getStages()
         for stage in stages:
-            stageDir = checkoutDir + '/' + stage.name
+            stageDir = productDir + '/' + stage.name
             os.mkdir(stageDir)
             open(stageDir + '/.stage', 'w').write(stage.name + '\n')
         self.handle.getConfig().writeToFile(targetDir + '/rbuildrc')
-        return self.handle.Product.getProductStoreFromDirectory(checkoutDir)
+        return self.handle.Product.getProductStoreFromDirectory(productDir)
 

@@ -21,7 +21,7 @@ from rbuild import pluginapi
 
 class UpdateCommand(pluginapi.command.BaseCommand):
     """
-    Updates source checkouts
+    Updates source directories
     """
     commands = ['update']
     def runCommand(self, handle, _, args):
@@ -70,8 +70,8 @@ class Update(pluginapi.Plugin):
 
     def updateByCurrentDirectory(self):
         """
-        Update whatever checkout is appropriate for the current
-        directory.
+        Update whatever source checkout directory is appropriate for
+        the current directory.
         """
         if os.path.exists('CONARY'):
             self.updateCurrentDirectory()
