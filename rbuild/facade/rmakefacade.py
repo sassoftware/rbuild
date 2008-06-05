@@ -197,5 +197,14 @@ class RmakeFacade(object):
         else:
             for buildTrove in job2.iterTroves():
                 job1.addBuildTrove(buildTrove)
+            job1Configs = job1.getConfigDict()
+            job2Configs = job2.getConfigDict()
+            for context, config in job1Configs.iteritems():
+                if context in job2Configs:
+                    config.buildTroveSpecs.extend(
+                                    job2Configs[context].buildTroveSpecs)
+            prebuiltBinaries = set(job1.getMainConfig().prebuiltBinaries
+                                    +   job2.getMainConfig().prebuiltBinaries)
+            job1.getMainConfig().prebuiltBinaries = list(prebuiltBinaries)
         job1.getMainConfig().primaryTroves = list(job2.iterTroveList(True))
         return job1
