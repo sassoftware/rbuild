@@ -12,23 +12,12 @@
 # full details.
 #
 from rbuild import errors
+from rbuild_plugins.build import groups
 
 from conary.lib import log
 
 def createRmakeJobForPackages(handle, packageList):
-    allRecipes = handle.getProductStore().getEditedRecipeDicts()
-    packageRecipes, groupRecipes = allRecipes
-    packageRecipes = dict(x for x in packageRecipes.items() 
-                          if x[0] in packageList)
-    if len(packageRecipes) < len(packageList):
-        notFound = set(packageList) - set(packageRecipes)
-        raise errors.RbuildError(
-            'the following packages'
-            ' were not found: %s' % ', '.join(sorted(notFound)))
-    assert(len(packageRecipes) == len(packageList))
-    mainJob = _getJobBasedOnProductGroups(handle, groupRecipes)
-    # overlay the main job with the recipes that are checked out.
-    return _addInEditedPackages(handle, mainJob, packageRecipes)
+    return _createRmakeJobForPackages(handle, packageList)
 
 def createRmakeJobForAllPackages(handle):
     """
@@ -39,50 +28,28 @@ def createRmakeJobForAllPackages(handle):
     as a build dependency.
     @param handle: rbuild handle
     """
+    return _createRmakeJobForPackages(handle)
+
+def _createRmakeJobForPackages(handle, packageList=None):
     allRecipes = handle.getProductStore().getEditedRecipeDicts()
     packageRecipes, groupRecipes = allRecipes
-
-    if not packageRecipes:
+    if packageList is not None:
+        packageRecipes = dict(x for x in packageRecipes.items() 
+                              if x[0] in packageList)
+        if len(packageRecipes) < len(packageList):
+            notFound = set(packageList) - set(packageRecipes)
+            raise errors.RbuildError(
+                'the following packages'
+                ' were not found: %s' % ', '.join(sorted(notFound)))
+        assert(len(packageRecipes) == len(packageList))
+    elif not packageRecipes:
         raise errors.RbuildError(
                 'no packages are currently being edited - nothing to build')
 
-    mainJob = _getJobBasedOnProductGroups(handle, groupRecipes)
+    mainJob = groups._getJobBasedOnProductGroups(handle, groupRecipes,
+                                                 recurse=True)
     # overlay the main job with the recipes that are checked out.
     return _addInEditedPackages(handle, mainJob, packageRecipes)
-
-def _getJobBasedOnProductGroups(handle, groupRecipes):
-    groupFlavors = handle.getProductStore().getGroupFlavors()
-    if not (groupFlavors or groupRecipes):
-        return None
-    contextDict = handle.facade.rmake._getRmakeContexts()
-
-    groupsToFind = {}
-    recipesToBuild = []
-    for groupName, flavor in groupFlavors:
-        context = contextDict[flavor]
-        if groupName in groupRecipes:
-            # build recipe instead of whatever is in the repository
-            recipesToBuild.append(groupRecipes[groupName] + '{%s}' % context)
-        else:
-            groupsToFind.setdefault(
-                    (groupName + ':source', None, None), []).append(context)
-
-    label = handle.getProductStore().getActiveStageLabel()
-    results = handle.facade.conary._findTroves(groupsToFind.keys(), label,
-                                               allowMissing=True)
-    groupsToBuild = []
-    for groupSpec in results.keys():
-        for context in groupsToFind[groupSpec]:
-            groupName = groupSpec[0].split(':')[0]
-            groupsToBuild.append('%s{%s}' % (groupName, context))
-    groupsToBuild += recipesToBuild
-
-    if groupsToBuild:
-        job = handle.facade.rmake.createBuildJobForStage(groupsToBuild,
-                                                         recurse=True)
-        return job
-    else:
-        return None
 
 def _addInEditedPackages(handle, mainJob, packageRecipes):
     # remove packages from the main job that were going to be built from

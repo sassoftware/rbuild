@@ -15,7 +15,7 @@
 from rbuild import pluginapi
 from rbuild.pluginapi import command
 
-from rbuild_plugins.buildpackages import packages
+from rbuild_plugins.build import packages
 
 class BuildPackagesCommand(command.BaseCommand):
     docs = {'no-watch' : 'do not watch the job after starting the build',
@@ -36,9 +36,9 @@ class BuildPackagesCommand(command.BaseCommand):
         else:
             jobId = handle.BuildPackages.buildPackages(packageList)
         if watch and commit:
-            handle.BuildPackages.watchAndCommitJob(jobId)
+            handle.Build.watchAndCommitJob(jobId)
         elif watch:
-            handle.BuildPackages.watchJob(jobId)
+            handle.Build.watchJob(jobId)
 
 
 class BuildPackages(pluginapi.Plugin):
@@ -60,9 +60,3 @@ class BuildPackages(pluginapi.Plugin):
 
     def createJobForPackages(self, packageList):
         return packages.createRmakeJobForPackages(self.handle, packageList)
-
-    def watchAndCommitJob(self, jobId):
-        return self.handle.facade.rmake.watchAndCommitJob(jobId)
-
-    def watchJob(self, jobId):
-        return self.handle.facade.rmake.watchJob(jobId)
