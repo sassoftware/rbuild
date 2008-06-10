@@ -27,6 +27,7 @@ from rbuild import rbuildcfg
 from rbuild.internal import pluginloader
 import rbuild.facade.conaryfacade
 import rbuild.facade.rmakefacade
+import rbuild.facade.rbuilderfacade
 
 class _Facade(object):
     """
@@ -57,6 +58,7 @@ class RbuildHandle(object):
         self.facade = _Facade()
         self.facade.conary = rbuild.facade.conaryfacade.ConaryFacade(self)
         self.facade.rmake = rbuild.facade.rmakefacade.RmakeFacade(self)
+        self.facade.rbuilder = rbuild.facade.rbuilderfacade.RbuilderFacade(self)
         # C0103: bad variable name.  We want this variable to match the
         # convention of variables accessible from the handle.  Like a plugin,
         # which is available under its class name, the commands are available
