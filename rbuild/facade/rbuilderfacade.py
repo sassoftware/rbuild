@@ -85,8 +85,9 @@ class RbuilderClient(object):
         # W0612: leave unused variables as documentation
         # W0631: versionId is guaranteed to be defined
         #pylint: disable-msg=W0612,W0631
-        for versionId, productId2, versionName2, desc  in versionList:
+        for versionId2, productId2, versionName2, desc  in versionList:
             if versionName == versionName2:
+                versionId = versionId2
                 break
         if versionId is None:
             raise errors.RbuildError(
