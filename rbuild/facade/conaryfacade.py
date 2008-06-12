@@ -279,6 +279,37 @@ class ConaryFacade(object):
         """
         checkin.updateSrc(self._getRepositoryClient(), [targetDir])
 
+    def getCheckoutStatus(self, targetDir):
+        """
+        Create summary of changes regarding all files in a directory
+        as a list of C{(I{status}, I{filename})} tuples where
+        C{I{status}} is a single character describing the status
+        of the file C{I{filename}}:
+        - C{?}: File not managed by Conary
+        - C{A}: File added since last commit (or since package created if no commit)
+        - C{M}: File modified since last commit
+        - C{R}: File removed since last commit
+        @param targetDir: name of directory for which to fetch status.
+        @type targetDir: string
+        @rtype: list
+        """
+        return checkin.generateStatus(self._getRepositoryClient(), dirName=targetDir)
+
+    def iterCheckoutLog(self, targetDir, newerOnly=False):
+        """
+        Yields lines of log messages relative to the specified
+        targetDirectory.
+        @param targetDir: name of directory for which to fetch status.
+        @type targetDir: string
+        @param newerOnly: (C{False}) whether to return only log messages
+        newer than the current contents of the checkout.
+        @type newerOnly: bool
+        """
+        for message in checkin.iterLog(self._getRepositoryClient(),
+                                       newer=newerOnly, dirName=targetDir):
+            yield message
+        
+
     def createNewPackage(self, package, label):
         """
         Create a subdirectory containing files to initialize a new
