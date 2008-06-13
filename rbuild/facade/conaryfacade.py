@@ -39,6 +39,8 @@ from conary.lib import log
 
 from conary.build import loadrecipe
 
+from rbuild import errors
+
 
 class ConaryFacade(object):
     """
@@ -133,6 +135,12 @@ class ConaryFacade(object):
         if isinstance(flavor, types.StringTypes):
             return deps.parseFlavor(str(flavor), raiseError=True)
         return flavor
+
+    def _findTrovesFlattened(self, specList, labelPath=None,
+                             allowMissing=False):
+        results = self._findTroves(specList, labelPath=labelPath, 
+                                   allowMissing=allowMissing)
+        return list(itertools.chain(*results.values()))
 
     def _findTroves(self, specList, labelPath=None,
                     allowMissing=False):
@@ -457,6 +465,23 @@ class ConaryFacade(object):
 
     def isGroupName(self, packageName):
         return trove.troveIsGroup(packageName)
+
+    def promoteGroups(self, groupList, fromLabel, toLabel):
+        fromLabel = self._getLabel(fromLabel)
+        toLabel = self._getLabel(toLabel)
+        client = self._getConaryClient()
+        success, cs = client.createSiblingCloneChangeSet({fromLabel:toLabel},
+                                                         groupList,
+                                                         cloneSources=True)
+        if not success:
+            raise errors.RbuildError('Promote failed.')
+        else:
+            packageList = [ x.getNewNameVersionFlavor()
+                           for x in cs.iterNewTroveList() ]
+            packageList = [ (str(x[0]), str(x[1]), str(x[2])) 
+                            for x in packageList ]
+            self._getRepositoryClient().commitChangeSet(cs)
+            return packageList
 
 #pylint: disable-msg=C0103,R0901,W0221,R0904
 # "The creature can't help its ancestry"

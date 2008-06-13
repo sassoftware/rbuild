@@ -55,7 +55,8 @@ class DirectoryBasedProductStore(object):
         @raise errors.rRbuildError: If no product directory is checked out
         in an .rbuild directory under the product directory
         """
-        if not os.path.exists(baseDirectory + '/.rbuild/product-definition.xml'):
+        if not os.path.exists(
+                            baseDirectory + '/.rbuild/product-definition.xml'):
             raise errors.RbuildError(
                             'No product directory at %r' % baseDirectory)
 
@@ -80,6 +81,13 @@ class DirectoryBasedProductStore(object):
 
     def iterStageNames(self):
         return (x.name for x in self.get().getStages())
+
+    def getNextStageName(self, stageName):
+        stageNames = list(self.iterStageNames())
+        stageIdx = stageNames.index(stageName)
+        if stageIdx + 1 == len(stageNames):
+            return None
+        return stageNames[stageIdx + 1]
 
     def getActiveStageName(self):
         return self._currentStage
