@@ -20,21 +20,57 @@ from rbuild import pluginapi
 
 class Product(pluginapi.Plugin):
 
+    def getDefaultProductDirectory(self, dirName=None):
+        """
+        Starting at the current directory, look up the directory tree
+        for a product checkout.
+        @param dirName: (current working directory) Optional directory name
+        to search
+        @return: directory name, or C{None} if no checkout found.
+        @rtype: str
+        """
+        if not dirName:
+            dirName = os.getcwd()
+        while not os.path.exists(dirName + '/.rbuild') and dirName != '/':
+            dirName = os.path.dirname(dirName)
+        if dirName == '/':
+            dirName = None
+        return dirName
+
     def getDefaultProductStore(self):
-        curDir = os.getcwd()
-        stageName = None
-        while not os.path.exists(curDir + '/.rbuild') and curDir != '/':
-            if stageName is None and os.path.exists(curDir + '/.stage'):
-                # found our current stage; might have been called
-                # from a stage directory or a package directory
-                stageName = open('.stage').read(1024).split('\n', 1)[0]
-            curDir = os.path.dirname(curDir)
-        if curDir == '/':
+        """
+        Returns a product store object corresponding to the current directory
+        @return: product store, or None if no checkout found.
+        """
+        productDirectory = self.getDefaultProductDirectory()
+        if productDirectory is None:
             return None
-        productStore =  self.getProductStoreFromDirectory(curDir)
+        productStore =  self.getProductStoreFromDirectory(productDirectory)
+        stageName = self.getStageName(os.getcwd())
         if stageName is not None:
             productStore.setActiveStageName(stageName)
         return productStore
+
+    def getStageName(self, dirName):
+        '''
+        Returns the stage name associated with a directory, or None if
+        no stage is found above the current directory.
+        @param dirName: name of directory to search
+        @return: name of stage, or None
+        @rtype: str
+        '''
+        stageName = None
+        dirName = os.path.abspath(dirName)
+        while (stageName is None and not os.path.exists(dirName + '/.rbuild')
+               and dirName != '/'):
+            stageCandidate = dirName + '/.stage'
+            if os.path.exists(stageCandidate):
+                # found our current stage; might have been called
+                # from a stage directory or a package directory
+                stageName = open(stageCandidate).read(1024).split('\n', 1)[0]
+                break
+            dirName = os.path.dirname(dirName)
+        return stageName
 
     def getProductStoreFromDirectory(self, directoryName):
         return DirectoryBasedProductStore(self.handle, directoryName)
@@ -63,6 +99,9 @@ class DirectoryBasedProductStore(object):
     def getBaseDirectory(self):
         return self._baseDirectory
 
+    def getProductDefinitionDirectory(self):
+        return self._baseDirectory+'/.rbuild'
+
     def update(self):
         """
         This is the only acceptable way to update a product definition
@@ -71,7 +110,7 @@ class DirectoryBasedProductStore(object):
         # After an update, expire any cache
         self._proddef = None
         return self._handle.facade.conary.updateCheckout(
-            self._baseDirectory+'/.rbuild')
+            self.getProductDefinitionDirectory())
 
     def get(self):
         if self._proddef is None:
@@ -147,4 +186,4 @@ class DirectoryBasedProductStore(object):
                                                            [extraFlavor])[0]
 
     def getRmakeConfigPath(self):
-        return self._baseDirectory + '/.rbuild/rmakerc'
+        return self.getProductDefinitionDirectory() + '/rmakerc'
