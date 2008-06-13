@@ -55,13 +55,13 @@ class Status(pluginapi.Plugin):
         dirName = os.path.abspath(dirName)
         productDir = self.handle.Product.getDefaultProductDirectory(dirName)
         if not productDir:
-            raise errors.RbuildError('could not find product for directory %s',
-                dirName)
+            raise errors.RbuildError('could not find product for directory %s'
+                % dirName)
         product = self.handle.Product.getProductStoreFromDirectory(productDir)
         self.printProductStatus(product)
         self._printOneDirectoryStatus(dirName)
         for dirpath, dirnames, _ in os.walk(dirName):
-            for oneDir in dirnames:
+            for oneDir in sorted(dirnames):
                 if oneDir == '.rbuild':
                     continue
                 self._printOneDirectoryStatus(os.path.join(dirpath, oneDir))
