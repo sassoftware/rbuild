@@ -20,6 +20,9 @@ from rbuild import pluginapi
 from rbuild.pluginapi import command
 
 class BuildCommand(command.CommandWithSubCommands):
+    """\
+    Build commands for building the various components of a product.
+    """
     commands = ['build']
 
 

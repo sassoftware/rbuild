@@ -16,6 +16,7 @@ from rbuild import pluginapi
 from rbuild.pluginapi import command
 
 class BuildImagesCommand(command.BaseCommand):
+    help = 'build images for this stage'
     docs = {'no-watch' : 'do not watch the job after starting the build' }
 
     def addParameters(self, argDef):

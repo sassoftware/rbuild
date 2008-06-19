@@ -135,6 +135,7 @@ class CommandWithSubCommands(BaseCommand):
     method.  The subCommands C{runCommand} method will be called with the
     same variables as there are in C{BaseCommand}.
     """
+    paramHelp = '<subcommand> [options]'
 
     @classmethod
     def registerSubCommand(cls, name, subCommandClass):
@@ -147,9 +148,12 @@ class CommandWithSubCommands(BaseCommand):
         if not '_subCommands' in cls.__dict__:
             cls._subCommands = {}
         cls._subCommands[name] = subCommandClass
+        subCommandClass.name = '%s %s' % (cls.commands[0], name)
 
     def addParameters(self, argDef):
         BaseCommand.addParameters(self, argDef)
+        if not getattr(self, '_subCommands', None):
+            self._subCommands = {}
         for cls in self._subCommands.values():
             cls().addParameters(argDef)
 
@@ -178,5 +182,45 @@ class CommandWithSubCommands(BaseCommand):
         commandName = args[2]
         if commandName not in self._subCommands:
             return self.usage()
-        subCommandClass = self._subCommands[commandName]
-        return subCommandClass().runCommand(handle, argSet, args[1:])
+        subCommand = self._subCommands[commandName]()
+        subCommand.setMainHandler(self.mainHandler)
+        return subCommand.runCommand(handle, argSet, args[1:])
+
+    def usage(self, rc=1):
+        if not getattr(self, '_subCommands', None):
+            self._subCommands = {}
+        commandList = sorted(self._subCommands.iteritems())
+        width = 0
+        for commandName, commandClass in commandList:
+            width = max(width, len(commandName))
+        myClass = self.__class__
+        if not myClass.description:
+            myClass.description = myClass.__doc__
+        extraDescription = '\n\nSub commands:\n'
+        for commandName, commandClass in commandList:
+            extraDescription += '     %-*s  %s\n' % (width, commandName,
+                                                        commandClass.help)
+        extraDescription += "\n(Use '%s help %s <subcommand>' for help on a subcommand)" % (self.mainHandler.name, self.commands[0])
+        self.parser = None
+        oldDescription = myClass.description
+        try:
+            myClass.description += extraDescription
+            BaseCommand.usage(self)
+        finally:
+            myClass.description = oldDescription
+
+        return rc
+
+    def subCommandUsage(self, subCommandName, errNo=1):
+        thisCommand = self._subCommands[subCommandName]()
+        thisCommand.setMainHandler(self.mainHandler)
+        params, cfgMap = thisCommand.prepare()
+        usage = '%s %s %s %s' % (self.mainHandler.name, '/'.join(self.commands),
+                                 subCommandName, thisCommand.paramHelp)
+        kwargs = self.mainHandler._getParserFlags(thisCommand)
+        kwargs['defaultGroup'] = None
+        parser = options._getParser(params, {}, usage=usage, **kwargs)
+        parser.print_help()
+        if log.getVerbosity() > log.INFO:
+            print '(Use --verbose to get a full option listing)'
+        return errNo

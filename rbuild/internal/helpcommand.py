@@ -35,7 +35,7 @@ class HelpCommand(BaseCommand):
         # W0613: unused variables handle, argSet.  This is expected.
         #pylint: disable-msg=W0613
         command, subCommands = self.requireParameters(args, allowExtra=True,
-                                                      maxExtra=1)
+                                                      maxExtra=2)
         if subCommands:
             command = subCommands[0]
             commands = self.mainHandler.getSupportedCommands()
@@ -43,7 +43,10 @@ class HelpCommand(BaseCommand):
                 print "%s: no such command: '%s'" % (self.mainHandler.name,
                                                      command)
                 sys.exit(1)
-            commands[command].usage()
+            if len(subCommands) == 2:
+                commands[command].subCommandUsage(subCommands[1])
+            else:
+                commands[command].usage()
             return 0
         else:
             self.mainHandler.usage(showAll=True)

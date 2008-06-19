@@ -18,8 +18,20 @@ from rbuild.pluginapi import command
 from rbuild_plugins.build import packages
 
 class BuildPackagesCommand(command.BaseCommand):
+    """\
+    Builds or rebuilds the packages listed or all checked out packages if
+    none are specified.
+
+    Additionally rebuilds any other packages in the product group that
+    depend on the built packages.
+    """
+
     docs = {'no-watch' : 'do not watch the job after starting the build',
             'no-commit' : 'do not automatically commit successful builds',}
+
+    paramHelp = '[package]*'
+    help = 'build edited packages for this stage'
+
 
     def addParameters(self, argDef):
         argDef['no-watch'] = command.NO_PARAM

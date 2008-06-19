@@ -20,6 +20,7 @@ from rbuild_plugins.build import groups
 class BuildGroupsCommand(command.BaseCommand):
     docs = {'no-watch' : 'do not watch the job after starting the build',
             'no-commit' : 'do not automatically commit successful builds',}
+    help = 'build groups for this stage'
 
     def addParameters(self, argDef):
         argDef['no-watch'] = command.NO_PARAM
