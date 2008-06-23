@@ -69,7 +69,8 @@ class Init(pluginapi.Plugin):
     def registerCommands(self):
         self.handle.Commands.registerCommand(InitCommand)
 
-    def getProductVersionByParts(self, repository, namespace, shortname, version):
+    def getProductVersionByParts(self, repository, namespace,
+                                 shortname, version):
         prodDef = proddef.ProductDefinition()
         prodDef.setConaryRepositoryHostname(repository)
         prodDef.setConaryNamespace(namespace)
@@ -91,10 +92,9 @@ class Init(pluginapi.Plugin):
             tempDir = productDir
         else:
             tempDir = None
-            if not os.path.exists(productDir):
-                util.mkdirChain(productDir)
+        util.mkdirChain(productDir + '/.rbuild')
 
-        targetDir = productDir + '/.rbuild'
+        targetDir = productDir + '/.rbuild/product-definition'
         self.handle.facade.conary.checkout('product-definition', version,
                                            targetDir=targetDir)
         productStore = self.handle.Product.getProductStoreFromDirectory(
@@ -107,13 +107,13 @@ class Init(pluginapi.Plugin):
                 raise errors.RbuildError(
                                 'Directory %r already exists.' % productDir)
             os.rename(tempDir, productDir)
-            targetDir = productDir + '/.rbuild'
+            targetDir = productDir + '/.rbuild/product-definition'
 
         stages = product.getStages()
         for stage in stages:
             stageDir = productDir + '/' + stage.name
             os.mkdir(stageDir)
             open(stageDir + '/.stage', 'w').write(stage.name + '\n')
-        self.handle.getConfig().writeToFile(targetDir + '/rbuildrc')
+        self.handle.getConfig().writeToFile(productDir + '/.rbuild/rbuildrc')
         return self.handle.Product.getProductStoreFromDirectory(productDir)
 

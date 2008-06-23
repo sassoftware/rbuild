@@ -63,6 +63,7 @@ class Status(pluginapi.Plugin):
         for dirpath, dirnames, _ in os.walk(dirName):
             for oneDir in sorted(dirnames):
                 if oneDir == '.rbuild':
+                    dirnames.remove('.rbuild')
                     continue
                 self._printOneDirectoryStatus(os.path.join(dirpath, oneDir))
 

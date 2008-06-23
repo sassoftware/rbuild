@@ -23,6 +23,8 @@ import os
 
 from rmake.build import buildcfg
 from rmake.cmdline import helper
+from rmake.cmdline import query
+from rmake import plugins
 
 class RmakeFacade(object):
     """
@@ -40,6 +42,7 @@ class RmakeFacade(object):
         self._handle = handle
         self._rmakeConfig = None
         self._rmakeConfigWithContexts = None
+        self._plugins = None
 
     def _getRmakeConfig(self, useCache=True):
         """
@@ -61,10 +64,22 @@ class RmakeFacade(object):
         baseFlavor = conaryFacade._getFlavor(product.getBaseFlavor())
         rmakeConfigPath = productStore.getRmakeConfigPath()
 
+        rbuildConfig = self._handle.getConfig()
+        if not self._plugins:
+            p = plugins.PluginManager(rbuildConfig.rmakePluginDirs, ['test'])
+            p.loadPlugins()
+            p.callLibraryHook('library_preInit')
+            self._plugins = p
+
+
         cfg = buildcfg.BuildConfiguration(False)
         cfg.resolveTrovesOnly = True
         cfg.shortenGroupFlavors = True
         cfg.ignoreExternalRebuildDeps = True
+        if self._handle.getConfig().rmakePluginDirs:
+            cfg.pluginDirs = self._handle.getConfig().rmakePluginDirs
+
+
 
         cfg.buildLabel = stageLabel
         cfg.installLabelPath = [ stageLabel ]
@@ -75,7 +90,6 @@ class RmakeFacade(object):
                             for x in upstreamSources]
         cfg.resolveTroves = [upstreamSources]
 
-        rbuildConfig = self._handle.getConfig()
         cfg.repositoryMap = rbuildConfig.repositoryMap
         #E1101: Instance of 'BuildConfiguration' has no 'user' member - untrue
         #pylint: disable-msg=E1101
@@ -91,18 +105,19 @@ class RmakeFacade(object):
 
         if useCache:
             self._rmakeConfig = cfg
+
         return cfg
 
     def _getRmakeConfigWithContexts(self):
         """
         Returns an rmake configuration file that matches the product associated
-        with the current handle.  Beyond the settings provided in _getRmakeConfig,
-        this rmake configuration will have contexts set up that match the flavors
-        required by the product's build definitions for building packages for
-        those build definitions.
+        with the current handle.  Beyond the settings provided in 
+        _getRmakeConfig, this rmake configuration will have contexts set up 
+        that match the flavors required by the product's build definitions 
+        for building packages for those build definitions.
         @return: rMake configuration object suitable for use with the current
-        product, and a dictionary of {flavor : contextName} lists that match the
-        flavors in the current product's build definitions.
+        product, and a dictionary of {flavor : contextName} lists that match 
+        the flavors in the current product's build definitions.
         """
 
         if self._rmakeConfigWithContexts:
@@ -128,7 +143,7 @@ class RmakeFacade(object):
         flavors in the current product's build definitions.
         """
         cfg, contextDict = self._getRmakeConfigWithContexts()
-        client = helper.rMakeHelper(buildConfig=cfg)
+        client = helper.rMakeHelper(buildConfig=cfg, plugins=self._plugins)
         return client, contextDict
 
     def _getRmakeContexts(self):
@@ -189,6 +204,10 @@ class RmakeFacade(object):
         client = self._getRmakeHelper()
         client.watch(jobId, showTroveLogs=True, showBuildLogs=True)
 
+    def displayJob(self, jobId, troveList=None, showLogs=False):
+        client = self._getRmakeHelper()
+        query.displayJobInfo(client, jobId, troveList, showLogs=showLogs,
+                             displayTroves=True)
 
     @staticmethod
     def overlayJob(job1, job2):

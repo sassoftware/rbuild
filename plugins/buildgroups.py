@@ -50,11 +50,15 @@ class BuildGroups(pluginapi.Plugin):
 
     def buildAllGroups(self):
         job = self.createJobForAllGroups()
-        return self.handle.facade.rmake.buildJob(job)
+        jobId = self.handle.facade.rmake.buildJob(job)
+        self.handle.getProductStore().setGroupJobId(jobId)
+        return jobId
 
     def buildGroups(self, groupList):
         job = self.createJobForGroups(groupList)
-        return self.handle.facade.rmake.buildJob(job)
+        jobId = self.handle.facade.rmake.buildJob(job)
+        self.handle.getProductStore().setGroupJobId(jobId)
+        return jobId
 
     def createJobForAllGroups(self):
         return groups.createRmakeJobForAllGroups(self.handle)

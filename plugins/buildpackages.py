@@ -61,11 +61,15 @@ class BuildPackages(pluginapi.Plugin):
 
     def buildAllPackages(self):
         job = self.createJobForAllPackages()
-        return self.handle.facade.rmake.buildJob(job)
+        jobId = self.handle.facade.rmake.buildJob(job)
+        self.handle.getProductStore().setPackageJobId(jobId)
+        return jobId
 
     def buildPackages(self, packageList):
         job = self.createJobForPackages(packageList)
-        return self.handle.facade.rmake.buildJob(job)
+        jobId = self.handle.facade.rmake.buildJob(job)
+        self.handle.getProductStore().setPackageJobId(jobId)
+        return jobId
 
     def createJobForAllPackages(self):
         return packages.createRmakeJobForAllPackages(self.handle)

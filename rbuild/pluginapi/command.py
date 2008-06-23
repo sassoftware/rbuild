@@ -196,11 +196,15 @@ class CommandWithSubCommands(BaseCommand):
         myClass = self.__class__
         if not myClass.description:
             myClass.description = myClass.__doc__
+        if myClass.description is None:
+            myClass.description = ''
         extraDescription = '\n\nSub commands:\n'
         for commandName, commandClass in commandList:
             extraDescription += '     %-*s  %s\n' % (width, commandName,
                                                         commandClass.help)
-        extraDescription += "\n(Use '%s help %s <subcommand>' for help on a subcommand)" % (self.mainHandler.name, self.commands[0])
+        extraDescription += ("\n(Use '%s help %s <subcommand>'"
+                             "for help on a subcommand)" \
+                             % (self.mainHandler.name, self.commands[0]))
         self.parser = None
         oldDescription = myClass.description
         try:
@@ -214,7 +218,7 @@ class CommandWithSubCommands(BaseCommand):
     def subCommandUsage(self, subCommandName, errNo=1):
         thisCommand = self._subCommands[subCommandName]()
         thisCommand.setMainHandler(self.mainHandler)
-        params, cfgMap = thisCommand.prepare()
+        params, _ = thisCommand.prepare()
         usage = '%s %s %s %s' % (self.mainHandler.name, '/'.join(self.commands),
                                  subCommandName, thisCommand.paramHelp)
         kwargs = self.mainHandler._getParserFlags(thisCommand)

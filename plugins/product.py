@@ -13,6 +13,9 @@
 #
 import os
 
+from conary.lib import cfg
+from conary.lib import cfgtypes
+
 from rpath_common.proddef import api1 as proddef
 
 from rbuild import errors
@@ -91,8 +94,9 @@ class DirectoryBasedProductStore(object):
         @raise errors.rRbuildError: If no product directory is checked out
         in an .rbuild directory under the product directory
         """
-        if not os.path.exists(
-                            baseDirectory + '/.rbuild/product-definition.xml'):
+        productDefPath = (baseDirectory +
+                          '/.rbuild/product-definition/product-definition.xml')
+        if not os.path.exists(productDefPath):
             raise errors.RbuildError(
                             'No product directory at %r' % baseDirectory)
 
@@ -100,7 +104,7 @@ class DirectoryBasedProductStore(object):
         return self._baseDirectory
 
     def getProductDefinitionDirectory(self):
-        return self._baseDirectory+'/.rbuild'
+        return self._baseDirectory + '/.rbuild/product-definition'
 
     def update(self):
         """
@@ -114,7 +118,8 @@ class DirectoryBasedProductStore(object):
 
     def get(self):
         if self._proddef is None:
-            path = self._baseDirectory + '/.rbuild/product-definition.xml'
+            path = (self.getProductDefinitionDirectory()
+                    + '/product-definition.xml')
             self._proddef = proddef.ProductDefinition(fromStream=open(path))
         return self._proddef
 
@@ -185,5 +190,42 @@ class DirectoryBasedProductStore(object):
         return self._handle.facade.conary._overrideFlavors(flavor,
                                                            [extraFlavor])[0]
 
+    def getRbuildConfigPath(self):
+        return self.getProductDefinitionDirectory() + '/rbuildrc'
+
     def getRmakeConfigPath(self):
         return self.getProductDefinitionDirectory() + '/rmakerc'
+
+    def getStatusStore(self):
+        return StatusStore(self.getBaseDirectory() + '/.rbuild/status')
+
+    def getPackageJobId(self):
+        return self.getStatusStore().packageJobId
+
+    def getGroupJobId(self):
+        return self.getStatusStore().groupJobId
+
+    def setPackageJobId(self, jobId):
+        statusStore = self.getStatusStore()
+        statusStore.setValue('packageJobId', jobId)
+        statusStore.save()
+
+
+    def setGroupJobId(self, jobId):
+        statusStore = self.getStatusStore()
+        statusStore.setValue('groupJobId', jobId)
+        statusStore.save()
+
+
+class StatusStore(cfg.ConfigFile):
+
+    packageJobId  = cfgtypes.CfgInt
+    groupJobId  = cfgtypes.CfgInt
+
+    def __init__(self, baseFile):
+        cfg.ConfigFile.__init__(self)
+        self.read(baseFile, exception=False)
+        self._baseFile = baseFile
+
+    def save(self):
+        self.writeToFile(self._baseFile)
