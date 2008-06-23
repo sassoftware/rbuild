@@ -77,6 +77,8 @@ class RbuildHandle(object):
                             ' pluginDirs setting')
                 productStore = None
         self._productStore = productStore
+        if productStore is not None:
+            self._cfg.read(productStore.getRbuildConfigPath(), exception=False)
 
     def getConfig(self):
         """
