@@ -34,7 +34,8 @@ include-ids=yes
 [MESSAGES CONTROL]
 # R0201: method could be a function
 # R0903: Too few public methods
-disable-msg=W0142,I0011,R0201,R0903
+# C0111: Missing docstring
+disable-msg=W0142,I0011,R0201,R0903,C0111,W0212
 
 [MASTER]
 load-plugins=pylint_plugins.epydoc_checker
