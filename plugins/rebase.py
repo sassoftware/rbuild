@@ -12,7 +12,7 @@
 # full details.
 #
 """
-status command and related utilities.
+rebase command and related utilities.
 """
 from rbuild.pluginapi import command
 from rbuild import pluginapi
