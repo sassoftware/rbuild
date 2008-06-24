@@ -183,15 +183,15 @@ class DirectoryBasedProductStore(object):
     def _addInExtraFlavor(self, flavor):
         majorArch = self._handle.facade.conary._getFlavorArch(flavor)
         if majorArch == 'x86':
-            extraFlavor = '~!grub.static is: x86(~i486,~i586,~i686,~cmov)'
+            extraFlavor = '~!grub.static is: x86(~i486,~i586,~i686,~cmov,~sse,~sse2)'
         else:
             extraFlavor = ('~grub.static is: x86_64'
-                           ' x86(~i486,~i586,~i686,~cmov)')
+                           ' x86(~i486,~i586,~i686,~cmov,~sse,~sse2)')
         return self._handle.facade.conary._overrideFlavors(flavor,
                                                            [extraFlavor])[0]
 
     def getRbuildConfigPath(self):
-        return self.getProductDefinitionDirectory() + '/rbuildrc'
+        return self.getBaseDirectory()+ '/.rbuild/rbuildrc'
 
     def getRmakeConfigPath(self):
         return self.getProductDefinitionDirectory() + '/rmakerc'

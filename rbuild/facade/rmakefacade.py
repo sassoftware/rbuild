@@ -85,7 +85,7 @@ class RmakeFacade(object):
         cfg.installLabelPath = [ stageLabel ]
         cfg.flavor = [baseFlavor]
         cfg.buildFlavor = baseFlavor
-        upstreamSources = product.getUpstreamSources()
+        upstreamSources = product.getSearchPaths()
         upstreamSources = [(x.troveName, x.label, None)
                             for x in upstreamSources]
         cfg.resolveTroves = [upstreamSources]
@@ -94,7 +94,8 @@ class RmakeFacade(object):
         #E1101: Instance of 'BuildConfiguration' has no 'user' member - untrue
         #pylint: disable-msg=E1101
         cfg.user.append((stageLabel.getHost(),) + rbuildConfig.user)
-        cfg.rmakeUrl = rbuildConfig.rmakeUrl
+        if rbuildConfig.rmakeUrl:
+            cfg.rmakeUrl = rbuildConfig.rmakeUrl
         cfg.rmakeUser = rbuildConfig.user
         cfg.name = rbuildConfig.name
         cfg.contact = rbuildConfig.contact

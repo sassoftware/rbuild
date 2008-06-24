@@ -18,8 +18,6 @@ resulting packages to the repository.
 
 import os
 
-from conary.lib import log
-
 def derive(handle, troveToDerive):
     """
     Performs all the commands necessary to create a derived recipe.
@@ -31,13 +29,14 @@ def derive(handle, troveToDerive):
     @param troveToDerive: troveTuple of binary which we wish to derive
     """
 
+    ui = handle.ui
     targetLabel = handle.getProductStore().getActiveStageLabel()
     troveName = troveToDerive[0]
     # displaying output along the screen allows there to be a record
     # of what operations were performed.  Since this command is
     # an aggregate of several commands I think that is appropriate,
     # rather than simply using a progress callback.
-    log.info('Shadowing %s=%s[%s] onto %s' % (troveToDerive[0],
+    ui.info('Shadowing %s=%s[%s] onto %s' % (troveToDerive[0],
                                              troveToDerive[1],
                                              troveToDerive[2],
                                              targetLabel))
@@ -49,21 +48,21 @@ def derive(handle, troveToDerive):
                                        targetLabel)
     troveName = troveName.split(':')[0]
     conaryFacade.checkout(troveName, targetLabel)
-    _writeDerivedRecipe(conaryFacade, troveName, directory=troveName)
+    _writeDerivedRecipe(ui, conaryFacade, troveName, directory=troveName)
 
     extractDir = '%s/%s/_ROOT_' % (os.getcwd(), troveName)
-    log.info('extracting files from %s=%s[%s]' % troveToDerive)
+    handle.ui.info('extracting files from %s=%s[%s]' % troveToDerive)
     troveName, version, flavor = troveToDerive
     conaryFacade.checkoutBinaryPackage(troveName, version, flavor,
                                        extractDir)
 
-def _writeDerivedRecipe(conaryFacade, troveName, directory):
+def _writeDerivedRecipe(ui, conaryFacade, troveName, directory):
     recipeName = troveName + '.recipe'
     recipePath = os.path.realpath(directory + '/' + recipeName)
 
-    log.info('Removing extra files from checkout')
+    ui.info('Removing extra files from checkout')
     conaryFacade._removeNonRecipeFilesFromCheckout(recipePath)
-    log.info('Rewriting recipe file')
+    ui.info('Rewriting recipe file')
     recipeClass = conaryFacade._loadRecipeClassFromCheckout(recipePath)
     derivedRecipe = """
 class %(className)s(DerivedPackageRecipe):

@@ -35,7 +35,6 @@ from conary import trove
 from conary import updatecmd
 from conary import versions
 from conary.lib import util
-from conary.lib import log
 
 from conary.build import loadrecipe
 
@@ -488,7 +487,8 @@ class ConaryFacade(object):
                     else:
                         os.unlink(path)
                 except OSError, e:
-                    log.warning("cannot remove %s: %s" % (path, e.strerror))
+                    self._handle.ui.warning(
+                                "cannot remove %s: %s", path, e.strerror)
         conaryState.write('CONARY')
 
     def getNameForCheckout(self, checkoutDir):

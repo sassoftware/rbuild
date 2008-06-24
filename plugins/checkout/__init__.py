@@ -79,7 +79,9 @@ class Checkout(pluginapi.Plugin):
     def checkoutPackageDefault(self, packageName):
         existingPackage = self._getExistingPackage(packageName)
         if existingPackage:
-            return self.checkoutPackage(packageName)
+            rc = self.checkoutPackage(packageName)
+            self.handle.ui.info('Checked out existing package %r', packageName)
+            return rc
         upstreamLatest = self._getUpstreamPackage(packageName)
         if upstreamLatest:
             raise errors.RbuildError('\n'.join((
@@ -102,6 +104,9 @@ class Checkout(pluginapi.Plugin):
             raise errors.RbuildError(
                         'cannot derive %s: no upstream binary' % packageName)
         derive.derive(self.handle, upstreamLatest)
+        self.handle.ui.info('Derived %s from %s=%s[%s].', packageName, *upstreamLatest)
+        self.handle.ui.info(
+                'Edit recipe to add changes your changes to the binary package')
 
     def shadowPackage(self, packageName):
         upstreamLatest = self._getUpstreamPackage(packageName)
@@ -113,17 +118,19 @@ class Checkout(pluginapi.Plugin):
         self.handle.facade.conary.shadowSourceForBinary(name, version, flavor,
                                                         currentLabel)
         self.checkoutPackage(packageName)
+        self.handle.ui.info('Shadowed package %r', packageName)
 
     def newPackage(self, packageName):
         currentLabel = self.handle.getProductStore().getActiveStageLabel()
         self.handle.facade.conary.createNewPackage(
                                             packageName, currentLabel)
+        self.handle.ui.info('Created new package %r', packageName)
         return
 
 
     def _getUpstreamPackage(self, packageName):
         product = self.handle.getProductStore().get()
-        upstreamSources = product.getUpstreamSources()
+        upstreamSources = product.getSearchPaths()
         upstreamSources = [(x.troveName, x.label, None)
                             for x in upstreamSources]
         troveList =  self.handle.facade.conary._findPackageInGroups(

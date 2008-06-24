@@ -14,8 +14,6 @@
 from rbuild import errors
 from rbuild_plugins.build import groups
 
-from conary.lib import log
-
 def createRmakeJobForPackages(handle, packageList):
     return _createRmakeJobForPackages(handle, packageList)
 
@@ -60,7 +58,8 @@ def _addInEditedPackages(handle, mainJob, packageRecipes):
         # if we don't find a match in a group, that means no one has
         # told us what flavor to build this package with.  We'll build it
         # once per context we know about.
-        log.warning('the following edited packages were not in any groups'
+        handle.ui.warning(
+                    'the following edited packages were not in any groups'
                     ' or have not been committed yet - building with default'
                     ' flavors: %s' % ', '.join(sorted(newRecipeDict.keys())))
         contextDict = handle.facade.rmake._getRmakeContexts()

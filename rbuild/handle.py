@@ -20,10 +20,9 @@ the core API item by which consumers of the python API call the plugins
 that implement rBuild functionality, and by which plugins communicate
 with each other.
 """
-from conary.lib import log
-
 from rbuild import errors
 from rbuild import rbuildcfg
+from rbuild import ui
 from rbuild.internal import pluginloader
 import rbuild.facade.conaryfacade
 import rbuild.facade.rmakefacade
@@ -65,6 +64,7 @@ class RbuildHandle(object):
         # under handle.Commands.
         # pylint: disable-msg=C0103
         self.Commands = CommandManager()
+        self.ui = ui.UserInterface(self._cfg)
 
         if productStore is None:
             # E1101: Instance of 'RbuildHandle' has no 'Product' member
@@ -73,8 +73,8 @@ class RbuildHandle(object):
             if hasattr(self, 'Product'):
                 productStore = self.Product.getDefaultProductStore()
             else:
-                log.warning('Product plugin not loaded - check'
-                            ' pluginDirs setting')
+                self.ui.warning('Product plugin not loaded - check'
+                                ' pluginDirs setting')
                 productStore = None
         self._productStore = productStore
         if productStore is not None:
