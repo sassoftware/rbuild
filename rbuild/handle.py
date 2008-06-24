@@ -87,6 +87,8 @@ class RbuildHandle(object):
         return self._cfg
 
     def getProductStore(self):
+        if self._productStore is None:
+            raise errors.RbuildError('Could not find product definition')
         return self._productStore
 
     def installPrehook(self, apiMethod, hookFunction):
