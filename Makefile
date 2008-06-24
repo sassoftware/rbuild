@@ -45,7 +45,9 @@ clean: clean-subdirs default-clean
 doc: html
 
 html:
+	ln -fs plugins/ rbuild_plugins
 	scripts/generate_docs.sh
+	rm -f rbuild_plugins
 
 dist:
 	if ! grep "^Changes in $(VERSION)" NEWS > /dev/null 2>&1; then \
