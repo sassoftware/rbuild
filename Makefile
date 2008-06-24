@@ -34,7 +34,7 @@ extra_files = \
 
 dist_files = $(extra_files)
 
-.PHONY: clean dist install subdirs
+.PHONY: clean dist install subdirs html
 
 subdirs: default-subdirs
 

@@ -23,7 +23,7 @@ from rbuild import errors
 
 class RbuilderFacade(object):
     """
-    The rBuild rMake facade.
+    The rBuild rBuilder facade.
 
     Note that the contents of objects marked as B{opaque} may vary
     according to the version of rMake and conary in use, and the contents
