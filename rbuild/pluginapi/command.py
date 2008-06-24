@@ -203,7 +203,7 @@ class CommandWithSubCommands(BaseCommand):
             extraDescription += '     %-*s  %s\n' % (width, commandName,
                                                         commandClass.help)
         extraDescription += ("\n(Use '%s help %s <subcommand>'"
-                             "for help on a subcommand)" \
+                             " for help on a subcommand)" \
                              % (self.mainHandler.name, self.commands[0]))
         self.parser = None
         oldDescription = myClass.description
