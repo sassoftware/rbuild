@@ -23,11 +23,7 @@ pyfiles-install:
 		cp -a $$f $(DESTDIR)/$(sitedir)/$(DIR)/$$f; \
 	done
 
-default-dist: dist-subdirs
-	for f in $(dist_files); do \
-		mkdir -p $(DISTDIR)/$(DIR)/`dirname $$f`; \
-		cp -a $$f $(DISTDIR)/$(DIR)/$$f; \
-	done
+default-dist:
 
 default-install:
 
@@ -53,6 +49,3 @@ ifdef SUBDIRS
 endif
 
 dist-subdirs:
-ifdef SUBDIRS
-	for d in $(SUBDIRS); do make -C $$d DIR=$(DIR)/$$d dist || exit 1; done
-endif

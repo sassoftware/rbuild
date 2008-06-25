@@ -18,7 +18,6 @@ all-subdirs:
 	for d in $(MAKEALLSUBDIRS); do make -C $$d DIR=$$d || exit 1; done
 
 export TOPDIR = $(shell pwd)
-export DISTDIR = $(TOPDIR)/rbuild-$(VERSION)
 
 SUBDIRS=commands rbuild plugins pylint
 MAKEALLSUBDIRS=commands rbuild plugins
@@ -58,19 +57,15 @@ dist:
 
 
 archive: $(dist_files)
-	rm -rf $(DISTDIR)
-	mkdir $(DISTDIR)
-	for d in $(SUBDIRS); do make -C $$d DIR=$$d dist || exit 1; done
-	for f in $(dist_files); do \
-		mkdir -p $(DISTDIR)/`dirname $$f`; \
-		cp -a $$f $(DISTDIR)/$$f; \
-	done; \
-	tar cjf $(DISTDIR).tar.bz2 `basename $(DISTDIR)`
+	hg archive -t tbz2 rbuild-$(VERSION).tar.bz2
 
 forcedist: archive
 
-tag:
+forcetag:
 	hg tag -f rbuild-$(VERSION)
+
+tag:
+	hg tag rbuild-$(VERSION)
 
 clean: clean-subdirs default-clean
 
