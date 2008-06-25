@@ -106,6 +106,9 @@ class DirectoryBasedProductStore(object):
     def getProductDefinitionDirectory(self):
         return self._baseDirectory + '/.rbuild/product-definition'
 
+    def getPlatformDefinitionDirectory(self):
+        return self._baseDirectory + '/.rbuild/platform-definition'
+
     def update(self):
         """
         This is the only acceptable way to update a product definition
@@ -183,7 +186,8 @@ class DirectoryBasedProductStore(object):
     def _addInExtraFlavor(self, flavor):
         majorArch = self._handle.facade.conary._getFlavorArch(flavor)
         if majorArch == 'x86':
-            extraFlavor = '~!grub.static is: x86(~i486,~i586,~i686,~cmov,~sse,~sse2)'
+            extraFlavor = ('~!grub.static'
+                           ' is: x86(~i486,~i586,~i686,~cmov,~sse,~sse2)')
         else:
             extraFlavor = ('~grub.static is: x86_64'
                            ' x86(~i486,~i586,~i686,~cmov,~sse,~sse2)')
@@ -215,6 +219,12 @@ class DirectoryBasedProductStore(object):
         statusStore = self.getStatusStore()
         statusStore.setValue('groupJobId', jobId)
         statusStore.save()
+
+    def checkoutPlatform(self):
+        platformLabel = self.get().getProductDefinitionLabel()
+        self._handle.facade.conary.checkout('platform-definition',
+                            platformLabel,
+                            targetDir=self.getPlatformDefinitionDirectory())
 
 
 class StatusStore(cfg.ConfigFile):
