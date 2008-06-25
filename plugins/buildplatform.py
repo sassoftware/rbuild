@@ -34,6 +34,9 @@ class BuildPlatform(pluginapi.Plugin):
                                         'platform', BuildPlatformCommand)
 
     def buildPlatform(self):
+        productStore = self.handle.getProductStore()
         product = self.handle.getProductStore().get()
         conaryClient = self.handle.facade.conary._getConaryClient()
         product.savePlatformToRepository(conaryClient)
+        productStore.checkoutPlatform()
+        self.handle.ui.info('New platform definition created.')

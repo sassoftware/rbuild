@@ -44,3 +44,6 @@ class Rebase(pluginapi.Plugin):
         product.rebase(conaryClient, label=label)
         product.saveToRepository(conaryClient)
         productStore.update()
+        platformSource = product.getPlatformSourceTrove()
+        self.handle.ui.info(
+         'Now using latest platform from %s' % (platformSource,))
