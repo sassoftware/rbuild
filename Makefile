@@ -57,7 +57,7 @@ dist:
 
 
 archive: $(dist_files)
-	hg archive -t tbz2 rbuild-$(VERSION).tar.bz2
+	hg archive  --exclude .hgignore -t tbz2 rbuild-$(VERSION).tar.bz2
 
 forcedist: archive
 
