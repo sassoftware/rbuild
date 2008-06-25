@@ -12,7 +12,7 @@
 # full details.
 #
 """
-status command and related utilities.
+watch command and related utilities.
 """
 from rbuild import pluginapi
 from rbuild.pluginapi import command
