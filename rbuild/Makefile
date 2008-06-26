@@ -13,9 +13,10 @@
 #
 
 python_files =  __init__.py	\
-                handle.py	\
-                errors.py	\
-                rbuildcfg.py
+                errors.py \
+                handle.py \
+                rbuildcfg.py \
+                ui.py
 
 dist_files = Makefile constants.py.in $(python_files)
 

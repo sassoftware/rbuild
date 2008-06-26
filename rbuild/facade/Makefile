@@ -12,7 +12,10 @@
 # full details.
 #
 
-python_files =  __init__.py
+python_files =  __init__.py \
+                conaryfacade.py \
+                rbuilderfacade.py \
+                rmakefacade.py
 
 
 dist_files = Makefile $(python_files)
