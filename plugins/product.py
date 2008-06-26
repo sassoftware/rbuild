@@ -165,8 +165,9 @@ class DirectoryBasedProductStore(object):
         @param stageName: (None) Stage name to inspect relative to the
         current product.
         @type stageName: string
-        @return: Tuple of two C{dicts} containing, a mapping from package name
-        to recipe path and a mapping from group name to recipe path.
+        @return: Tuple of two C{dicts}, the first containing a map
+        from package name to recipe path and the second containing
+        a map from group name to recipe path.
         """
         packageDict = {}
         groupDict = {}

@@ -103,8 +103,8 @@ class Update(pluginapi.Plugin):
         @type stageNames: list of strings
         """
         for stageName in stageNames:
-            for packageDir in self.handle.getProductStore(
-                    ).iterPackageDirsInStage(stageName):
+            for packageDir in sorted(self.handle.getProductStore(
+                    ).getEditedRecipeDicts(stageName)[0].values()):
                 self.handle.facade.conary.updateCheckout(packageDir)
 
     def updateCurrentDirectory(self):
