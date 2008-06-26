@@ -119,6 +119,13 @@ class RbuildMain(mainhandler.MainHandler):
         #pylint: disable-msg=W0221
         # runCommand is an *args, **kw method and pylint doesn't like that
         # in the override we specify these explicitly
+        cfg = self.handle.getConfig()
+        if not self.handle.Config.isComplete(cfg):
+            self.handle.Config.initializeConfig(cfg)
+        if 'stage' in argSet:
+            stageName = argSet.pop('stage')
+            productStore = self.handle.getProductStore()
+            productStore.setActiveStageName(stageName)
         return thisCommand.runCommand(self.handle, argSet, args)
 
 

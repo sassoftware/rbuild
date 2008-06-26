@@ -19,7 +19,11 @@ plugins.  It provides public methods which are only to be accessed
 via C{handle.facade.rbuilder} which is automatically available to
 all plugins through the C{handle} object.
 """
+import urllib2
+
+from rpath_common import proddef
 from rbuild import errors
+
 
 class RbuilderFacade(object):
     """
@@ -51,9 +55,24 @@ class RbuilderFacade(object):
                                              stageName)
         return buildIds
 
+    def getProductLabelFromNameAndVersion(self, productName, versionName):
+        client = self._getRbuilderClient()
+        return client.getProductLabelFromNameAndVersion(productName,
+                                                        versionName)
+
     def watchImages(self, buildIds):
         client = self._getRbuilderClient()
         client.watchImages(buildIds)
+
+    def validateUrl(self, serverUrl):
+        try:
+            urllib2.urlopen(serverUrl).read(1024)
+        except Exception, err:
+            self._handle.ui.write('Error contacting \'%s\': %s', serverUrl, err)
+            return False
+        return True
+
+
 
 class RbuilderClient(object):
     def __init__(self, rbuilderUrl, user, pw):
@@ -71,6 +90,31 @@ class RbuilderClient(object):
             self.server = m2xmlrpclib.ServerProxy(rbuilderUrl)
         else:
             self.server = xmlrpclib.ServerProxy(rbuilderUrl)
+
+    def getProductLabelFromNameAndVersion(self, productName, versionName):
+        error, productId = self.server.getProjectIdByHostname(productName)
+        if error:
+            raise errors.RbuildError(*productId)
+        error, versionList = self.server.getProductVersionListForProduct(
+                                                                    productId)
+        if error:
+            raise errors.RbuildError(*versionList)
+
+        versionId = None
+        # W0612: leave unused variables as documentation
+        # W0631: versionId is guaranteed to be defined
+        #pylint: disable-msg=W0612,W0631
+        for (versionId2, productId2,
+             namespace, versionName2, desc)  in versionList:
+            if versionName == versionName2:
+                versionId = versionId2
+                break
+        error, stream = self.server.getProductDefinitionForVersion(versionId)
+        if error:
+            raise errors.RbuildError(*versionInfo)
+        product = proddef.ProductDefinition(stream)
+        return product.getProductDefinitionLabel()
+
 
     def startProductBuilds(self, productName, versionName, stageName):
         error, productId = self.server.getProjectIdByHostname(productName)

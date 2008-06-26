@@ -36,14 +36,15 @@ class CheckoutCommand(command.BaseCommand):
     specify whether the upstream version should be shadowed, derived, or
     a new package should be created.
     """
+    help = 'checkout packages and groups for editing'
+
     commands = ['checkout']
     docs = {'derive' : "Create a derived package based on an upstream one",
             'shadow' : "Create a shadowed package based on an upstream one",
             'new' : ("Create a new version of the package regardless of"
                      " whether an upstream one exists") }
 
-    def addParameters(self, argDef):
-        command.BaseCommand.addParameters(self, argDef)
+    def addLocalParameters(self, argDef):
         argDef['derive'] = command.NO_PARAM
         argDef['shadow'] = command.NO_PARAM
         argDef['new']    = command.NO_PARAM

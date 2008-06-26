@@ -91,6 +91,9 @@ class RbuildHandle(object):
             raise errors.RbuildError('Could not find product definition')
         return self._productStore
 
+    def setProductStore(self, productStore):
+        self._productStore = productStore
+
     def installPrehook(self, apiMethod, hookFunction):
         """
         Installs a hook that will be called before the given apiMethod

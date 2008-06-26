@@ -19,7 +19,7 @@ class BuildImagesCommand(command.BaseCommand):
     help = 'build images for this stage'
     docs = {'no-watch' : 'do not watch the job after starting the build' }
 
-    def addParameters(self, argDef):
+    def addLocalParameters(self, argDef):
         argDef['no-watch'] = command.NO_PARAM
 
     #pylint: disable-msg=R0201,R0903

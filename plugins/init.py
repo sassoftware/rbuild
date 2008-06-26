@@ -45,10 +45,9 @@ class InitCommand(command.BaseCommand):
             label, = self.requireParameters(args, ['label'])[1:]
             self._initByLabelCommand(handle, label)
         else:
-            params = self.requireParameters(args, ['repository', 'namespace',
-                                                   'shortname', 'version'])
-            repository, namespace, shortname, version = params[1:]
-            self._initCommand(handle, repository, namespace, shortname, version)
+            params = self.requireParameters(args, ['repository', 'version'])
+            repository, version = params[1:]
+            self._initCommand(handle, repository, version)
 
     @staticmethod
     def _initByLabelCommand(handle, label):
@@ -57,10 +56,9 @@ class InitCommand(command.BaseCommand):
         return 0
 
     @staticmethod
-    def _initCommand(handle, repository, namespace, shortname, version):
-        version = handle.Init.getProductVersionByParts(
-                                repository, namespace, shortname, version)
-        handle.Init.createProductDirectory(version)
+    def _initCommand(handle, repository, version):
+        fullVersion = handle.Init.getProductVersionByParts(repository, version)
+        handle.Init.createProductDirectory(fullVersion)
         return 0
 
 class Init(pluginapi.Plugin):
@@ -69,14 +67,9 @@ class Init(pluginapi.Plugin):
     def registerCommands(self):
         self.handle.Commands.registerCommand(InitCommand)
 
-    def getProductVersionByParts(self, repository, namespace,
-                                 shortname, version):
-        prodDef = proddef.ProductDefinition()
-        prodDef.setConaryRepositoryHostname(repository)
-        prodDef.setConaryNamespace(namespace)
-        prodDef.setProductShortname(shortname)
-        prodDef.setProductVersion(version)
-        labelStr = prodDef.getProductDefinitionLabel()
+    def getProductVersionByParts(self, repository, version):
+        labelStr = self.handle.facade.rbuilder.getProductLabelFromNameAndVersion(
+                                                        repository, version)
         return self.getProductVersionByLabel(labelStr)
 
     def getProductVersionByLabel(self, label):

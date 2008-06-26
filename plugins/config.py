@@ -11,16 +11,23 @@
 # or fitness for a particular purpose. See the Common Public License for
 # full details.
 #
+import os
 
 from rbuild import pluginapi
 from rbuild.pluginapi import command
 
 class ConfigCommand(command.BaseCommand):
     commands = ['config']
+    def addLocalParameters(self, argSet):
+        argSet['ask'] = command.NO_PARAM
+
     def runCommand(self, handle, argSet, args):
         # W0613: Unused variables
         # pylint: disable-msg=W0613
-        handle.Config.displayConfig()
+        if argSet.pop('ask', False):
+            handle.Config.updateConfig()
+        else:
+            handle.Config.displayConfig()
 
 
 class Config(pluginapi.Plugin):
@@ -43,3 +50,57 @@ class Config(pluginapi.Plugin):
         cfg.setDisplayOptions(hidePasswords=hidePasswords,
                               prettyPrint=prettyPrint)
         cfg.display()
+
+    def isComplete(self, cfg):
+        for cfgItem in ['serverUrl', 'name', 'contact']:
+            if not cfg[cfgItem]:
+                return False
+        return True
+
+    def initializeConfig(self, cfg=None):
+        if cfg is None:
+            cfg = self.handle.getConfig()
+        ui = self.handle.ui
+        ui.write('''\
+'********************************************************
+Welcome to rBuild!  Your configuration is incomplete.
+Please answer the following questions to begin using rBuild:
+''')
+
+        self.updateConfig(cfg)
+
+        ui.write("rBuild configuration complete.  To rerun this"
+                 " configuration test run rbuild config --ask,"
+                 " or simply edit ~/.rbuildrc.")
+        ui.write('')
+        ui.write("You should now begin working with a product by running"
+                   " 'rbuild init <short anme> <version>'")
+
+    def updateConfig(self, cfg=None):
+        if cfg is None:
+            cfg = self.handle.getConfig()
+        ui = self.handle.ui
+        validateUrl = self.handle.facade.rbuilder.validateUrl
+        cfg.serverUrl = ui.getResponse('URL to use to contact rBuilder'
+                                       ' (start with http:// or https://)',
+                                       validationFn=validateUrl,
+                                       default=cfg.serverUrl)
+        ui.write('rBuilder contacted ok.')
+        if cfg.user:
+            defaultUser = cfg.user[0]
+            defaultPassword = cfg.user[1]
+        else:
+            defaultUser = defaultPassword = None
+
+        user =  ui.getResponse('Your rbuilder user name',
+                               default=defaultUser)
+        passwd = ui.getPassword('Your rbuilder password',
+                                default=defaultPassword)
+        cfg.user = (user, passwd)
+        cfg.name = ui.getResponse('Name to display when committing',
+                                  default=cfg.name)
+        cfg.contact = ui.getResponse('Contact - usually email or url',
+                                     default=cfg.contact)
+        if 'HOME' in os.environ:
+            cfg.writeToFile(os.environ['HOME'] + '/.rbuildrc')
+

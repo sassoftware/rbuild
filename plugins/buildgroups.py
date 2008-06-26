@@ -22,7 +22,7 @@ class BuildGroupsCommand(command.BaseCommand):
             'no-commit' : 'do not automatically commit successful builds',}
     help = 'build groups for this stage'
 
-    def addParameters(self, argDef):
+    def addLocalParameters(self, argDef):
         argDef['no-watch'] = command.NO_PARAM
         argDef['no-commit'] = command.NO_PARAM
 

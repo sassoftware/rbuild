@@ -137,13 +137,28 @@ class DirectoryBasedProductStore(object):
         return stageNames[stageIdx + 1]
 
     def getActiveStageName(self):
+        if self._currentStage is None:
+            raise errors.RbuildError('Please specify a stage.')
         return self._currentStage
 
     def getActiveStageLabel(self):
-        return self.get().getLabelForStage(self._currentStage)
+        return self.get().getLabelForStage(self.getActiveStageName())
 
     def setActiveStageName(self, stageName):
+        self.checkStageIsValid(stageName)
         self._currentStage = stageName
+
+    def checkStageIsValid(self, stageName):
+        stageNames = [ str(x.name) for x in self.get().getStages() ]
+        if stageName not in stageNames:
+            raise errors.RbuildError('Unknown stage %r' % stageName)
+
+    def getStageDirectory(self, stageName):
+        stageDirectory = '%s/%s' % (self._baseDirectory, stageName)
+        if not os.path.exists(stageDirectory):
+            raise errors.RbuildError('Stage directory for %r'
+                                     ' does not exist' % stageName)
+        return stageDirectory
 
     def getEditedRecipeDicts(self, stageName = None):
         """
@@ -159,7 +174,7 @@ class DirectoryBasedProductStore(object):
         if stageName is None:
             stageName = self.getActiveStageName()
         if stageName is not None:
-            stageDir = '%s/%s' % (self._baseDirectory, stageName)
+            stageDir = self.getStageDirectory(stageName)
             for dirName in os.listdir(stageDir):
                 packageDir = '%s/%s' % (stageDir, dirName)
                 if os.path.exists(packageDir + '/CONARY'):

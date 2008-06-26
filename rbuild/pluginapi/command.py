@@ -53,7 +53,9 @@ class BaseCommand(command.AbstractCommand):
                                     "Quiet operation, intended for scripting"),
             'verbose'            : (VERBOSE_HELP,
                                     "Display more detailed information where"
-                                    " available") }
+                                    " available"),
+            'stage'              : (VERBOSE_HELP, "Specify the stage to use")
+            }
 
     def addParameters(self, argDef):
         """
@@ -74,7 +76,24 @@ class BaseCommand(command.AbstractCommand):
         d["skip-default-config"] = NO_PARAM
         d["verbose"] = NO_PARAM
         d["quiet"] = NO_PARAM
+        d["stage"] = ONE_PARAM
         argDef[self.defaultGroup] = d
+        self.addLocalParameters(argDef)
+
+    def addLocalParameters(self, argDef):
+        """
+        Stub method for doing special handling of arguments in plugins.
+        Called by C{AbstractCommand}, this sets up default commands
+        handled by all rbuild commands.  To extend this in a plugin,
+        do:
+            def addLocalParameters(self, argDef):
+                argDef['localflag'] = command.NO_PARAM
+                argDef['localarg'] = command.ONE_PARAM
+
+        @param argSet: flags passed to the command
+        @type argSet: dict
+        """
+
 
     def processConfigOptions(self, rbuildConfig, cfgMap, argSet):
         """
@@ -155,7 +174,7 @@ class CommandWithSubCommands(BaseCommand):
         if not getattr(self, '_subCommands', None):
             self._subCommands = {}
         for cls in self._subCommands.values():
-            cls().addParameters(argDef)
+            cls().addLocalParameters(argDef)
 
     @classmethod
     def getSubCommandClass(cls, name):

@@ -13,6 +13,7 @@
 """
 User interface module for rbuild.
 """
+import getpass
 import sys
 
 class UserInterface(object):
@@ -37,3 +38,39 @@ class UserInterface(object):
 
     def warning(self, msg, *args):
         self.writeError(msg, *args)
+
+    def input(self, prompt):
+        try:
+            return raw_input(prompt)
+        except EOFError:
+            raise errors.RbuildError(
+                    "Ran out of input while reading for '%s'" % prompt)
+
+    def inputPassword(self, prompt):
+        return getpass.getpass(prompt)
+
+    def getPassword(self, prompt, default=None, validationFn=None):
+        return self.getResponse(prompt, default=default,
+                                validationFn=validationFn,
+                                inputFn=self.inputPassword)
+
+    def getResponse(self, prompt, default=None, validationFn=None,
+                    inputFn=None):
+        if inputFn is None:
+            inputFn = self.input
+        if default:
+            prompt += ' (Default: %s): ' % default
+        else:
+            prompt += ': '
+        while True:
+            response = inputFn(prompt)
+            if not response:
+                if not default:
+                    self.write('Empty response not allowed.')
+                    continue
+                else:
+                    return default
+            if validationFn is not None:
+                if not validationFn(response):
+                    continue
+            return response
