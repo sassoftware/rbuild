@@ -140,10 +140,7 @@ class DirectoryBasedProductStore(object):
         return self._currentStage
 
     def getActiveStageLabel(self):
-        return self.getLabelForStage(self._currentStage)
-
-    def getLabelForStage(self, stage):
-        return self.get().getLabelForStage(stage)
+        return self.get().getLabelForStage(self._currentStage)
 
     def setActiveStageName(self, stageName):
         self._currentStage = stageName
