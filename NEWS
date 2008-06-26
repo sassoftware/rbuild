@@ -1,5 +1,8 @@
-Changes in @NEW@:
-  o API changes
+Changes in 0.2:
+  o User Interface Changes:
+    * Adds configuration interactively when run for the first time.
+
+  o API Changes:
     * Low-level post hooks have been implemented, and are called
       via the handle.installPrehook() method.  A post hook can
       modify the return value from the hooked function. (RBLD-5)
