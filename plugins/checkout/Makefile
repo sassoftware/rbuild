@@ -13,39 +13,23 @@
 #
 
 plugin_files = \
-	buildgroups.py \
-	buildimages.py \
-	buildpackages.py \
-	buildplatform.py \
-	config.py \
 	__init__.py \
-	init.py \
-	product.py \
-	promote.py \
-	rebase.py \
-	showgroups.py \
-	showpackages.py \
-	show.py \
-	status.py \
-	update.py \
-	watch.py
+	derive.py
 
 dist_files = Makefile $(plugin_files)
-
-SUBDIRS = build checkout
 
 all: default-subdirs default-all
 
 install: all install-subdirs default-install
-	mkdir -p $(DESTDIR)$(plugindir)
-	cp -a $(plugin_files) $(DESTDIR)$(plugindir)
-	$(PYTHON) -c "import compileall; compileall.compile_dir('$(DESTDIR)$(plugindir)', ddir='$(plugindir)', quiet=1)"
-	$(PYTHON) -OO -c "import compileall; compileall.compile_dir('$(DESTDIR)$(plugindir)', ddir='$(plugindir)', quiet=1)"
+	mkdir -p $(DESTDIR)$(plugindir)/checkout/
+	cp -a $(plugin_files) $(DESTDIR)$(plugindir)/checkout/
+	$(PYTHON) -c "import compileall; compileall.compile_dir('$(DESTDIR)$(plugindir)/checkout', ddir='$(plugindir)/checkout', quiet=1)"
+	$(PYTHON) -OO -c "import compileall; compileall.compile_dir('$(DESTDIR)$(plugindir)/checkout', ddir='$(plugindir)/checkout', quiet=1)"
 
 dist: default-dist
 
 clean: default-clean
 
-include ../Make.rules
-include ../Make.defs
+include ../../Make.rules
+include ../../Make.defs
 # vim: set sts=8 sw=8 noexpandtab :
