@@ -140,7 +140,10 @@ class DirectoryBasedProductStore(object):
         return self._currentStage
 
     def getActiveStageLabel(self):
-        return self.get().getLabelForStage(self._currentStage)
+        return self.getLabelForStage(self._currentStage)
+
+    def getLabelForStage(self, stage):
+        return self.get().getLabelForStage(stage)
 
     def setActiveStageName(self, stageName):
         self._currentStage = stageName
@@ -148,7 +151,7 @@ class DirectoryBasedProductStore(object):
     def getEditedRecipeDicts(self, stageName = None):
         """
         @param stageName: (None) Stage name to inspect relative to the
-        currentp product.
+        current product.
         @type stageName: string
         @return: Tuple of two C{dicts} containing, a mapping from package name
         to recipe path and a mapping from group name to recipe path.
