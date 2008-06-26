@@ -116,13 +116,40 @@ class RbuildHandle(object):
             plugin = getattr(self, pluginName)
         except AttributeError:
             raise errors.InternalError(
-                    'Could not install hook %r:'
+                    'Could not install pre hook %r:'
                     ' No such plugin %r' % (hookFunction.__name__, pluginName))
         # W0212: Access to a protected member _installPrehook.  Since 
         # we're calling into plugin, whose public methods are api calls,
         # we need to do this here.
         #pylint: disable-msg=W0212
         plugin._installPrehook(methodName, hookFunction)
+
+    def installPosthook(self, apiMethod, hookFunction):
+        """
+        Installs a hook that will be called after the given apiMethod
+        is called.
+        @param apiMethod: api call to add the hook to.  This should be
+        a reference to the api object accessible from this handle.
+        @param hookFunction: a function that will be called before apiMethod.
+        The function must take the same parameters as apiMethod, except that
+        it must take a leading argument of the current return value, and
+        must return the new return value.
+        It may modify the return value, and may raise an exception,
+        though this is generally discouraged.
+        """
+        pluginName = apiMethod.im_class.__name__
+        methodName = apiMethod.im_func.__name__
+        try:
+            plugin = getattr(self, pluginName)
+        except AttributeError:
+            raise errors.InternalError(
+                    'Could not install post hook %r:'
+                    ' No such plugin %r' % (hookFunction.__name__, pluginName))
+        # W0212: Access to a protected member _installPosthook.  Since 
+        # we're calling into plugin, whose public methods are api calls,
+        # we need to do this here.
+        #pylint: disable-msg=W0212
+        plugin._installPosthook(methodName, hookFunction)
 
 class CommandManager(object):
     """

@@ -163,7 +163,7 @@ class DirectoryBasedProductStore(object):
     def getEditedRecipeDicts(self, stageName = None):
         """
         @param stageName: (None) Stage name to inspect relative to the
-        currentp product.
+        current product.
         @type stageName: string
         @return: Tuple of two C{dicts} containing, a mapping from package name
         to recipe path and a mapping from group name to recipe path.

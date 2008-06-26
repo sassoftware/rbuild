@@ -12,16 +12,33 @@
 # full details.
 #
 
-python_files = build.py	   	\
-               buildpackages.py
+plugin_files = \
+	buildgroups.py \
+	buildimages.py \
+	buildpackages.py \
+	buildplatform.py \
+	config.py \
+	__init__.py \
+	init.py \
+	product.py \
+	promote.py \
+	rebase.py \
+	showgroups.py \
+	showpackages.py \
+	show.py \
+	status.py \
+	update.py \
+	watch.py
 
-dist_files = Makefile $(python_files)
+dist_files = Makefile $(plugin_files)
 
-SUBDIRS = 
+SUBDIRS = build checkout
 
 all: default-subdirs default-all
 
-install: all install-subdirs pyfiles-install default-install
+install: all install-subdirs default-install
+	mkdir -p $(DESTDIR)$(plugindir)
+	cp -a $(plugin_files) $(DESTDIR)$(plugindir)
 	$(PYTHON) -c "import compileall; compileall.compile_dir('$(DESTDIR)$(plugindir)', ddir='$(plugindir)', quiet=1)"
 	$(PYTHON) -OO -c "import compileall; compileall.compile_dir('$(DESTDIR)$(plugindir)', ddir='$(plugindir)', quiet=1)"
 
@@ -31,3 +48,4 @@ clean: default-clean
 
 include ../Make.rules
 include ../Make.defs
+# vim: set sts=8 sw=8 noexpandtab :

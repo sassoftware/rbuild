@@ -12,25 +12,25 @@
 # full details.
 #
 
-python_files =  __init__.py	\
-                helpcommand.py		\
-                main.py		\
-                pluginloader.py
+plugin_files = \
+	__init__.py \
+	groups.py \
+	packages.py
 
-
-dist_files = Makefile $(python_files)
-
-SUBDIRS = 
+dist_files = Makefile $(plugin_files)
 
 all: default-subdirs default-all
 
-install: all install-subdirs pyfiles-install default-install
-	$(PYTHON) -c "import compileall; compileall.compile_dir('$(DESTDIR)$(rbuilddir)/internal', ddir='$(rbuilddir)/internal', quiet=1)"
-	$(PYTHON) -OO -c "import compileall; compileall.compile_dir('$(DESTDIR)$(rbuilddir)/internal', ddir='$(rbuilddir)/internal', quiet=1)"
+install: all install-subdirs default-install
+	mkdir -p $(DESTDIR)$(plugindir)/build/
+	cp -a $(plugin_files) $(DESTDIR)$(plugindir)/build/
+	$(PYTHON) -c "import compileall; compileall.compile_dir('$(DESTDIR)$(plugindir)/build', ddir='$(plugindir)/build', quiet=1)"
+	$(PYTHON) -OO -c "import compileall; compileall.compile_dir('$(DESTDIR)$(plugindir)/build', ddir='$(plugindir)/build', quiet=1)"
 
 dist: default-dist
 
-clean: clean-subdirs default-clean
+clean: default-clean
 
 include ../../Make.rules
 include ../../Make.defs
+# vim: set sts=8 sw=8 noexpandtab :

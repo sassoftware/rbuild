@@ -45,6 +45,7 @@ class Plugin(pluginlib.Plugin):
         pluginlib.Plugin.__init__(self, *args, **kw)
 
         self._prehooks = {}
+        self._posthooks = {}
         self.handle = None
         for methodName in self.__class__.__dict__:
             if methodName[0] == '_' or hasattr(Plugin, methodName):
@@ -53,7 +54,10 @@ class Plugin(pluginlib.Plugin):
             if not inspect.ismethod(method):
                 continue
             self._prehooks[methodName] = []
-            newMethod = _apiWrapper(self, method, self._prehooks[methodName])
+            self._posthooks[methodName] = []
+            newMethod = _apiWrapper(self, method,
+                self._prehooks[methodName],
+                self._posthooks[methodName])
             setattr(self, methodName, newMethod)
 
     def registerCommands(self):
@@ -77,11 +81,11 @@ class Plugin(pluginlib.Plugin):
 
     def _installPrehook(self, apiName, hookFunction):
         """
-            Installs a prehook for a particular method.
-            @param apiName: name of the function to install the prehook for
-            @param hookFunction: function to call before calling apiName.
-            See handle.installPrehook for description of the reuqired
-            hookFunction signature.
+        Installs a prehook for a particular method.
+        @param apiName: name of the function to install the prehook for
+        @param hookFunction: function to call before calling apiName.
+        See handle.installPrehook for description of the required
+        hookFunction signature.
         """
         try:
             self._prehooks[apiName].append(hookFunction)
@@ -91,9 +95,9 @@ class Plugin(pluginlib.Plugin):
 
     def _getPrehooks(self, apiName):
         """
-            @param apiName: name of api method to get prehooks for.
-            @return: modifiable list all hooks attached to api method with
-            name C{apiName}.
+        @param apiName: name of api method to get prehooks for.
+        @return: modifiable list all prehooks attached to api method with
+        name C{apiName}.
         """
         try:
             return self._prehooks[apiName]
@@ -101,15 +105,41 @@ class Plugin(pluginlib.Plugin):
             raise errors.InternalError('Cannot get prehooks:'
                                        ' No such api method %r' % apiName)
 
-def _apiWrapper(self, function, prehooks):
+    def _installPosthook(self, apiName, hookFunction):
+        """
+        Installs a posthook for a particular method.
+        @param apiName: name of the function to install the posthook for
+        @param hookFunction: function to call before calling apiName.
+        See handle.installPosthook for description of the required
+        hookFunction signature.
+        """
+        try:
+            self._posthooks[apiName].append(hookFunction)
+        except KeyError:
+            raise errors.InternalError('Cannot install posthook:'
+                                       ' No such api method %r' % apiName)
+
+    def _getPosthooks(self, apiName):
+        """
+        @param apiName: name of api method to get posthooks for.
+        @return: modifiable list all posthooks attached to api method with
+        name C{apiName}.
+        """
+        try:
+            return self._posthooks[apiName]
+        except KeyError:
+            raise errors.InternalError('Cannot get posthooks:'
+                                       ' No such api method %r' % apiName)
+
+def _apiWrapper(self, function, prehooks, posthooks):
     """
-        Internal funciton that adds support for calling prehooks before
-        calling api methods.
+    Internal function that adds support for calling pre- and post-hooks
+    before calling api methods.
     """
     @decorator
     def wrapper(apiMethod, _, *args, **kw):
         """
-            Wrapper method around api calls that calls prehooks.
+        Wrapper method around api calls that calls pre/post hooks.
         """
         for prehook in prehooks:
             rv = prehook(*args, **kw)
@@ -121,7 +151,10 @@ def _apiWrapper(self, function, prehooks):
                         'Invalid return value from prehook %r'
                         ' for function %r' % (prehook,
                                               function.im_func.__name__))
-        return apiMethod(*args, **kw)
+        rv = apiMethod(*args, **kw)
+        for posthook in posthooks:
+            rv = posthook(rv, *args, **kw)
+        return rv
     newFunction = wrapper(function)
     newMethod = new.instancemethod(newFunction, self, self.__class__)
     return newMethod

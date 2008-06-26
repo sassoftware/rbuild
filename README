@@ -13,6 +13,10 @@ change.  All documentation regarding stable interfaces is relevant
 only to published stable releases; it is not in force for alpha
 and beta releases, including 0.x releases and any automated builds.
 
+API documentation is available at http://cvs.rpath.com/rbuild-docs/
+or by running "make html" and viewing docs/developer/index.html (requires
+epydoc).
+
 
 DEVELOPMENT
 
@@ -35,3 +39,10 @@ should look like this:
 # errors.py even though it is not used.
 # W0612: some other warning - reason why this warning is not being heeded
 # pylint: disable-msg=W0611,W0612
+
+
+REPORTING BUGS
+==============
+
+Please visit https://issues.rpath.com/ and file issues in the rBuild
+project.
