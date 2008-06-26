@@ -74,7 +74,7 @@ Please answer the following questions to begin using rBuild:
                  " or simply edit ~/.rbuildrc.")
         ui.write('')
         ui.write("You should now begin working with a product by running"
-                   " 'rbuild init <short anme> <version>'")
+                   " 'rbuild init <short name> <version>'")
 
     def updateConfig(self, cfg=None):
         if cfg is None:
