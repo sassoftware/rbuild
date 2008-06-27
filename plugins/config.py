@@ -52,7 +52,7 @@ class Config(pluginapi.Plugin):
         cfg.display()
 
     def isComplete(self, cfg):
-        for cfgItem in ['serverUrl', 'name', 'contact']:
+        for cfgItem in ['serverUrl', 'name', 'contact', 'user']:
             if not cfg[cfgItem]:
                 return False
         return True
@@ -62,7 +62,7 @@ class Config(pluginapi.Plugin):
             cfg = self.handle.getConfig()
         ui = self.handle.ui
         ui.write('''\
-'********************************************************
+********************************************************
 Welcome to rBuild!  Your configuration is incomplete.
 Please answer the following questions to begin using rBuild:
 ''')
