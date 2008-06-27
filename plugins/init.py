@@ -94,7 +94,8 @@ class Init(pluginapi.Plugin):
                                                                 productDir)
         product = productStore.get()
         if tempDir:
-            productDir = product.getProductShortname()
+            productDir = '%s-%s' % (product.getProductShortname(),
+                                    product.getProductVersion())
             if os.path.exists(productDir):
                 util.rmtree(tempDir)
                 raise errors.RbuildError(
