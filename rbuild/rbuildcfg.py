@@ -37,7 +37,8 @@ class RbuildConfiguration(cfg.ConfigFile):
     pluginDirs           = (CfgPathList, ['/usr/share/rbuild/plugins',
                                           '~/.rbuild/plugins.d'])
     rmakeUrl             = CfgString
-    rmakePluginDirs      = (CfgPathList, [])
+    rmakePluginDirs      = (CfgPathList, ['/usr/share/rmake/plugins',
+                                          '~/.rmake/plugins.d'])
     repositoryMap        = CfgRepoMap
     quiet                = (CfgBool, False)
 
