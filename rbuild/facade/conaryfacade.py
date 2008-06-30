@@ -66,7 +66,8 @@ class ConaryFacade(object):
         """
         serverUrl = self._handle.getConfig().serverUrl
         if serverUrl:
-            cfg.includeConfigFile(serverUrl + '/conaryrc')
+            if serverUrl != 'http://www.rpath.org':
+                cfg.includeConfigFile(serverUrl + '/conaryrc')
 
     def _initializeFlavors(self):
         if not self._initializedFlavors:

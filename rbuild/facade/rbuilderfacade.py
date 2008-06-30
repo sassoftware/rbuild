@@ -111,7 +111,7 @@ class RbuilderClient(object):
                 break
         error, stream = self.server.getProductDefinitionForVersion(versionId)
         if error:
-            raise errors.RbuildError(*versionInfo)
+            raise errors.RbuildError(*stream)
         product = proddef.ProductDefinition(stream)
         return product.getProductDefinitionLabel()
 

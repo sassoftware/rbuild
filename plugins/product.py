@@ -34,8 +34,12 @@ class Product(pluginapi.Plugin):
         """
         if not dirName:
             dirName = os.getcwd()
-        while not os.path.exists(dirName + '/.rbuild') and dirName != '/':
+        productPath = dirName \
+                        + '/.rbuild/product-definition/product-definition.xml'
+        while not os.path.exists(productPath) and dirName != '/':
             dirName = os.path.dirname(dirName)
+            productPath = dirName \
+                        + '/.rbuild/product-definition/product-definition.xml'
         if dirName == '/':
             dirName = None
         return dirName

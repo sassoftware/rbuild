@@ -16,6 +16,8 @@ User interface module for rbuild.
 import getpass
 import sys
 
+from rbuild import errors
+
 class UserInterface(object):
     def __init__(self, cfg, outStream=None, errorStream=None):
         if outStream is None:
