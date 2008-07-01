@@ -3,6 +3,13 @@ Changes in @NEW@:
     * "rbuild update" in a stage directory adjusted to use
       getEditedRecipeDicts (RBLD-51)
 
+  o Interface Changes:
+    * Top-level checked-out directory now includes the major version
+
+  o API Changes:
+    * rMake now searches standard rMake plugin directories for rMake
+      plugins when invoked via rBuild.
+
 Changes in 0.2:
   o User Interface Changes:
     * Adds configuration interactively when run for the first time.
