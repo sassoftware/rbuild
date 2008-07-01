@@ -1,4 +1,4 @@
-Changes in @NEW@:
+Changes in 0.3:
   o Bug Fixes:
     * "rbuild update" in a stage directory adjusted to use
       getEditedRecipeDicts (RBLD-51)
