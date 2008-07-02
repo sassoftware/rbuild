@@ -18,7 +18,7 @@ from rbuild import pluginapi
 from rbuild.pluginapi import command
 
 class WatchCommand(command.CommandWithSubCommands):
-    help = 'Watchs details about the result of rbuild operations'
+    help = 'Watches details about the result of rbuild operations'
 
     commands = ['watch']
 
