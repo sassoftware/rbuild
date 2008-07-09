@@ -44,7 +44,7 @@ class UpdateCommand(pluginapi.command.BaseCommand):
                 raise errors.BadParameters('update unrecognized command %s'
                                            %target)
             if target in ('product', 'all'):
-                handle.getProductStore().update()
+                handle.productStore.update()
             if target in ('packages', 'all'):
                 handle.Update.updateAllStages()
             elif target == 'stage':
@@ -76,7 +76,7 @@ class Update(pluginapi.Plugin):
         if os.path.exists('CONARY'):
             self.updateCurrentDirectory()
         elif os.path.exists('.rbuild'):
-            self.handle.getProductStore().update()
+            self.handle.productStore.update()
         else:
             self.updateCurrentStage()
 
@@ -85,13 +85,13 @@ class Update(pluginapi.Plugin):
         Update all source packages in all stages in the current product.
         """
         self.handle.Update.updateStages(
-            self.handle.getProductStore().iterStageNames())
+            self.handle.productStore.iterStageNames())
 
     def updateCurrentStage(self):
         """
         Update all source packages in the current stage in the current product.
         """
-        stageName = self.handle.getProductStore().getActiveStageName()
+        stageName = self.handle.productStore.getActiveStageName()
         if not stageName:
             raise errors.RbuildError('Could not find current stage')
         self.updateStages([stageName])
@@ -102,9 +102,10 @@ class Update(pluginapi.Plugin):
         @param stageNames: names of stages to update
         @type stageNames: list of strings
         """
+        productStore = self.handle.productStore
         for stageName in stageNames:
-            for packageDir in sorted(self.handle.getProductStore(
-                    ).getEditedRecipeDicts(stageName)[0].values()):
+            for packageDir in sorted(productStore.getEditedRecipeDicts(
+                stageName)[0].values()):
                 self.handle.facade.conary.updateCheckout(packageDir)
 
     def updateCurrentDirectory(self):

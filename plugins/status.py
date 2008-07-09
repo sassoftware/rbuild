@@ -20,6 +20,8 @@ from rbuild import errors
 from rbuild import pluginapi
 from rbuild.pluginapi import command
 
+from rbuild.productstore import dirstore
+
 class StatusCommand(command.BaseCommand):
     """
     Prints status relative to the repository
@@ -29,7 +31,7 @@ class StatusCommand(command.BaseCommand):
 
     def runCommand(self, handle, _, args):
         if len(args) == 2:
-            directory = handle.Product.getDefaultProductDirectory()
+            directory = dirstore.getDefaultProductDirectory()
             if directory is None:
                 raise errors.RbuildError('Could not find product from'
                                          ' current directory')
@@ -53,12 +55,12 @@ class Status(pluginapi.Plugin):
         @param dirName: Full path name of the directory to print
         '''
         dirName = os.path.abspath(dirName)
-        productDir = self.handle.Product.getDefaultProductDirectory(dirName)
+        productDir = dirstore.getDefaultProductDirectory(dirName)
         if not productDir:
             raise errors.RbuildError('could not find product for directory %s'
                 % dirName)
-        product = self.handle.Product.getProductStoreFromDirectory(productDir)
-        self.printProductStatus(product)
+        productStore = dirstore.CheckoutProductStore(self.handle, productDir)
+        self.printProductStatus(productStore)
         self._printOneDirectoryStatus(dirName)
         for dirpath, dirnames, _ in os.walk(dirName):
             for oneDir in sorted(dirnames):
@@ -92,26 +94,26 @@ class Status(pluginapi.Plugin):
             for x, y in self.handle.facade.conary.getCheckoutStatus(dirName):
                 yield '%s   %s' % (x, y)
         if os.path.exists(os.sep.join((dirName, '.stage'))):
-            yield 'Stage %s status:' % self.handle.Product.getStageName(dirName)
+            yield 'Stage %s status:' % dirstore.getStageNameFromDirectory(dirName)
 
-    def printProductStatus(self, product=None):
+    def printProductStatus(self, productStore=None):
         '''
         Print current status of the product checkout.
         Currently, this is a list of commit log messages that are
         newer than the current checkout.
         '''
-        if not product:
-            product = self.handle.Product.getDefaultProductStore()
-        for statusLine in self._iterProductStatus(product):
+        if not productStore:
+            productStore = dirstore.CheckoutProductStore(self.handle)
+        for statusLine in self._iterProductStatus(productStore):
             print statusLine
 
-    def _iterProductStatus(self, product):
+    def _iterProductStatus(self, productStore):
         '''
         Essentially a specialized version of C{_iterOneDirectoryStatus}
         for the product checkout.  Does not call getCheckoutStatus
-        because the product checkout is not expected to be used a a
+        because the product checkout is not expected to be used as a
         general storage space.
         '''
         for x in self.handle.facade.conary.iterCheckoutLog(
-            product.getProductDefinitionDirectory(), newerOnly=True):
+            productStore.getProductDefinitionDirectory(), newerOnly=True):
             yield x

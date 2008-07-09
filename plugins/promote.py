@@ -49,21 +49,20 @@ class Promote(pluginapi.Plugin):
 
     def promoteAll(self):
         """
-        Update whatever source checkout directory is appropriate for
-        the current directory.
+        Promote all appropriate troves from the currently active stage
+        to the next stage.
         """
-        productStore = self.handle.getProductStore()
-        product = productStore.get()
-        activeStage = productStore.getActiveStageName()
-        nextStage = productStore.getNextStageName(activeStage)
-        activeLabel = product.getLabelForStage(activeStage)
-        nextLabel = product.getLabelForStage(nextStage)
-        groupSpecs = [ '%s[%s]' % x for x in productStore.getGroupFlavors() ]
-        allTroves = self.handle.facade.conary._findTrovesFlattened(groupSpecs,
-                                                                   activeLabel)
-        promotedList = self.handle.facade.conary.promoteGroups(allTroves,
-                                                               activeLabel,
-                                                               nextLabel)
+        handle = self.handle
+        activeStage = handle.productStore.getActiveStageName()
+        nextStage = handle.productStore.getNextStageName(activeStage)
+        activeLabel = handle.product.getLabelForStage(activeStage)
+        nextLabel = handle.product.getLabelForStage(nextStage)
+        groupSpecs = [ '%s[%s]' % x for x in handle.productStore.getGroupFlavors() ]
+        allTroves = handle.facade.conary._findTrovesFlattened(groupSpecs,
+                                                              activeLabel)
+        promotedList = handle.facade.conary.promoteGroups(allTroves,
+                                                          activeLabel,
+                                                          nextLabel)
 
         promotedList = [ x for x in promotedList
                          if (':' not in x[0]

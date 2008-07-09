@@ -53,9 +53,9 @@ class Watch(pluginapi.Plugin):
         self.handle.Commands.registerCommand(WatchCommand)
 
     def watchPackages(self):
-        jobId = self.handle.getProductStore().getPackageJobId()
+        jobId = self.handle.productStore.getPackageJobId()
         self.handle.Build.watchJob(jobId)
 
     def watchGroups(self):
-        jobId = self.handle.getProductStore().getGroupJobId()
+        jobId = self.handle.productStore.getGroupJobId()
         self.handle.Build.watchJob(jobId)

@@ -95,7 +95,7 @@ class Checkout(pluginapi.Plugin):
 
 
     def checkoutPackage(self, packageName):
-        currentLabel = self.handle.getProductStore().getActiveStageLabel()
+        currentLabel = self.handle.productStore.getActiveStageLabel()
         self.handle.facade.conary.checkout(packageName, currentLabel)
         return True
 
@@ -115,14 +115,14 @@ class Checkout(pluginapi.Plugin):
             raise errors.RbuildError(
                         'cannot shadow %s: no upstream binary' % packageName)
         name, version, flavor = upstreamLatest
-        currentLabel = self.handle.getProductStore().getActiveStageLabel()
+        currentLabel = self.handle.productStore.getActiveStageLabel()
         self.handle.facade.conary.shadowSourceForBinary(name, version, flavor,
                                                         currentLabel)
         self.checkoutPackage(packageName)
         self.handle.ui.info('Shadowed package %r', packageName)
 
     def newPackage(self, packageName):
-        currentLabel = self.handle.getProductStore().getActiveStageLabel()
+        currentLabel = self.handle.productStore.getActiveStageLabel()
         self.handle.facade.conary.createNewPackage(
                                             packageName, currentLabel)
         self.handle.ui.info('Created new package %r', packageName)
@@ -130,7 +130,7 @@ class Checkout(pluginapi.Plugin):
 
 
     def _getUpstreamPackage(self, packageName):
-        product = self.handle.getProductStore().get()
+        product = self.handle.product
         upstreamSources = product.getSearchPaths()
         upstreamSources = [(x.troveName, x.label, None)
                             for x in upstreamSources]
@@ -144,7 +144,7 @@ class Checkout(pluginapi.Plugin):
         return None
 
     def _getExistingPackage(self, packageName):
-        currentLabel = self.handle.getProductStore().getActiveStageLabel()
+        currentLabel = self.handle.productStore.getActiveStageLabel()
         return self.handle.facade.conary._findTrove(packageName + ':source',
                                                     currentLabel,
                                                     allowMissing=True)

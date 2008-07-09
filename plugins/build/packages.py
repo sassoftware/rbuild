@@ -29,7 +29,7 @@ def createRmakeJobForAllPackages(handle):
     return _createRmakeJobForPackages(handle)
 
 def _createRmakeJobForPackages(handle, packageList=None):
-    allRecipes = handle.getProductStore().getEditedRecipeDicts()
+    allRecipes = handle.productStore.getEditedRecipeDicts()
     packageRecipes, groupRecipes = allRecipes
     if packageList is not None:
         packageRecipes = dict(x for x in packageRecipes.items() 

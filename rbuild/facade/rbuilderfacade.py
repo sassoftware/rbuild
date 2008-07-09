@@ -47,10 +47,9 @@ class RbuilderFacade(object):
 
     def buildAllImagesForStage(self):
         client = self._getRbuilderClient()
-        stageName = self._handle.getProductStore().getActiveStageName()
-        product = self._handle.getProductStore().get()
-        productName = str(product.getProductShortname())
-        versionName = str(product.getProductVersion())
+        stageName = self._handle.productStore.getActiveStageName()
+        productName = str(self._handle.product.getProductShortname())
+        versionName = str(self._handle.product.getProductVersion())
         buildIds = client.startProductBuilds(productName, versionName,
                                              stageName)
         return buildIds

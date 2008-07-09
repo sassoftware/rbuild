@@ -30,7 +30,7 @@ def derive(handle, troveToDerive):
     """
 
     ui = handle.ui
-    targetLabel = handle.getProductStore().getActiveStageLabel()
+    targetLabel = handle.productStore.getActiveStageLabel()
     troveName = troveToDerive[0]
     # displaying output along the screen allows there to be a record
     # of what operations were performed.  Since this command is

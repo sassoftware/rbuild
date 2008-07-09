@@ -20,7 +20,7 @@ def createRmakeJobForAllGroups(handle):
     return _createRmakeJobForGroups(handle)
 
 def _createRmakeJobForGroups(handle, groupList=None):
-    allRecipes = handle.getProductStore().getEditedRecipeDicts()
+    allRecipes = handle.productStore.getEditedRecipeDicts()
     _, groupRecipes = allRecipes
     if groupList is not None:
         groupRecipes = dict(x for x in groupRecipes.items() 
@@ -41,7 +41,7 @@ def _createRmakeJobForGroups(handle, groupList=None):
     return mainJob
 
 def _getJobBasedOnProductGroups(handle, groupRecipes, recurse=False):
-    groupFlavors = handle.getProductStore().getGroupFlavors()
+    groupFlavors = handle.productStore.getGroupFlavors()
     if not (groupFlavors or groupRecipes):
         return None
     contextDict = handle.facade.rmake._getRmakeContexts()
@@ -57,7 +57,7 @@ def _getJobBasedOnProductGroups(handle, groupRecipes, recurse=False):
             groupsToFind.setdefault(
                     (groupName + ':source', None, None), []).append(context)
 
-    label = handle.getProductStore().getActiveStageLabel()
+    label = handle.productStore.getActiveStageLabel()
     results = handle.facade.conary._findTroves(groupsToFind.keys(), label,
                                                allowMissing=True)
     groupsToBuild = []

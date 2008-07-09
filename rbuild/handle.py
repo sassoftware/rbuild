@@ -24,6 +24,7 @@ from rbuild import errors
 from rbuild import rbuildcfg
 from rbuild import ui
 from rbuild.internal import pluginloader
+from rbuild.productstore import dirstore
 import rbuild.facade.conaryfacade
 import rbuild.facade.rmakefacade
 import rbuild.facade.rbuilderfacade
@@ -40,8 +41,13 @@ class RbuildHandle(object):
     from disk.
     @param pluginManager: a C{PluginManager} object that contains the plugins
     to use with this handle, or C{None} to load the plugins from disk.
+    @ivar product: product definition instance
+    @type product: C{proddef}
+    @ivar productStore: persistent context for interacting with a product
+    @type productStore: C{rbuild.productstore.abstract.ProductStore}
     """
     def __init__(self, cfg=None, pluginManager=None, productStore=None):
+        self.product = None
         if cfg is None:
             cfg = rbuildcfg.RbuildConfiguration(readConfigFiles=True)
 
@@ -67,32 +73,30 @@ class RbuildHandle(object):
         self.ui = ui.UserInterface(self._cfg)
 
         if productStore is None:
-            # E1101: Instance of 'RbuildHandle' has no 'Product' member
-            # Product is a required builtin plugin.
-            # pylint: disable-msg=E1101
-            if hasattr(self, 'Product'):
-                productStore = self.Product.getDefaultProductStore()
-            else:
-                self.ui.warning('Product plugin not loaded - check'
-                                ' pluginDirs setting')
-                productStore = None
-        self._productStore = productStore
-        if productStore is not None:
-            self._cfg.read(productStore.getRbuildConfigPath(), exception=False)
+            # default product store is directory-based
+            # Note: will still be None for some cases, such as rbuild init
+            proddir = dirstore.getDefaultProductDirectory()
+            if proddir is not None:
+                productStore = dirstore.CheckoutProductStore(self, proddir)
+        self.productStore = productStore
+
+        if productStore:
+            self.product = productStore.getProduct()
+
+            if hasattr(productStore, 'getRbuildConfigPath'):
+                RbuildConfigPath = productStore.getRbuildConfigPath()
+                if RbuildConfigPath is not None:
+                    self._cfg.read(RbuildConfigPath, exception=False)
+            elif hasattr(productStore, 'getRbuildConfigData'):
+                RbuildConfigData = productStore.getRbuildConfigData()
+                if RbuildConfigData is not None:
+                    self._cfg.readObject('INTERNAL', RbuildConfigData)
 
     def getConfig(self):
         """
         @return: RbuildConfiguration object used by this handle object.
         """
         return self._cfg
-
-    def getProductStore(self):
-        if self._productStore is None:
-            raise errors.RbuildError('Could not find product definition')
-        return self._productStore
-
-    def setProductStore(self, productStore):
-        self._productStore = productStore
 
     def installPrehook(self, apiMethod, hookFunction):
         """

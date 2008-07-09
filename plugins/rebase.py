@@ -38,12 +38,11 @@ class Rebase(pluginapi.Plugin):
         self.handle.Commands.registerCommand(RebaseCommand)
 
     def rebaseProduct(self, label=None):
-        conaryClient = self.handle.facade.conary._getConaryClient()
-        productStore = self.handle.getProductStore()
-        product = productStore.get()
-        product.rebase(conaryClient, label=label)
-        product.saveToRepository(conaryClient)
-        productStore.update()
-        platformSource = product.getPlatformSourceTrove()
-        self.handle.ui.info(
+        handle = self.handle
+        conaryClient = handle.facade.conary._getConaryClient()
+        handle.product.rebase(conaryClient, label=label)
+        handle.product.saveToRepository(conaryClient)
+        handle.productStore.update()
+        platformSource = handle.product.getPlatformSourceTrove()
+        handle.ui.info(
          'Now using latest platform from %s' % (platformSource,))

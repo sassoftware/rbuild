@@ -33,7 +33,7 @@ class ShowPackages(pluginapi.Plugin):
                                             'packages', ShowPackagesCommand)
 
     def showPackageStatus(self):
-        jobId = self.handle.getProductStore().getPackageJobId()
+        jobId = self.handle.productStore.getPackageJobId()
         if not jobId:
             raise errors.RbuildError(
                         'No packages have been built in this environment')

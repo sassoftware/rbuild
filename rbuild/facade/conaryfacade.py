@@ -284,8 +284,10 @@ class ConaryFacade(object):
         source package.  Similar to the C{cvc update} command.
         @param targetDir: subdirectory containing package to update
         @type targetDir: string
+        @return: Status
+        @rtype: bool
         """
-        checkin.updateSrc(self._getRepositoryClient(), [targetDir])
+        return checkin.updateSrc(self._getRepositoryClient(), [targetDir])
 
     def getCheckoutStatus(self, targetDir):
         """

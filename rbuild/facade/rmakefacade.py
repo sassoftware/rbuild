@@ -57,12 +57,12 @@ class RmakeFacade(object):
         if self._rmakeConfig and useCache:
             return self._rmakeConfig
         conaryFacade = self._handle.facade.conary
-        productStore = self._handle.getProductStore()
-        product = productStore.get()
-        stageName = productStore.getActiveStageName()
-        stageLabel = conaryFacade._getLabel(product.getLabelForStage(stageName))
-        baseFlavor = conaryFacade._getFlavor(product.getBaseFlavor())
-        rmakeConfigPath = productStore.getRmakeConfigPath()
+        stageName = self._handle.productStore.getActiveStageName()
+        stageLabel = conaryFacade._getLabel(
+            self._handle.product.getLabelForStage(stageName))
+        baseFlavor = conaryFacade._getFlavor(
+            self._handle.product.getBaseFlavor())
+        rmakeConfigPath = self._handle.productStore.getRmakeConfigPath()
 
         rbuildConfig = self._handle.getConfig()
         if not self._plugins:
@@ -85,7 +85,7 @@ class RmakeFacade(object):
         cfg.installLabelPath = [ stageLabel ]
         cfg.flavor = [baseFlavor]
         cfg.buildFlavor = baseFlavor
-        upstreamSources = product.getSearchPaths()
+        upstreamSources = self._handle.product.getSearchPaths()
         upstreamSources = [(x.troveName, x.label, None)
                             for x in upstreamSources]
         cfg.resolveTroves = [upstreamSources]
@@ -124,9 +124,8 @@ class RmakeFacade(object):
         if self._rmakeConfigWithContexts:
             return self._rmakeConfigWithContexts
         cfg = self._getRmakeConfig(useCache=False)
-        productStore = self._handle.getProductStore()
         conaryFacade = self._handle.facade.conary
-        buildFlavors = [x[1] for x in productStore.getGroupFlavors() ]
+        buildFlavors = [x[1] for x in self._handle.productStore.getGroupFlavors() ]
         contextNames = conaryFacade._getShortFlavorDescriptors(buildFlavors)
         for flavor, name in contextNames.items():
             cfg.configLine('[%s]' % name)
@@ -170,8 +169,7 @@ class RmakeFacade(object):
         product (without any contexts for use in starting a build)
         """
         rmakeClient = self._getRmakeHelperWithContexts()[0]
-        productStore = self._handle.getProductStore()
-        stageLabel = productStore.getActiveStageLabel()
+        stageLabel = self._handle.productStore.getActiveStageLabel()
         if recurse:
             recurse = rmakeClient.BUILD_RECURSE_GROUPS_SOURCE
         return rmakeClient.createBuildJob(itemList,

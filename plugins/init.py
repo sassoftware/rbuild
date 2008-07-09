@@ -24,6 +24,7 @@ from rpath_common.proddef import api1 as proddef
 from rbuild import errors
 from rbuild import pluginapi
 from rbuild.pluginapi import command
+from rbuild.productstore import dirstore
 
 class InitCommand(command.BaseCommand):
     """
@@ -90,9 +91,9 @@ class Init(pluginapi.Plugin):
         targetDir = productDir + '/.rbuild/product-definition'
         self.handle.facade.conary.checkout('product-definition', version,
                                            targetDir=targetDir)
-        productStore = self.handle.Product.getProductStoreFromDirectory(
-                                                                productDir)
-        product = productStore.get()
+        handle = self.handle
+        productStore = dirstore.CheckoutProductStore(handle, productDir)
+        product = productStore.getProduct()
         if tempDir:
             productDir = '%s-%s' % (product.getProductShortname(),
                                     product.getProductVersion())
@@ -112,5 +113,7 @@ class Init(pluginapi.Plugin):
         self.handle.ui.info('Created checkout for %s at %s', 
                              product.getProductDefinitionLabel(),
                              productDir)
-        return self.handle.Product.getProductStoreFromDirectory(productDir)
-
+        # get the versions that point to the real checkout now
+        handle.productStore = dirstore.CheckoutProductStore(handle, productDir)
+        handle.product = handle.productStore.getProduct()
+        return handle.productStore

@@ -32,7 +32,7 @@ class ShowGroups(pluginapi.Plugin):
                                             'groups', ShowGroupsCommand)
 
     def showGroupStatus(self):
-        jobId = self.handle.getProductStore().getGroupJobId()
+        jobId = self.handle.productStore.getGroupJobId()
         if not jobId:
             raise errors.RbuildError('No groups have been built'
                                      ' in this environment')

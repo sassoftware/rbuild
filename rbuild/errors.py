@@ -50,6 +50,16 @@ class RbuildError(BaseError):
     not by plugins.
     """
 
+class IncompleteInterfaceError(BaseError):
+    """
+    C{C{IncompleteInterfaceError}} - Interface unavailable in this configuration
+
+    This error is raised by stub functions that are not filled in;
+    for example, a function that makes sense only in the context
+    of filesystem operations might raise this error if called in
+    the context of repository operations.
+    """
+
 class BadParameters(BaseError):
     """
     Raised when a command is given bad parameters at the command line.

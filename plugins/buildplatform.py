@@ -16,7 +16,7 @@ from rbuild import pluginapi
 from rbuild.pluginapi import command
 
 class BuildPlatformCommand(command.BaseCommand):
-    help = 'create a platform usable by others for this product'
+    help = 'create a platform usable by others from this product'
 
     #pylint: disable-msg=R0201,R0903
     # could be a function, and too few public methods
@@ -34,9 +34,7 @@ class BuildPlatform(pluginapi.Plugin):
                                         'platform', BuildPlatformCommand)
 
     def buildPlatform(self):
-        productStore = self.handle.getProductStore()
-        product = self.handle.getProductStore().get()
         conaryClient = self.handle.facade.conary._getConaryClient()
-        product.savePlatformToRepository(conaryClient)
-        productStore.checkoutPlatform()
+        self.handle.product.savePlatformToRepository(conaryClient)
+        self.handle.productStore.checkoutPlatform()
         self.handle.ui.info('New platform definition created.')

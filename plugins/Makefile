@@ -20,7 +20,6 @@ plugin_files = \
 	config.py \
 	__init__.py \
 	init.py \
-	product.py \
 	promote.py \
 	rebase.py \
 	showgroups.py \
