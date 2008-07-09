@@ -1,4 +1,4 @@
-Chagnes in @NEW@:
+Changes in @NEW@:
   o Interface Changes:
     * Product information is now stored in a way that allows calling
       code to override the product storage, and the abstract product
