@@ -85,13 +85,13 @@ class BaseCommand(command.AbstractCommand):
         Stub method for doing special handling of arguments in plugins.
         Called by C{AbstractCommand}, this sets up default commands
         handled by all rbuild commands.  To extend this in a plugin,
-        do:
+        do::
             def addLocalParameters(self, argDef):
                 argDef['localflag'] = command.NO_PARAM
                 argDef['localarg'] = command.ONE_PARAM
 
-        @param argSet: flags passed to the command
-        @type argSet: dict
+        @param argDef: flags passed to the command
+        @type argDef: dict
         """
 
 
