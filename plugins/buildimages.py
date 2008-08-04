@@ -28,9 +28,9 @@ class BuildImagesCommand(command.BaseCommand):
         watch = not argSet.pop('no-watch', False)
         # no allowed parameters
         self.requireParameters(args)
-        buildIds = handle.BuildImages.buildAllImages()
+        jobId = handle.BuildImages.buildAllImages()
         if watch:
-            handle.BuildImages.watchImages(buildIds)
+            handle.Build.watchJob(jobId)
 
 
 class BuildImages(pluginapi.Plugin):
@@ -41,7 +41,7 @@ class BuildImages(pluginapi.Plugin):
                                     'images', BuildImagesCommand)
 
     def buildAllImages(self):
-        return self.handle.facade.rbuilder.buildAllImagesForStage()
-
-    def watchImages(self, buildIds):
-        self.handle.facade.rbuilder.watchImages(buildIds)
+        job = self.handle.facade.rmake.createImagesJobForStage()
+        jobId = self.handle.facade.rmake.buildJob(job)
+        self.handle.productStore.setImageJobId(jobId)
+        return jobId

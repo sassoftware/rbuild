@@ -73,13 +73,13 @@ class RmakeFacade(object):
 
 
         cfg = buildcfg.BuildConfiguration(False)
+        cfg.rbuilderUrl = self._handle.getConfig().serverUrl
+        cfg.rmakeUser = self._handle.getConfig().user
         cfg.resolveTrovesOnly = True
         cfg.shortenGroupFlavors = True
         cfg.ignoreExternalRebuildDeps = True
         if self._handle.getConfig().rmakePluginDirs:
             cfg.pluginDirs = self._handle.getConfig().rmakePluginDirs
-
-
 
         cfg.buildLabel = stageLabel
         cfg.installLabelPath = [ stageLabel ]
@@ -125,7 +125,8 @@ class RmakeFacade(object):
             return self._rmakeConfigWithContexts
         cfg = self._getRmakeConfig(useCache=False)
         conaryFacade = self._handle.facade.conary
-        buildFlavors = [x[1] for x in self._handle.productStore.getGroupFlavors() ]
+        buildFlavors = [x[1] 
+                        for x in self._handle.productStore.getGroupFlavors() ]
         contextNames = conaryFacade._getShortFlavorDescriptors(buildFlavors)
         for flavor, name in contextNames.items():
             cfg.configLine('[%s]' % name)
@@ -176,6 +177,26 @@ class RmakeFacade(object):
                                    rebuild=True,
                                    recurseGroups=recurse,
                                    limitToLabels=[stageLabel])
+
+    def createImagesJobForStage(self):
+        rmakeClient = self._getRmakeHelper()
+        conaryFacade = self._handle.facade.conary
+        stageName = self._handle.productStore.getActiveStageName()
+        stageLabel = self._handle.productStore.getActiveStageLabel()
+        product = self._handle.product
+        productName = str(product.getProductShortname())
+        versionName = str(product.getProductVersion())
+        builds = self._handle.productStore.getBuildsWithFullFlavors(stageName)
+        allImages = []
+        for build, buildFlavor in builds:
+            buildFlavor = conaryFacade._getFlavor(buildFlavor)
+            groupName = str(build.getBuildImageGroup())
+            buildImageType = build.getBuildImageType().tag
+            buildSettings = build.getBuildImageType().fields.copy()
+            troveSpec = (groupName, stageLabel, buildFlavor)
+            allImages.append((troveSpec, buildImageType, buildSettings))
+
+        return rmakeClient.createImageJob(productName, allImages)
 
     def buildJob(self, job):
         """

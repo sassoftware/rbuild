@@ -75,6 +75,16 @@ class ProductStore(object):
         fullFlavors = [ self._addInExtraFlavor(x) for x in fullFlavors ]
         return [(x[0][0], x[1]) for x in zip(groupFlavors, fullFlavors)]
 
+    def getBuildsWithFullFlavors(self, stageName):
+        product = self._handle.product
+        builds = product.getBuildsForStage(stageName)
+        flavors = [ x.getBuildBaseFlavor() for x in builds ]
+        fullFlavors = self._handle.facade.conary._overrideFlavors(
+                                             str(product.getBaseFlavor()),
+                                             [x[1] for x in flavors])
+        fullFlavors = [ self._addInExtraFlavor(x) for x in fullFlavors ]
+        return zip(builds, fullFlavors)
+
     # temporary hack until RPCL-13 is complete
     def _addInExtraFlavor(self, flavor):
         majorArch = self._handle.facade.conary._getFlavorArch(flavor)
@@ -94,11 +104,17 @@ class ProductStore(object):
     def getGroupJobId(self):
         return self.getStatus('groupJobId')
 
+    def getImageJobId(self):
+        return self.getStatus('imageJobId')
+
     def setPackageJobId(self, jobId):
         self.setStatus('packageJobId', jobId)
 
     def setGroupJobId(self, jobId):
         self.setStatus('groupJobId', jobId)
+
+    def setImageJobId(self, jobId):
+        self.setStatus('imageJobId', jobId)
 
     def getStatus(self, key):
         raise errors.IncompleteInterfaceError(
