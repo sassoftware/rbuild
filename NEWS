@@ -1,4 +1,6 @@
 Changes in @NEW@:
+  o API Changes:
+    * rbuild now uses rMake to communicate to rbuilder. (RBLD-45)
   o Interface Changes:
     * Product information is now stored in a way that allows calling
       code to override the product storage, and the abstract product
