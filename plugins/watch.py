@@ -39,6 +39,12 @@ class WatchGroupsCommand(command.BaseCommand):
         self.requireParameters(args)
         handle.Watch.watchGroups()
 
+class WatchImagesCommand(command.BaseCommand):
+    def runCommand(self, handle, argSet, args):
+        self.requireParameters(args)
+        handle.Watch.watchImages()
+
+
 
 class Watch(pluginapi.Plugin):
     name = 'watch'
@@ -47,6 +53,7 @@ class Watch(pluginapi.Plugin):
         cmd = self.handle.Commands.getCommandClass('watch')
         cmd.registerSubCommand('groups', WatchGroupsCommand)
         cmd.registerSubCommand('packages', WatchPackagesCommand)
+        cmd.registerSubCommand('images', WatchImagesCommand)
         cmd.registerSubCommand('job', WatchJobCommand)
 
     def registerCommands(self):
@@ -58,4 +65,8 @@ class Watch(pluginapi.Plugin):
 
     def watchGroups(self):
         jobId = self.handle.productStore.getGroupJobId()
+        self.handle.Build.watchJob(jobId)
+
+    def watchImages(self):
+        jobId = self.handle.productStore.getImageJobId()
         self.handle.Build.watchJob(jobId)
