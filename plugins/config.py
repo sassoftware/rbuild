@@ -18,6 +18,7 @@ from rbuild.pluginapi import command
 
 class ConfigCommand(command.BaseCommand):
     commands = ['config']
+    help = 'Print the rbuild configuration'
     def addLocalParameters(self, argSet):
         argSet['ask'] = command.NO_PARAM
 

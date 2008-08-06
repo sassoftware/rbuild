@@ -16,7 +16,7 @@ from rbuild import pluginapi
 from rbuild.pluginapi import command
 
 class BuildPlatformCommand(command.BaseCommand):
-    help = 'create a platform usable by others from this product'
+    help = 'Create a platform usable by others from this product'
 
     #pylint: disable-msg=R0201,R0903
     # could be a function, and too few public methods

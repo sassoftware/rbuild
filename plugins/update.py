@@ -24,6 +24,8 @@ class UpdateCommand(pluginapi.command.BaseCommand):
     Updates source directories
     """
     commands = ['update']
+    help = 'Update working directories from repository'
+    # FIXME: help for optional subcommands: product packages stage all
     def runCommand(self, handle, _, args):
         """
         Process the command line provided for this plugin

@@ -18,9 +18,9 @@ from rbuild.pluginapi import command
 from rbuild_plugins.build import groups
 
 class BuildGroupsCommand(command.BaseCommand):
+    help = 'Build groups for this stage'
     docs = {'no-watch' : 'do not watch the job after starting the build',
             'no-commit' : 'do not automatically commit successful builds',}
-    help = 'build groups for this stage'
 
     def addLocalParameters(self, argDef):
         argDef['no-watch'] = command.NO_PARAM

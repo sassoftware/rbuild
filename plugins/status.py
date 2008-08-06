@@ -28,6 +28,7 @@ class StatusCommand(command.BaseCommand):
     """
 
     commands = ['status']
+    help = 'Print status summary relative to the current directory'
 
     def runCommand(self, handle, _, args):
         if len(args) == 2:

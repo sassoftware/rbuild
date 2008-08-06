@@ -18,19 +18,19 @@ from rbuild.pluginapi import command
 from rbuild_plugins.build import packages
 
 class BuildPackagesCommand(command.BaseCommand):
-    """\
-    Builds or rebuilds the packages listed or all checked out packages if
-    none are specified.
+    """
+    Builds or rebuilds specified packages, or all checked-out packages
+    if none are specified.
 
-    Additionally rebuilds any other packages in the product group that
+    Additionally, rebuilds any other packages in the product group that
     depend on the built packages.
     """
 
+    help = 'Build edited packages for this stage'
+    paramHelp = '[package]*'
     docs = {'no-watch' : 'do not watch the job after starting the build',
             'no-commit' : 'do not automatically commit successful builds',}
 
-    paramHelp = '[package]*'
-    help = 'build edited packages for this stage'
 
 
     def addLocalParameters(self, argDef):

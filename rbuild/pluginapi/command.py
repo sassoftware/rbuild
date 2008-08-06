@@ -37,6 +37,7 @@ from conary.lib import options
 (NO_PARAM,  ONE_PARAM)  = (options.NO_PARAM, options.ONE_PARAM)
 (OPT_PARAM, MULT_PARAM) = (options.OPT_PARAM, options.MULT_PARAM)
 (NORMAL_HELP, VERBOSE_HELP)  = (options.NORMAL_HELP, options.VERBOSE_HELP)
+# FIXME: pass docstring through de-epydocification (RBLD-70)
 
 class BaseCommand(command.AbstractCommand):
     """
@@ -217,7 +218,7 @@ class CommandWithSubCommands(BaseCommand):
             myClass.description = myClass.__doc__
         if myClass.description is None:
             myClass.description = ''
-        extraDescription = '\n\nSub commands:\n'
+        extraDescription = '\n\nSubcommands:\n'
         for commandName, commandClass in commandList:
             extraDescription += '     %-*s  %s\n' % (width, commandName,
                                                         commandClass.help)

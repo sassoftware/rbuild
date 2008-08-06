@@ -21,6 +21,7 @@ class PromoteCommand(pluginapi.command.BaseCommand):
     Updates source directories
     """
     commands = ['promote']
+    help = 'Promote groups and packages to next stage'
     def runCommand(self, handle, _, args):
         """
         Process the command line provided for this plugin

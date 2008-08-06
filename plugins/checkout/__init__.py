@@ -30,19 +30,29 @@ from rbuild_plugins.checkout import derive
 
 class CheckoutCommand(command.BaseCommand):
     """
-    Creates a checkout of the package, creating a new package if necessary.
+    Check out a package, creating a new package if necessary.
 
-    If an upstream version of the package is available, then the user must
-    specify whether the upstream version should be shadowed, derived, or
-    a new package should be created.
+    If the product's platform contains a package by the same name,
+    then you must specify whether to shadow or derive from that
+    upstream version, or to create a new package by the same name
+    that is not related to the upstream version.
+
+    A derived package starts with the contents of the binary
+    package from the platform, generally used to make modifications
+    that do not require rebuilding binaries.
+
+    A shadow allows you to make changes relative to the platform's
+    source package, changing how the package is built, and requiring
+    rebuilding binaries.
     """
-    help = 'checkout packages and groups for editing'
+    help = 'Check out packages and groups for editing'
+    paramHelp = '[<options>] <packagename>'
 
     commands = ['checkout']
-    docs = {'derive' : "Create a derived package based on an upstream one",
-            'shadow' : "Create a shadowed package based on an upstream one",
-            'new' : ("Create a new version of the package regardless of"
-                     " whether an upstream one exists") }
+    docs = {'derive' : "Create derived package (based on upstream binary)",
+            'shadow' : "Create shadowed package (based on upstream source)",
+            'new' : ("Create a new version of the package even if"
+                     " an upstream version exists") }
 
     def addLocalParameters(self, argDef):
         argDef['derive'] = command.NO_PARAM

@@ -18,7 +18,7 @@ from rbuild.pluginapi import command
 from rbuild import pluginapi
 
 class RebaseCommand(command.BaseCommand):
-    help = 'Rebases this product on the latest version of its platform'
+    help = 'Update product to most recent platform version'
 
     commands = ['rebase']
 

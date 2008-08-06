@@ -40,6 +40,7 @@ class InitCommand(command.BaseCommand):
     """
 
     commands = ['init']
+    help = 'Create a directory for for working with a product'
 
     def runCommand(self, handle, _, args):
         if len(args) == 3:
