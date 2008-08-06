@@ -19,13 +19,33 @@ import os
 from rbuild import errors
 from rbuild import pluginapi
 
-class UpdateCommand(pluginapi.command.BaseCommand):
+class UpdateCommand(pluginapi.command.CommandWithSubCommands):
     """
-    Updates source directories
+    Updates source directories based on working directory
     """
     commands = ['update']
     help = 'Update working directories from repository'
-    # FIXME: help for optional subcommands: product packages stage all
+    def runCommand(self, handle, argSet, args):
+        """
+        Process the command line provided for this plugin
+        @param handle: context handle
+        @type handle: rbuild.handle.RbuildHandle
+        @param argSet: dictionary of flags passed to the command
+        @param args: command-line arguments
+        @type args: iterable
+        """
+        if len(args) == 2:
+            handle.Update.updateByCurrentDirectory()
+        else:
+            pluginapi.command.CommandWithSubCommands.runCommand(self,
+                handle, argSet, args)
+        return None
+
+class UpdateProductCommand(pluginapi.command.BaseCommand):
+    """
+    Updates product directory relative to working directory
+    """
+    help = 'Update product directory relative to working directory'
     def runCommand(self, handle, _, args):
         """
         Process the command line provided for this plugin
@@ -34,28 +54,65 @@ class UpdateCommand(pluginapi.command.BaseCommand):
         @param args: command-line arguments
         @type args: iterable
         """
-        if len(args) == 2:
-            handle.Update.updateByCurrentDirectory()
-        else:
-            target = self.requireParameters(args,
-                ['[product|packages|stage|all]'],
-                allowExtra=True,
-                appendExtra=True)[1:][0]
-            target, extra = target[0], target[1:]
-            if target not in ('product', 'packages', 'stage', 'all'):
-                raise errors.BadParameters('update unrecognized command %s'
-                                           %target)
-            if target in ('product', 'all'):
-                handle.productStore.update()
-            if target in ('packages', 'all'):
-                handle.Update.updateAllStages()
-            elif target == 'stage':
-                if extra:
-                    handle.Update.updateStages(extra)
-                else:
-                    handle.Update.updateCurrentStage()
+        handle.productStore.update()
         return None
 
+
+class UpdatePackagesCommand(pluginapi.command.BaseCommand):
+    """
+    Updates all packages in all stages
+    """
+    help = 'Updates all packages in all stages'
+    def runCommand(self, handle, _, args):
+        """
+        Process the command line provided for this plugin
+        @param handle: context handle
+        @type handle: rbuild.handle.RbuildHandle
+        @param args: command-line arguments
+        @type args: iterable
+        """
+        handle.Update.updateAllStages()
+        return None
+
+
+class UpdateStageCommand(pluginapi.command.BaseCommand):
+    """
+    Updates all packages in stage
+    """
+    help = 'Updates all packages in current or named stage(s)'
+    paramHelp = '[stagename]*'
+    def runCommand(self, handle, _, args):
+        """
+        Process the command line provided for this plugin
+        @param handle: context handle
+        @type handle: rbuild.handle.RbuildHandle
+        @param args: command-line arguments
+        @type args: iterable
+        """
+        args = args[2:]
+        if args:
+            handle.Update.updateStages(args)
+        else:
+            handle.Update.updateCurrentStage()
+        return None
+
+
+class UpdateAllCommand(pluginapi.command.BaseCommand):
+    """
+    Updates all contents of checkout, regardless of current directory
+    """
+    help = 'Updates all checkout contents, from any directory'
+    def runCommand(self, handle, _, args):
+        """
+        Process the command line provided for this plugin
+        @param handle: context handle
+        @type handle: rbuild.handle.RbuildHandle
+        @param args: command-line arguments
+        @type args: iterable
+        """
+        handle.productStore.update()
+        handle.Update.updateAllStages()
+        return None
 
 
 class Update(pluginapi.Plugin):
@@ -69,6 +126,14 @@ class Update(pluginapi.Plugin):
         Register the command-line handling portion of the update plugin.
         """
         self.handle.Commands.registerCommand(UpdateCommand)
+        self.handle.Commands.getCommandClass('update').registerSubCommand(
+                                             'product', UpdateProductCommand)
+        self.handle.Commands.getCommandClass('update').registerSubCommand(
+                                             'packages', UpdatePackagesCommand)
+        self.handle.Commands.getCommandClass('update').registerSubCommand(
+                                             'stage', UpdateStageCommand)
+        self.handle.Commands.getCommandClass('update').registerSubCommand(
+                                             'all', UpdateAllCommand)
 
     def updateByCurrentDirectory(self):
         """
