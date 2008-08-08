@@ -52,7 +52,8 @@ class Config(pluginapi.Plugin):
                               prettyPrint=prettyPrint)
         cfg.display()
 
-    def isComplete(self, cfg):
+    @staticmethod
+    def isComplete(cfg):
         for cfgItem in ['serverUrl', 'name', 'contact', 'user']:
             if not cfg[cfgItem]:
                 return False

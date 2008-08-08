@@ -100,7 +100,8 @@ class CheckoutProductStore(ProductStore):
         ProductStore.update(self)
 
 
-    def _testProductDirectory(self, baseDirectory):
+    @staticmethod
+    def _testProductDirectory(baseDirectory):
         """
         Test to see whether a product directory has been checked out
         @param baseDirectory: name of product directory

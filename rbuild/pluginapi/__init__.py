@@ -40,6 +40,8 @@ class Plugin(pluginlib.Plugin):
     """
     Base plugin class for all rbuild plugins.
     """
+    #pylint: disable-msg=R0201
+    # "Method could be a function" but this is a base class
 
     def __init__(self, *args, **kw):
         pluginlib.Plugin.__init__(self, *args, **kw)

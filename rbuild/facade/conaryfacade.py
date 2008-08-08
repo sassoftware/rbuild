@@ -494,11 +494,13 @@ class ConaryFacade(object):
                                 "cannot remove %s: %s", path, e.strerror)
         conaryState.write('CONARY')
 
-    def getNameForCheckout(self, checkoutDir):
+    @staticmethod
+    def getNameForCheckout(checkoutDir):
         conaryState = state.ConaryStateFromFile(checkoutDir + '/CONARY')
         return conaryState.getSourceState().getName().split(':', 1)[0]
 
-    def isGroupName(self, packageName):
+    @staticmethod
+    def isGroupName(packageName):
         return trove.troveIsGroup(packageName)
 
     def promoteGroups(self, groupList, fromLabel, toLabel):
