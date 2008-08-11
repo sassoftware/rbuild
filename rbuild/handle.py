@@ -34,7 +34,25 @@ class _Facade(object):
     Private internal container for facades provided via the handle
     """
 
-class RbuildHandle(object):
+
+class _PluginProxy(dict):
+    """
+    Proxy for plugin calls via the handle. Stores the plugin instances
+    in an internal dictionary, then presents them as attributes.
+
+    Note that while this is currently a superclass to RbuildHandle, it
+    could become an attribute of it instead, changing the calling
+    convention from handle.Plugin.foo to handle.plugins.Plugin.foo.
+    """
+
+    def __getattr__(self, attr):
+        if attr in self:
+            return self[attr]
+        else:
+            raise errors.MissingPluginError(attr)
+
+
+class RbuildHandle(_PluginProxy):
     """
     The rBuild Appliance Developer Process Toolkit handle object.
     @param cfg: rBuild Configuration object, or C{None} to read config
@@ -47,6 +65,8 @@ class RbuildHandle(object):
     @type productStore: C{rbuild.productstore.abstract.ProductStore}
     """
     def __init__(self, cfg=None, pluginManager=None, productStore=None):
+        super(RbuildHandle, self).__init__()
+
         self.product = None
         if cfg is None:
             cfg = rbuildcfg.RbuildConfiguration(readConfigFiles=True)
@@ -57,8 +77,10 @@ class RbuildHandle(object):
         self._cfg = cfg
         self._pluginManager = pluginManager
         for plugin in pluginManager.plugins:
-            setattr(self, plugin.__class__.__name__, plugin)
+            pluginName = plugin.__class__.__name__
+            self[pluginName] = plugin
             plugin.setHandle(self)
+
         # Provide access to facades
         self.facade = _Facade()
         self.facade.conary = rbuild.facade.conaryfacade.ConaryFacade(self)
@@ -117,8 +139,8 @@ class RbuildHandle(object):
         pluginName = apiMethod.im_class.__name__
         methodName = apiMethod.im_func.__name__
         try:
-            plugin = getattr(self, pluginName)
-        except AttributeError:
+            plugin = self[pluginName]
+        except KeyError:
             raise errors.InternalError(
                     'Could not install pre hook %r:'
                     ' No such plugin %r' % (hookFunction.__name__, pluginName))
@@ -144,8 +166,8 @@ class RbuildHandle(object):
         pluginName = apiMethod.im_class.__name__
         methodName = apiMethod.im_func.__name__
         try:
-            plugin = getattr(self, pluginName)
-        except AttributeError:
+            plugin = self[pluginName]
+        except KeyError:
             raise errors.InternalError(
                     'Could not install post hook %r:'
                     ' No such plugin %r' % (hookFunction.__name__, pluginName))

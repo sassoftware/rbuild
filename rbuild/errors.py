@@ -52,7 +52,7 @@ class RbuildError(BaseError):
 
 class IncompleteInterfaceError(BaseError):
     """
-    C{C{IncompleteInterfaceError}} - Interface unavailable in this configuration
+    B{C{IncompleteInterfaceError}} - Interface unavailable in this configuration
 
     This error is raised by stub functions that are not filled in;
     for example, a function that makes sense only in the context
@@ -64,6 +64,19 @@ class BadParameters(BaseError):
     """
     Raised when a command is given bad parameters at the command line.
     """
+
+
+class MissingPluginError(InternalError):
+    """
+    Raised on attempts to access a plugin that is not known to the
+    C{RbuildHandle} object.
+    """
+    def __init__(self, pluginName):
+        InternalError.__init__(self)
+        self.pluginName = pluginName
+    def __str__(self):
+        return "Plugin %r is not loaded" % self.pluginName
+
 
 #: error that is output when a Python exception makes it to the command 
 #: line.
