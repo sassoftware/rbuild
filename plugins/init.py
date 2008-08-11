@@ -87,23 +87,29 @@ class Init(pluginapi.Plugin):
             tempDir = productDir
         else:
             tempDir = None
-        util.mkdirChain(productDir + '/.rbuild')
 
-        targetDir = productDir + '/.rbuild/product-definition'
-        self.handle.facade.conary.checkout('product-definition', version,
-                                           targetDir=targetDir)
-        handle = self.handle
-        productStore = dirstore.CheckoutProductStore(handle, productDir)
-        product = productStore.getProduct()
-        if tempDir:
-            productDir = '%s-%s' % (product.getProductShortname(),
-                                    product.getProductVersion())
-            if os.path.exists(productDir):
-                util.rmtree(tempDir)
-                raise errors.RbuildError(
-                                'Directory %r already exists.' % productDir)
-            os.rename(tempDir, productDir)
+        try:
+            util.mkdirChain(productDir + '/.rbuild')
+            os.mkdir(productDir + '/.rbuild/tracebacks', 0700)
+
             targetDir = productDir + '/.rbuild/product-definition'
+            self.handle.facade.conary.checkout('product-definition', version,
+                                               targetDir=targetDir)
+            handle = self.handle
+            productStore = dirstore.CheckoutProductStore(handle, productDir)
+            product = productStore.getProduct()
+            if tempDir:
+                productDir = '%s-%s' % (product.getProductShortname(),
+                                        product.getProductVersion())
+                if os.path.exists(productDir):
+                    raise errors.RbuildError(
+                                    'Directory %r already exists.' % productDir)
+                os.rename(tempDir, productDir)
+                tempDir = None
+                targetDir = productDir + '/.rbuild/product-definition'
+        finally:
+            if tempDir:
+                util.rmtree(tempDir)
 
         stages = product.getStages()
         for stage in stages:

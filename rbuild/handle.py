@@ -114,6 +114,13 @@ class RbuildHandle(_PluginProxy):
                 if RbuildConfigData is not None:
                     self._cfg.readObject('INTERNAL', RbuildConfigData)
 
+    def __repr__(self):
+        if self.product:
+            return '<RbuildHandle at %d, product %s>' % (id(self),
+                self.product.getProductDefinitionLabel())
+        else:
+            return '<RbuildHandle at %d>' % (id(self),)
+
     def getConfig(self):
         """
         @return: RbuildConfiguration object used by this handle object.

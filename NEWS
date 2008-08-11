@@ -7,6 +7,8 @@ Changes in @NEW@:
       concepts are separate from the implementation of a checkout
       directory.  The Product plugin has been removed, and
       rbuild.productstore has been added. (RBLD-60)
+    * Error reports are now stored in .rbuild/tracebacks/ when an error
+      occurs while working in a product checkout. (RBLD-78)
 
 Changes in 0.3:
   o Bug Fixes:

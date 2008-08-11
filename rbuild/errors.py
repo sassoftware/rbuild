@@ -102,15 +102,47 @@ Error details follow:
 The complete related traceback has been saved as %(stackfile)s
 '''
 
+
+def _findCheckoutRoot():
+    import os
+    dirName = os.getcwd()
+    for i in range(dirName.count(os.path.sep)+1):
+        if os.path.isdir(os.path.join(dirName, '.rbuild')):
+            return dirName
+        dirName = os.path.dirname(dirName)
+    return None
+
+
 def genExcepthook(*args, **kw):
     """
     Generates an exception handling hook that brings up a debugger.
 
+    If the current working directory is underneath a product checkout,
+    a full traceback will be output in
+    C{<checkout root>/.rbuild/tracebacks/}, otherwise one will be
+    output in C{/tmp}.
+
     Example::
         sys.excepthook = genExceptHook(debugAll=True)
     """
-    return util.genExcepthook(error=_ERROR_MESSAGE,
-                              prefix='rbuild-error-', *args, **kw)
+
+    def excepthook(e_type, e_value, e_traceback):
+        checkoutRoot = _findCheckoutRoot()
+        if checkoutRoot:
+            import os
+            outputDir = checkoutRoot + '/.rbuild/tracebacks'
+            if not os.path.exists(outputDir):
+                os.mkdir(outputDir, 0700)
+            baseHook = util.genExcepthook(error=_ERROR_MESSAGE,
+                prefix=outputDir + '/rbuild-error-', *args, **kw)
+        else:
+            baseHook = util.genExcepthook(error=_ERROR_MESSAGE,
+                prefix='rbuild-error-', *args, **kw)
+
+        baseHook(e_type, e_value, e_traceback)
+
+    return excepthook
+
 
 #pylint: disable-msg=C0103
 # this shouldn't be upper case.
