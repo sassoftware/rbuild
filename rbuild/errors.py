@@ -15,6 +15,7 @@
 """
 rBuild-specific errors.
 """
+import os
 from conary.lib import util
 
 # make ParseError available from here as well
@@ -104,7 +105,10 @@ The complete related traceback has been saved as %(stackfile)s
 
 
 def _findCheckoutRoot():
-    import os
+    """
+    Find the top-level directory of the current checkout, if any.
+    @return: directory name, or None if no checkout found
+    """
     dirName = os.getcwd()
     for i in range(dirName.count(os.path.sep)+1):
         if os.path.isdir(os.path.join(dirName, '.rbuild')):
@@ -128,11 +132,17 @@ def genExcepthook(*args, **kw):
 
     def excepthook(e_type, e_value, e_traceback):
         checkoutRoot = _findCheckoutRoot()
+        outputDir = None
         if checkoutRoot:
-            import os
-            outputDir = checkoutRoot + '/.rbuild/tracebacks'
-            if not os.path.exists(outputDir):
-                os.mkdir(outputDir, 0700)
+            try:
+                outputDir = checkoutRoot + '/.rbuild/tracebacks'
+                if not os.path.exists(outputDir):
+                    os.mkdir(outputDir, 0700)
+            except:
+                # fall back gracefully if we can't create the directory
+                outputDir = None
+
+        if outputDir:
             baseHook = util.genExcepthook(error=_ERROR_MESSAGE,
                 prefix=outputDir + '/rbuild-error-', *args, **kw)
         else:
