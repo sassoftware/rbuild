@@ -138,6 +138,8 @@ def genExcepthook(*args, **kw):
                 outputDir = checkoutRoot + '/.rbuild/tracebacks'
                 if not os.path.exists(outputDir):
                     os.mkdir(outputDir, 0700)
+                elif not os.access(outputDir, os.W_OK):
+                    outputDir = None
             except:
                 # fall back gracefully if we can't create the directory
                 outputDir = None
