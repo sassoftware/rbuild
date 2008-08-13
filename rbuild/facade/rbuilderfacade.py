@@ -67,6 +67,8 @@ class RbuilderFacade(object):
     def validateUrl(self, serverUrl):
         try:
             urllib2.urlopen(serverUrl).read(1024)
+            #pylint: disable-msg=W0703
+            # * catch Exception is safe: it displays error to user
         except Exception, err:
             self._handle.ui.write('Error contacting \'%s\': %s', serverUrl, err)
             return False

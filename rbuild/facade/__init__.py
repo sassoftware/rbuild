@@ -34,54 +34,72 @@ from conary.lib import util
 
 
 class ProtectedTemplate(util.ProtectedTemplate):
-    '''
+    """
     Extension of L{conary.lib.util.ProtectedTemplate} that supports
     appending fixed strings to the template. The transport handler
     will (unknowingly) use this when it throws C{ProtocolError}.
-    '''
+    """
+    #pylint: disable-msg=R0904
+    # * lots of methods inherited from a builtin type
+
     def __add__(self, other):
+        """
+        Append string C{other} to the template.
+
+        @param other: String to add to template
+        @type  other: str
+        @return: L{ProtectedTemplate}
+        """
+        #pylint: disable-msg=E1101
+        # * parameters added in __new__ aren't lint-friendly
         assert isinstance(other, str)
         template = self._templ.template + other
         return ProtectedTemplate(template, **self._substArgs)
 
 
 class _Method(xmlrpclib._Method):
-    '''
+    """
     Extension of L{xmlrpclib._Method} that sanitizes any
     C{ProtocolError}s thrown in a call, using C{__safe_str__}().
-    '''
+    """
 
     def __getattr__(self, name):
-        '''
+        """
         Handle nested calls (e.g. C{proxy.foo.bar()}) while still
         returning our own C{_Method}. Note that unlike the python
         version, this will work with subclasses too.
-        '''
+
+        @param name: Name of sub-method to generate
+        @return: L{_Method}
+        """
         return self.__class__(self.__send, "%s.%s" % (self.__name, name))
 
     def __call__(self, *args):
-        '''
+        """
         Catch C{ProtocolError} thrown by the transport and sanitize
         the C{url} parameter.
-        '''
+
+        @param args: Arguments to marshal over XMLRPC
+        @return: Result of RPC
+        """
         try:
             return xmlrpclib._Method.__call__(self, *args)
         except xmlrpclib.ProtocolError:
-            e_type, e_value, e_traceback = sys.exc_info()
-            e_value.url = e_value.url.__safe_str__()
+            eType, eValue, eTraceback = sys.exc_info()
+            eValue.url = eValue.url.__safe_str__()
             try:
-                raise e_type, e_value, e_traceback
+                raise eType, eValue, eTraceback
             finally:
-                # Circular reference through e_traceback
-                del e_type, e_value, e_traceback
+                # Circular reference through eTraceback
+                del eType, eValue, eTraceback
 
 
 class ServerProxy(util.ServerProxy):
-    '''
+    """
     Generic ServerProxy that supports injecting username/password into
     a URI without revealing the password in tracebacks or error
     messages.
-    '''
+    """
 
     def __init__(self, uri, username=None, password=None, *args, **kwargs):
         util.ServerProxy.__init__(self, uri, *args, **kwargs)
@@ -92,17 +110,20 @@ class ServerProxy(util.ServerProxy):
                 user=username, password=password, host=self.__host)
 
     def __repr__(self):
-        '''
+        """
         Return a representation of the server proxy using a clean URI.
-        '''
+
+        @return: str
+        """
         return '<ServerProxy for %s%s>' % (self.__host.__safe_str__(),
             self.__handler)
 
     def _createMethod(self, name):
-        '''
+        """
         Use our C{_Method} so we can catch and sanitize
         all C{ProtocolError} thrown by the transport.
 
-        @params name: XMLRPC method name
-        '''
+        @param name: XMLRPC method name
+        @return: L{_Method}
+        """
         return _Method(self._request, name)
