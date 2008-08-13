@@ -23,6 +23,7 @@ import urllib2
 
 from rpath_common import proddef
 from rbuild import errors
+from rbuild import facade
 
 
 class RbuilderFacade(object):
@@ -75,20 +76,8 @@ class RbuilderFacade(object):
 
 class RbuilderClient(object):
     def __init__(self, rbuilderUrl, user, pw):
-        import urlparse
-        import xmlrpclib
-        from M2Crypto import m2xmlrpclib
-        scheme, netloc, path, query, fragment = urlparse.urlsplit(rbuilderUrl)
-        path = 'xmlrpc-private'
-        netloc = netloc.split('@', 1)[-1]
-        netloc = '%s:%s@' % (user, pw) + netloc
-        rbuilderUrl =  urlparse.urlunsplit(
-                                (scheme, netloc, path, query, fragment))
-
-        if scheme == 'https':
-            self.server = m2xmlrpclib.ServerProxy(rbuilderUrl)
-        else:
-            self.server = xmlrpclib.ServerProxy(rbuilderUrl)
+        rpcUrl = rbuilderUrl + '/xmlrpc-private'
+        self.server = facade.ServerProxy(rpcUrl, username=user, password=pw)
 
     def getProductLabelFromNameAndVersion(self, productName, versionName):
         error, productId = self.server.getProjectIdByHostname(productName)
