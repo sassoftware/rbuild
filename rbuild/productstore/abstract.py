@@ -81,12 +81,19 @@ class ProductStore(object):
         return [(x[0][0], x[1]) for x in zip(groupFlavors, fullFlavors)]
 
     def getBuildsWithFullFlavors(self, stageName):
+        """
+        @param stageName: name of stage
+        @type stageName: string
+        @return: Tuples of (build, fullFlavor) for each build defined
+        in stage C{stageName}
+        @rtype: [(proddef.Build, string), ...]
+        """
         product = self._handle.product
         builds = product.getBuildsForStage(stageName)
         flavors = [ x.getBuildBaseFlavor() for x in builds ]
         fullFlavors = self._handle.facade.conary._overrideFlavors(
                                              str(product.getBaseFlavor()),
-                                             [x[1] for x in flavors])
+                                             flavors)
         fullFlavors = [ self._addInExtraFlavor(x) for x in fullFlavors ]
         return zip(builds, fullFlavors)
 
