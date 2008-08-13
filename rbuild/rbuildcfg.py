@@ -61,3 +61,36 @@ class RbuildConfiguration(cfg.ConfigFile):
             self.read(root + os.environ["HOME"] + "/" + ".rbuildrc",
                       exception=False)
         self.read('rbuildrc', exception=False)
+
+    def writeCheckoutFile(self, path):
+        """
+        Write portions of the configuration to a file at C{path}. Most
+        options will only appear as comments showing the default value
+        and the value at the time this function was called. Some
+        options will have their actual values set, and others will not
+        appear at all.
+        """
+        out = open(path, 'w')
+        options = dict(prettyPrint=True)
+
+        OMIT_ITEMS = ['user']
+        SET_ITEMS = ['repositoryMap']
+
+        def _formatItem(theItem, theValue):
+            return ', '.join(theItem.valueType.toStrings(theValue, options))
+
+        for key, item in sorted(self._options.items()):
+            if key in OMIT_ITEMS:
+                # Omit these entirely
+                continue
+
+            value = self[key]
+            if key in SET_ITEMS:
+                # Write values for these
+                out.write("# %s (Default: %s)\n" % (item.name,
+                    _formatItem(item, item.default)))
+                self._writeKey(out, item, value, options)
+            else:
+                # Write docs for these (the normal case)
+                out.write("# %s (Default: %s) (At `rbuild init': %s)\n" % (item.name,
+                    _formatItem(item, item.default), _formatItem(item, value)))

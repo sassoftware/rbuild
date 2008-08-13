@@ -116,7 +116,7 @@ class Init(pluginapi.Plugin):
             stageDir = productDir + '/' + stage.name
             os.mkdir(stageDir)
             open(stageDir + '/.stage', 'w').write(stage.name + '\n')
-        self.handle.getConfig().writeToFile(productDir + '/.rbuild/rbuildrc')
+        self.handle.getConfig().writeCheckoutFile(productDir + '/.rbuild/rbuildrc')
         self.handle.ui.info('Created checkout for %s at %s', 
                              product.getProductDefinitionLabel(),
                              productDir)

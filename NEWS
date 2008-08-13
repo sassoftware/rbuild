@@ -2,6 +2,9 @@ Changes in @NEW@:
   o Bug Fixes:
     * rBuilder passwords are no longer displayed in error messages or
       traceback dumps. (RBLD-66)
+    * The rbuildrc file created on "rbuild init" no longer includes
+      passwords, and provides informational comments only for options
+      other than repositoryMap. (RBLD-77)
 
   o API Changes:
     * rbuild now uses rMake to communicate to rbuilder. (RBLD-45)
