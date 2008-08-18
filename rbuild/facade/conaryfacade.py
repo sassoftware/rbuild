@@ -24,6 +24,7 @@ import itertools
 import os
 import stat
 import types
+import urlparse
 
 from conary import conarycfg
 from conary import conaryclient
@@ -66,7 +67,8 @@ class ConaryFacade(object):
         """
         serverUrl = self._handle.getConfig().serverUrl
         if serverUrl:
-            if serverUrl != 'http://www.rpath.org':
+            hostname = urlparse.urlparse(serverUrl)[1]
+            if hostname not in ['www.rpath.com', 'www.rpath.org']:
                 cfg.includeConfigFile(serverUrl + '/conaryrc')
 
     def _initializeFlavors(self):
