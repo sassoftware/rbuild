@@ -453,6 +453,9 @@ class ConaryFacade(object):
         return deps.getMajorArch(flavor)
 
     def _getShortFlavorDescriptors(self, flavorList):
+        if not flavorList:
+            return {}
+
         descriptions = deps.getShortFlavorDescriptors(
                                   [ self._getFlavor(x) for x in flavorList ])
         return dict((str(x[0]), x[1]) for x in descriptions.items())
