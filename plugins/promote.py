@@ -33,7 +33,7 @@ class PromoteCommand(pluginapi.command.BaseCommand):
         _ = self.requireParameters(args)
         promotedList, nextStage = handle.Promote.promoteAll()
         promotedList = '\n   '.join(promotedList)
-        print 'Promoted to %s:\n    %s' % (nextStage, promotedList)
+        print 'Promoted to %s:\n   %s' % (nextStage, promotedList)
 
 
 class Promote(pluginapi.Plugin):
