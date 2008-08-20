@@ -17,6 +17,8 @@ Changes in @NEW@:
       rbuild.productstore has been added. (RBLD-60)
     * Error reports are now stored in .rbuild/tracebacks/ when an error
       occurs while working in a product checkout. (RBLD-78)
+    * The "rbuild promote" command now supports secondaryLabel and
+      promoteMap in stages. (RBLD-59)
 
 Changes in 0.3:
   o Bug Fixes:

@@ -53,17 +53,18 @@ class Promote(pluginapi.Plugin):
         Promote all appropriate troves from the currently active stage
         to the next stage.
         """
-        handle = self.handle
-        activeStage = handle.productStore.getActiveStageName()
-        nextStage = handle.productStore.getNextStageName(activeStage)
-        activeLabel = handle.product.getLabelForStage(activeStage)
-        nextLabel = handle.product.getLabelForStage(nextStage)
-        groupSpecs = [ '%s[%s]' % x for x in handle.productStore.getGroupFlavors() ]
-        allTroves = handle.facade.conary._findTrovesFlattened(groupSpecs,
-                                                              activeLabel)
-        promotedList = handle.facade.conary.promoteGroups(allTroves,
-                                                          activeLabel,
-                                                          nextLabel)
+        store, product = self.handle.productStore, self.handle.product
+        cny = self.handle.facade.conary
+
+        activeStage = store.getActiveStageName()
+        nextStage = store.getNextStageName(activeStage)
+        activeLabel = self.handle.product.getLabelForStage(activeStage)
+
+        fromTo = self.handle.product.getPromoteMapsForStages(activeStage, nextStage)
+
+        groupSpecs = [ '%s[%s]' % x for x in store.getGroupFlavors() ]
+        allTroves = cny._findTrovesFlattened(groupSpecs, activeLabel)
+        promotedList = cny.promoteGroups(allTroves, fromTo)
 
         promotedList = [ x for x in promotedList
                          if (':' not in x[0]

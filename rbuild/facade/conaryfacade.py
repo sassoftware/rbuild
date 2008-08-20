@@ -508,13 +508,24 @@ class ConaryFacade(object):
     def isGroupName(packageName):
         return trove.troveIsGroup(packageName)
 
-    def promoteGroups(self, groupList, fromLabel, toLabel):
-        fromLabel = self._getLabel(fromLabel)
-        toLabel = self._getLabel(toLabel)
+    def promoteGroups(self, groupList, fromTo):
+        """
+        Promote the troves in C{groupList} using the promote map in
+        C{fromTo}. The former should be a list of trove tuples, and the
+        latter a dictionary mapping of labels (C{from: to}).
+
+        @param groupList: List of group trove tuples to promote
+        @type  groupList: [(name, version, flavor)]
+        @param fromTo: Mapping of labels to execute promote on
+        @type  fromTo: {from: to}
+        """
+        promoteMap = dict((self._getLabel(fromLabel), self._getLabel(toLabel))
+            for (fromLabel, toLabel) in fromTo.iteritems())
+
         client = self._getConaryClient()
-        success, cs = client.createSiblingCloneChangeSet({fromLabel:toLabel},
-                                                         groupList,
-                                                         cloneSources=True)
+        success, cs = client.createSiblingCloneChangeSet(promoteMap,
+            groupList, cloneSources=True)
+
         if not success:
             raise errors.RbuildError('Promote failed.')
         else:
