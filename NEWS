@@ -1,4 +1,4 @@
-Changes in @NEW@:
+Changes in 0.4:
   o Bug Fixes:
     * rBuilder passwords are no longer displayed in error messages or
       traceback dumps. (RBLD-66)

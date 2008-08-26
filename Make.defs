@@ -12,8 +12,8 @@
 # full details.
 #
 
-VERSION=0.3
-# XVERSION can be overridden by snapshot builds to force incompatible versions
+VERSION=0.4
+# VERSION can be overridden by snapshot builds to force incompatible versions
 
 export prefix = /usr
 export lib = $(shell arch | sed -r '/x86_64|ppc64|s390x|sparc64/{s/.*/lib64/;q};s/.*/lib/')
