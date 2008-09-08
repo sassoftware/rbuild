@@ -478,13 +478,14 @@ class ConaryFacade(object):
         recipeDir = os.path.dirname(recipePath)
         recipeName = os.path.basename(recipePath)
         repos =  self._getRepositoryClient()
-        conaryState = state.ConaryStateFromFile(recipeDir + '/CONARY', repos)
+        statePath = os.path.join(recipeDir, 'CONARY')
+        conaryState = state.ConaryStateFromFile(statePath, repos)
         sourceState = conaryState.getSourceState()
 
         for (pathId, path, _, _) in list(sourceState.iterFileList()):
             if path == recipeName:
                 continue
-            path = recipeDir + '/' + path
+            path = os.path.join(recipeDir, path)
             sourceState.removeFile(pathId)
 
             if util.exists(path):
@@ -497,7 +498,7 @@ class ConaryFacade(object):
                 except OSError, e:
                     self._handle.ui.warning(
                                 "cannot remove %s: %s", path, e.strerror)
-        conaryState.write('CONARY')
+        conaryState.write(statePath)
 
     @staticmethod
     def getNameForCheckout(checkoutDir):
