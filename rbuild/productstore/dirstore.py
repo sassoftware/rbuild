@@ -78,7 +78,7 @@ class CheckoutProductStore(ProductStore):
                 raise errors.RbuildError("No product directory at '%s'"
                                          %baseDirectory)
         self._baseDirectory = os.path.realpath(productDirectory)
-        self._testProductDirectory(productDirectory)
+        self._testProductDirectory(self._baseDirectory)
         stageName = getStageNameFromDirectory(os.getcwd())
         if stageName is not None:
             # Cannot load product yet, so cannot validate

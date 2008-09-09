@@ -520,7 +520,15 @@ class ConaryFacade(object):
         @param fromTo: Mapping of labels to execute promote on
         @type  fromTo: {from: to}
         """
-        promoteMap = dict((self._getLabel(fromLabel), self._getLabel(toLabel))
+        def getLabelOrBranch(label):
+            if isinstance(label, types.StringTypes):
+                if label.startswith('/'):
+                    return self._getVersion(label)
+                else:
+                    return self._getLabel(label)
+            return label
+
+        promoteMap = dict((self._getLabel(fromLabel), getLabelOrBranch(toLabel))
             for (fromLabel, toLabel) in fromTo.iteritems())
 
         client = self._getConaryClient()
