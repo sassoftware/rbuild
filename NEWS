@@ -1,4 +1,9 @@
 Changes in @NEW@:
+  o New Features:
+    * Added a "rmakeUser" configuration option for use with multi-node
+      rMake.  This will override the defaults taken from "user".
+      (RBLD-94)
+
   o Bug Fixes:
     * The rbuild build images command now can handle multiple images
       built from the same name, version, and flavor group.  Previously,

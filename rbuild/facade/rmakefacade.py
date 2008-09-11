@@ -96,7 +96,10 @@ class RmakeFacade(object):
         cfg.user.append((stageLabel.getHost(),) + rbuildConfig.user)
         if rbuildConfig.rmakeUrl:
             cfg.rmakeUrl = rbuildConfig.rmakeUrl
-        cfg.rmakeUser = rbuildConfig.user
+        if rbuildConfig.rmakeUser:
+            cfg.rmakeUser = rbuildConfig.rmakeUser
+        else:
+            cfg.rmakeUser = rbuildConfig.user
         cfg.name = rbuildConfig.name
         cfg.contact = rbuildConfig.contact
         self._handle.facade.conary._parseRBuilderConfigFile(cfg)

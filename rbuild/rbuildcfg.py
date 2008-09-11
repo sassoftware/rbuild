@@ -36,6 +36,7 @@ class RbuildConfiguration(cfg.ConfigFile):
     contact              = CfgString
     pluginDirs           = (CfgPathList, ['/usr/share/rbuild/plugins',
                                           '~/.rbuild/plugins.d'])
+    rmakeUser            = CfgUser
     rmakeUrl             = CfgString
     rmakePluginDirs      = (CfgPathList, ['/usr/share/rmake/plugins',
                                           '~/.rmake/plugins.d'])
@@ -73,7 +74,7 @@ class RbuildConfiguration(cfg.ConfigFile):
         out = open(path, 'w')
         options = dict(prettyPrint=True)
 
-        OMIT_ITEMS = ['user']
+        OMIT_ITEMS = ['user', 'rmakeUser']
         SET_ITEMS = ['repositoryMap']
 
         def _formatItem(theItem, theValue):
