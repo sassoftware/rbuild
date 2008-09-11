@@ -18,11 +18,10 @@ As with all internal components, these interfaces are subject to
 change.
 """
 
-import inspect
 import weakref
 
 
-def findPropCaller(descr, cls):
+def findPropCaller(descr, othercls):
     """
     Figure out what attribute a descriptor was accessed as.
 
@@ -31,10 +30,10 @@ def findPropCaller(descr, cls):
     or this function will return the wrong name!
 
     @param descr: Descriptor to find the binding for
-    @param cls: Class whose MRO will be searched
+    @param topcls: Class whose MRO will be searched
     """
 
-    for cls in inspect.getmro(cls):
+    for cls in othercls.__mro__:
         for key, value in cls.__dict__.iteritems():
             if value is descr:
                 return key
