@@ -191,10 +191,11 @@ class RmakeFacade(object):
         for build, buildFlavor in builds:
             buildFlavor = conaryFacade._getFlavor(buildFlavor)
             groupName = str(build.getBuildImageGroup())
+            buildImageName = str(build.getBuildName())
             buildImageType = build.getBuildImageType().tag
             buildSettings = build.getBuildImageType().fields.copy()
             troveSpec = (groupName, stageLabel, buildFlavor)
-            allImages.append((troveSpec, buildImageType, buildSettings))
+            allImages.append((troveSpec, buildImageType, buildSettings, buildImageName))
 
         return rmakeClient.createImageJob(productName, allImages)
 

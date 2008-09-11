@@ -1,4 +1,20 @@
+Changes in @NEW@:
+  o Bug Fixes:
+    * The rbuild build images command now can handle multiple images
+      built from the same name, version, and flavor group.  Previously,
+      only one image of each name, version, flavor combination was
+      built. (RBLD-92)
+
+  o API Changes:
+    * Requires rMake with rmakeClient.createImageJob() API changes
+      defined in RMK-907. (RBLD-92)
+
+  o Internal Changes:
+    * Reference loops between the handle and other objects have been
+      eliminated by using weakrefs.
+
 Changes in 0.5:
+  o Bug Fixes:
     * Creating a derived package with rbuild no longer writes the
       conary state file into the stage directory. (RBLD-86)
     * The rbuild promote command now handles promoteMaps that
