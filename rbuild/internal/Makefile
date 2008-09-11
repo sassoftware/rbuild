@@ -12,10 +12,12 @@
 # full details.
 #
 
-python_files =  __init__.py	\
-                helpcommand.py		\
-                main.py		\
-                pluginloader.py
+python_files =	\
+		__init__.py		\
+		helpcommand.py		\
+		internal_types.py	\
+		main.py			\
+		pluginloader.py
 
 
 dist_files = Makefile $(python_files)

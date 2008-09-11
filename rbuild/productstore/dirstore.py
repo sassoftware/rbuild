@@ -68,7 +68,7 @@ def getStageNameFromDirectory(dirName=None):
 
 
 class CheckoutProductStore(ProductStore):
-    def __init__(self, handle, baseDirectory=None):
+    def __init__(self, handle=None, baseDirectory=None):
         ProductStore.__init__(self, handle)
         productDirectory = getDefaultProductDirectory(baseDirectory)
         if productDirectory is None:

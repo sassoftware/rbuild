@@ -121,6 +121,6 @@ class Init(pluginapi.Plugin):
                              product.getProductDefinitionLabel(),
                              productDir)
         # get the versions that point to the real checkout now
-        handle.productStore = dirstore.CheckoutProductStore(handle, productDir)
+        handle.productStore = dirstore.CheckoutProductStore(None, productDir)
         handle.product = handle.productStore.getProduct()
         return handle.productStore

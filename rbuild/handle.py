@@ -20,19 +20,16 @@ the core API item by which consumers of the python API call the plugins
 that implement rBuild functionality, and by which plugins communicate
 with each other.
 """
+
+import rbuild.facade.conaryfacade
+import rbuild.facade.rmakefacade
+import rbuild.facade.rbuilderfacade
 from rbuild import errors
 from rbuild import rbuildcfg
 from rbuild import ui
 from rbuild.internal import pluginloader
+from rbuild.internal.internal_types import AttributeHook
 from rbuild.productstore import dirstore
-import rbuild.facade.conaryfacade
-import rbuild.facade.rmakefacade
-import rbuild.facade.rbuilderfacade
-
-class _Facade(object):
-    """
-    Private internal container for facades provided via the handle
-    """
 
 
 class _PluginProxy(dict):
@@ -46,7 +43,9 @@ class _PluginProxy(dict):
     """
 
     def __getattr__(self, attr):
-        if attr in self:
+        if attr.startswith('_'):
+            raise AttributeError
+        elif attr in self:
             return self[attr]
         else:
             raise errors.MissingPluginError(attr)
@@ -64,6 +63,9 @@ class RbuildHandle(_PluginProxy):
     @ivar productStore: persistent context for interacting with a product
     @type productStore: C{rbuild.productstore.abstract.ProductStore}
     """
+
+    productStore = AttributeHook('setHandle')
+
     def __init__(self, cfg=None, pluginManager=None, productStore=None):
         super(RbuildHandle, self).__init__()
 
@@ -82,16 +84,15 @@ class RbuildHandle(_PluginProxy):
             plugin.setHandle(self)
 
         # Provide access to facades
-        self.facade = _Facade()
-        self.facade.conary = rbuild.facade.conaryfacade.ConaryFacade(self)
-        self.facade.rmake = rbuild.facade.rmakefacade.RmakeFacade(self)
-        self.facade.rbuilder = rbuild.facade.rbuilderfacade.RbuilderFacade(self)
-        # C0103: bad variable name.  We want this variable to match the
-        # convention of variables accessible from the handle.  Like a plugin,
-        # which is available under its class name, the commands are available
-        # under handle.Commands.
-        # pylint: disable-msg=C0103
-        self.Commands = CommandManager()
+        self.facade = _PluginProxy({
+            'conary': rbuild.facade.conaryfacade.ConaryFacade(self),
+            'rmake': rbuild.facade.rmakefacade.RmakeFacade(self),
+            'rbuilder': rbuild.facade.rbuilderfacade.RbuilderFacade(self),
+          })
+
+        # Provide the command manager as if it were a plugin
+        self['Commands'] = CommandManager()
+
         self.ui = ui.UserInterface(self._cfg)
 
         if productStore is None:
@@ -99,7 +100,7 @@ class RbuildHandle(_PluginProxy):
             # Note: will still be None for some cases, such as rbuild init
             proddir = dirstore.getDefaultProductDirectory()
             if proddir is not None:
-                productStore = dirstore.CheckoutProductStore(self, proddir)
+                productStore = dirstore.CheckoutProductStore(None, proddir)
         self.productStore = productStore
 
         if productStore:
@@ -116,10 +117,10 @@ class RbuildHandle(_PluginProxy):
 
     def __repr__(self):
         if self.product:
-            return '<RbuildHandle at %d, product %s>' % (id(self),
+            return '<RbuildHandle at %s, product %s>' % (hex(id(self)),
                 self.product.getProductDefinitionLabel())
         else:
-            return '<RbuildHandle at %d>' % (id(self),)
+            return '<RbuildHandle at %s>' % (hex(id(self)),)
 
     def getConfig(self):
         """

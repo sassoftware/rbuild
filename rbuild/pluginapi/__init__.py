@@ -33,7 +33,7 @@ from decorator import decorator
 from rmake.lib import pluginlib
 
 from rbuild import errors
-
+from rbuild.internal.internal_types import WeakReference
 
 
 class Plugin(pluginlib.Plugin):
@@ -43,12 +43,13 @@ class Plugin(pluginlib.Plugin):
     #pylint: disable-msg=R0201
     # "Method could be a function" but this is a base class
 
+    handle = WeakReference()
+
     def __init__(self, *args, **kw):
         pluginlib.Plugin.__init__(self, *args, **kw)
 
         self._prehooks = {}
         self._posthooks = {}
-        self.handle = None
         for methodName in self.__class__.__dict__:
             if methodName[0] == '_' or hasattr(Plugin, methodName):
                 continue

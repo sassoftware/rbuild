@@ -50,6 +50,12 @@ class EpydocParamsMatchChecker(BaseChecker):
     def visit_function(self, node, *args, **kw):
         if node.doc is None:
             return
+        # Ignore functions that look like slots. If we had a list of
+        # all slot methods that we could import, that would be better,
+        # but it seems it's only accessible from C.
+        if node.name.startswith('__') and node.name.endswith('__'):
+            return
+
         docParams = EpyTextNode(node.doc).getDocumentedParameters()
         if node.is_method() and node.type != 'staticmethod':
             neededParams = node.argnames[1:]

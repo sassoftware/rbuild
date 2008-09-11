@@ -16,6 +16,8 @@ import os
 from rpath_common.proddef import api1 as proddef
 
 from rbuild import errors
+from rbuild.internal.internal_types import WeakReference
+
 
 # "Method could be a function"
 # Since this is a base class, methods here might look like they could
@@ -28,9 +30,14 @@ class ProductStore(object):
     stores.
     """
 
-    def __init__(self, handle):
+    _handle = WeakReference()
+
+    def __init__(self, handle=None):
         self._handle = handle
         self._currentStage = None
+
+    def setHandle(self, handle):
+        self._handle = handle
 
     def getProduct(self):
         return proddef.ProductDefinition()
