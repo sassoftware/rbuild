@@ -40,7 +40,7 @@ def findPropCaller(descr, cls):
                 return key
 
     # Nothing in the object's MRO references this descriptor.
-    raise RuntimeError("invalid descriptor call")
+    raise AssertionError("invalid descriptor call")
 
 
 class AttributeHook(object):
@@ -78,7 +78,7 @@ class AttributeHook(object):
         """
         prop = self._attr(cls)
         if obj:
-            return obj.__dict__[prop]
+            return obj.__dict__.get(prop, None)
         else:
             return self
 
@@ -136,7 +136,11 @@ class WeakReference(object):
             ref = obj.__dict__.get(prop, None)
             if ref:
                 return ref()
-        return None
+            else:
+                return None
+        else:
+            # Pass-through
+            return self
 
     def __set__(self, obj, value):
         """
