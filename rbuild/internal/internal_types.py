@@ -30,7 +30,7 @@ def findPropCaller(descr, othercls):
     or this function will return the wrong name!
 
     @param descr: Descriptor to find the binding for
-    @param topcls: Class whose MRO will be searched
+    @param othercls: Class whose MRO will be searched
     """
 
     for cls in othercls.__mro__:
