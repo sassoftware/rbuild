@@ -64,6 +64,8 @@ class RbuildHandle(_PluginProxy):
     @type productStore: C{rbuild.productstore.abstract.ProductStore}
     """
 
+    # Hook the assignment of productStore so that its parent handle
+    # is automatically set (to the current instance).
     productStore = AttributeHook('setHandle')
 
     def __init__(self, cfg=None, pluginManager=None, productStore=None):

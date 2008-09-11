@@ -43,6 +43,8 @@ class Plugin(pluginlib.Plugin):
     #pylint: disable-msg=R0201
     # "Method could be a function" but this is a base class
 
+    # The parent handle should be a weak reference to avoid a loop;
+    # this descriptor will transparently handle the dereferenceing.
     handle = WeakReference()
 
     def __init__(self, *args, **kw):

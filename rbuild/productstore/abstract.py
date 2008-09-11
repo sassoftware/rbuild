@@ -30,6 +30,8 @@ class ProductStore(object):
     stores.
     """
 
+    # Transparently weak-reference our handle so no dependency loop is
+    # created.
     _handle = WeakReference()
 
     def __init__(self, handle=None):
