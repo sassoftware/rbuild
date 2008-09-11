@@ -73,7 +73,7 @@ class AttributeHook(object):
 
     def __get__(self, obj, cls):
         """
-        Pass-through; should behave identically to a selfiptorless fetch.
+        Pass-through; should behave identically to a descriptorless fetch.
         """
         prop = self._attr(cls)
         if obj:
