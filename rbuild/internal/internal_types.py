@@ -23,17 +23,23 @@ import weakref
 
 def findPropCaller(descr, othercls):
     """
-    Figure out what attribute a descriptor was accessed as.
+    Figure out what attribute of class C{othercls} a descriptor
+    C{descr} is stored in.
 
-    NOTE: When using a descriptor that utilizes this function, never
-    use the same instance of the descriptor for multiple attributes,
-    or this function will return the wrong name!
+    C{othercls} and its entire method-resolution order will be
+    searched.
 
-    @param descr: Descriptor to find the binding for
-    @param othercls: Class whose MRO will be searched
+    NOTE: Never store multiple copies of the same instance of any
+    descriptor, especially ones that use this function. If you do,
+    this function will probably return the wrong name!
+
+    @param descr: Descriptor to locate
+    @type  descr: C{object}
+    @param othercls: Class in which to find C{descr}
+    @type  othercls: C{type}
     """
 
-    for cls in othercls.__mro__:
+    for cls in othercls.mro():
         for key, value in cls.__dict__.iteritems():
             if value is descr:
                 return key
