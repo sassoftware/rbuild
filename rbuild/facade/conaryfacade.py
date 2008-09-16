@@ -545,6 +545,26 @@ class ConaryFacade(object):
             self._getRepositoryClient().commitChangeSet(cs)
             return packageList
 
+    def getLatestPackagesOnLabel(self, label, keepComponents=False,
+      keepGroups=False):
+        client = self._getConaryClient()
+        label = self._getLabel(label)
+        results = client.getRepos().getTroveLatestByLabel(
+            {None: {label: [None]}})
+
+        packages = []
+        for name, versiondict in results.iteritems():
+            if ':' in name and not keepComponents:
+                continue
+            elif trove.troveIsGroup(name) and not keepGroups:
+                continue
+
+            for version, flavors in versiondict.iteritems():
+                for flavor in flavors:
+                    packages.append((name, version, flavor))
+        return packages
+
+
 #pylint: disable-msg=C0103,R0901,W0221,R0904
 # "The creature can't help its ancestry"
 class _QuietUpdateCallback(checkin.CheckinCallback):

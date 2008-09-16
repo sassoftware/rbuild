@@ -19,6 +19,8 @@ plugins.  It provides public methods which are only to be accessed
 via C{handle.facade.rmake} which is automatically available to
 all plugins through the C{handle} object.
 """
+
+import copy
 import os
 
 from rmake.build import buildcfg
@@ -162,24 +164,38 @@ class RmakeFacade(object):
         cfg = self._getRmakeConfig()
         return helper.rMakeHelper(buildConfig=cfg)
 
-    def createBuildJobForStage(self, itemList, recurse=True):
+    def createBuildJobForStage(self, itemList, recurse=True, rebuild=True,
+      useLocal=False):
         """
-        @param itemList: list of troveSpec style items to build or paths to 
-        recipes.  May include version (after =) flavor (in []) or context
-        (in {}) for each item.
-        @type itemList: list of strings
-        @param recurse: if True, build all child packages included in groups.
-        @return: an rMakeHelper object suitable for use with the current
-        product (without any contexts for use in starting a build)
+        @param itemList: list of troveSpec style items to build or
+            paths to recipes.  May include version (after =) flavor
+            (in []) or context (in {}) for each item.
+        @type  itemList: list of strings
+        @param recurse: if C{True} (the default), build all child
+            packages included in groups.
+        @param rebuild: if C{True} (the default), rmake will reuse
+            packages that do not need to be rebuilt.
+        @param useLocal: if C{True}, built packages on the stage label
+            will be inserted into resolveTroves
+        @return: The new build job object
         """
         rmakeClient = self._getRmakeHelperWithContexts()[0]
         stageLabel = self._handle.productStore.getActiveStageLabel()
         if recurse:
             recurse = rmakeClient.BUILD_RECURSE_GROUPS_SOURCE
+
+        cfg = None
+        if useLocal:
+            conary = self._handle.facade.conary
+            initialTroves = conary.getLatestPackagesOnLabel(stageLabel)
+
+            cfg = copy.copy(self._getRmakeConfigWithContexts()[0])
+            cfg.resolveTroves = copy.deepcopy(cfg.resolveTroves)
+            cfg.resolveTroves.insert(0, initialTroves)
+
         return rmakeClient.createBuildJob(itemList,
-                                   rebuild=True,
-                                   recurseGroups=recurse,
-                                   limitToLabels=[stageLabel])
+            rebuild=rebuild, recurseGroups=recurse, limitToLabels=[stageLabel],
+            buildConfig=cfg)
 
     def createImagesJobForStage(self):
         rmakeClient = self._getRmakeHelper()

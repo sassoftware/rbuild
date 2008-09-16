@@ -29,24 +29,29 @@ class BuildPackagesCommand(command.BaseCommand):
     help = 'Build edited packages for this stage'
     paramHelp = '[package]*'
     docs = {'no-watch' : 'do not watch the job after starting the build',
-            'no-commit' : 'do not automatically commit successful builds',}
+            'no-commit' : 'do not automatically commit successful builds',
+            'no-recurse' : 'build exactly the packages listed on the '
+                'command line',
+      }
 
 
 
     def addLocalParameters(self, argDef):
         argDef['no-watch'] = command.NO_PARAM
         argDef['no-commit'] = command.NO_PARAM
+        argDef['no-recurse'] = command.NO_PARAM
 
     #pylint: disable-msg=R0201,R0903
     # could be a function, and too few public methods
     def runCommand(self, handle, argSet, args):
         watch = not argSet.pop('no-watch', False)
         commit = not argSet.pop('no-commit', False)
+        recurse = not argSet.pop('no-recurse', False)
         _, packageList, = self.requireParameters(args, allowExtra=True)
         if not packageList:
             jobId = handle.BuildPackages.buildAllPackages()
         else:
-            jobId = handle.BuildPackages.buildPackages(packageList)
+            jobId = handle.BuildPackages.buildPackages(packageList, recurse)
         if watch and commit:
             handle.Build.watchAndCommitJob(jobId)
         elif watch:
@@ -65,8 +70,8 @@ class BuildPackages(pluginapi.Plugin):
         self.handle.productStore.setPackageJobId(jobId)
         return jobId
 
-    def buildPackages(self, packageList):
-        job = self.createJobForPackages(packageList)
+    def buildPackages(self, packageList, recurse=True):
+        job = self.createJobForPackages(packageList, recurse)
         jobId = self.handle.facade.rmake.buildJob(job)
         self.handle.productStore.setPackageJobId(jobId)
         return jobId
@@ -74,5 +79,6 @@ class BuildPackages(pluginapi.Plugin):
     def createJobForAllPackages(self):
         return packages.createRmakeJobForAllPackages(self.handle)
 
-    def createJobForPackages(self, packageList):
-        return packages.createRmakeJobForPackages(self.handle, packageList)
+    def createJobForPackages(self, packageList, recurse=True):
+        return packages.createRmakeJobForPackages(self.handle, packageList,
+            recurse)
