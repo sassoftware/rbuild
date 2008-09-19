@@ -1,4 +1,4 @@
-Changes in @NEW@:
+Changes in 0.6:
   o New Features:
     * The "rbuild build packages" command now accepts a --no-recurse
       option, which will build exactly the packages listed without
