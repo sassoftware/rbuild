@@ -1,8 +1,9 @@
 Changes in @NEW@:
   o New Features:
-    * `rbuild build packages` now accepts a --no-recurse option, which
-      will build exactly the packages listed without utilizing the
-      group recipe. (RBLD-93)
+    * The "rbuild build packages" command now accepts a --no-recurse
+      option, which will build exactly the packages listed without
+      utilizing the group recipe to look for other related packages
+      to build. (RBLD-93)
     * Added a "rmakeUser" configuration option for use with multi-node
       rMake.  This will override the defaults taken from "user".
       (RBLD-94)
