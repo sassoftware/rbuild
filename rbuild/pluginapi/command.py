@@ -28,15 +28,19 @@ in the forms C{--argument 'list of values'} or C{--argument='list of values'}
 message (default)
 @var VERBOSE_HELP: Command-line argument which should be shown only in
 verbose help messages
+@var SUPPRESS_HELP: Command-line argument which should never be shown in
+any help messages
 """
 from conary.lib import command
 from conary.lib import log
 from conary.lib import options
+import optparse
 
 
 (NO_PARAM,  ONE_PARAM)  = (options.NO_PARAM, options.ONE_PARAM)
 (OPT_PARAM, MULT_PARAM) = (options.OPT_PARAM, options.MULT_PARAM)
-(NORMAL_HELP, VERBOSE_HELP)  = (options.NORMAL_HELP, options.VERBOSE_HELP)
+(NORMAL_HELP, VERBOSE_HELP, SUPPRESS_HELP)  = (
+    options.NORMAL_HELP, options.VERBOSE_HELP, optparse.SUPPRESS_HELP)
 # FIXME: pass docstring through de-epydocification (RBLD-70)
 
 class BaseCommand(command.AbstractCommand):
@@ -55,7 +59,8 @@ class BaseCommand(command.AbstractCommand):
             'verbose'            : (VERBOSE_HELP,
                                     "Display more detailed information where"
                                     " available"),
-            'stage'              : (VERBOSE_HELP, "Specify the stage to use")
+            'stage'              : (VERBOSE_HELP, "Specify the stage to use"),
+            'lsprof'             : SUPPRESS_HELP,
             }
 
     def addParameters(self, argDef):
@@ -78,6 +83,7 @@ class BaseCommand(command.AbstractCommand):
         d["verbose"] = NO_PARAM
         d["quiet"] = NO_PARAM
         d["stage"] = ONE_PARAM
+        d["lsprof"] = NO_PARAM
         argDef[self.defaultGroup] = d
         self.addLocalParameters(argDef)
 

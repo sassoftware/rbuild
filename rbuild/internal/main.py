@@ -125,7 +125,23 @@ class RbuildMain(mainhandler.MainHandler):
         if 'stage' in argSet:
             stageName = argSet.pop('stage')
             self.handle.productStore.setActiveStageName(stageName)
-        return thisCommand.runCommand(self.handle, argSet, args)
+
+        lsprof = False
+        if argSet.has_key('lsprof'):
+            import cProfile
+            prof = cProfile.Profile()
+            prof.enable()
+            lsprof = True
+            del argSet['lsprof']
+
+        rv = thisCommand.runCommand(self.handle, argSet, args)
+
+        if lsprof:
+            prof.disable()
+            prof.dump_stats('rbuild.lsprof')
+            prof.print_stats()
+
+        return rv
 
 
 def main(argv=None):

@@ -1,3 +1,9 @@
+Changes in @NEW@:
+  o Internal Changes:
+    * A hidden --lsprof command line argument is now available for
+      profiling with the lsprof profiler.  It will write an
+      rbuild.lsprof binary profile summary. (RBLD-104)
+
 Changes in 0.6:
   o New Features:
     * The "rbuild build packages" command now accepts a --no-recurse
