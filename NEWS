@@ -1,4 +1,7 @@
 Changes in @NEW@:
+  o Bug Fixes:
+    * The rbuild update stage command has been fixed. (RBLD-89)
+
   o Internal Changes:
     * A hidden --lsprof command line argument is now available for
       profiling with the lsprof profiler.  It will write an
