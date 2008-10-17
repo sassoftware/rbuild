@@ -1,6 +1,8 @@
 Changes in @NEW@:
   o Bug Fixes:
     * The rbuild update stage command has been fixed. (RBLD-89)
+    * The file permissions for the ~/.rbuildrc and <project>/.rbuild/rbuildrc
+      files are no longer created with world readable permissions. (RBLD-105)
 
   o Internal Changes:
     * A hidden --lsprof command line argument is now available for

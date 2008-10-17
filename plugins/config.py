@@ -105,4 +105,5 @@ Please answer the following questions to begin using rBuild:
                                      default=cfg.contact)
         if 'HOME' in os.environ:
             cfg.writeToFile(os.environ['HOME'] + '/.rbuildrc')
+            os.chmod(os.environ['HOME'] + '/.rbuildrc', 0600)
 
