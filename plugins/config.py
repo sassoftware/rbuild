@@ -104,6 +104,7 @@ Please answer the following questions to begin using rBuild:
         cfg.contact = ui.getResponse('Contact - usually email or url',
                                      default=cfg.contact)
         if 'HOME' in os.environ:
+            oldumask = os.umask(077)
             cfg.writeToFile(os.environ['HOME'] + '/.rbuildrc')
-            os.chmod(os.environ['HOME'] + '/.rbuildrc', 0600)
+            os.umask(oldumask)
 

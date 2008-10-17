@@ -116,8 +116,9 @@ class Init(pluginapi.Plugin):
             stageDir = productDir + '/' + stage.name
             os.mkdir(stageDir)
             open(stageDir + '/.stage', 'w').write(stage.name + '\n')
+        oldumask = os.umask(077)
         self.handle.getConfig().writeCheckoutFile(productDir + '/.rbuild/rbuildrc')
-        os.chmod(productDir + '/.rbuild/rbuildrc', 0600)
+        os.umask(oldumask)
         self.handle.ui.info('Created checkout for %s at %s', 
                              product.getProductDefinitionLabel(),
                              productDir)
