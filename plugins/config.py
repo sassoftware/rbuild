@@ -105,6 +105,8 @@ Please answer the following questions to begin using rBuild:
                                      default=cfg.contact)
         if 'HOME' in os.environ:
             oldumask = os.umask(077)
-            cfg.writeToFile(os.environ['HOME'] + '/.rbuildrc')
-            os.umask(oldumask)
+            try:
+                cfg.writeToFile(os.environ['HOME'] + '/.rbuildrc')
+            finally:
+                os.umask(oldumask)
 
