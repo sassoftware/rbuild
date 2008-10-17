@@ -1,4 +1,4 @@
-Changes in @NEW@:
+Changes in 0.7:
   o Bug Fixes:
     * The rbuild update stage command has been fixed. (RBLD-89)
     * The file permissions for the ~/.rbuildrc and <project>/.rbuild/rbuildrc
