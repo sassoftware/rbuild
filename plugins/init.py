@@ -30,13 +30,18 @@ class InitCommand(command.BaseCommand):
     """
     Creates a working directory for working with the given product.
 
-    Parameters: (repository namespace shortname version|label)
+    Parameters: (<project shortname> <version>|<label>)
 
-    Example: C{rbuild init foresight.rpath.org fl prod 2}
+    Example: C{rbuild init exampleprod 2}
     Assuming that there were a product defined at
-    foresight.rpath.org@fl:prod-2, this would create a product
+    exampleprod.rpath.org@examplens:exampleprod-2, this would create a product
     subdirectory tree representing the contents of that product
     definition.
+
+    Example: C{rbuild init example.rpath.org@ex:example-2}
+    If your product does not use a standard label layout, or its product
+    definition was not created through the rBuilder user interface, you will
+    need to use the label to the product definition directly.
     """
 
     commands = ['init']
