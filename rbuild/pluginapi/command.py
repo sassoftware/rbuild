@@ -35,6 +35,7 @@ from conary.lib import command
 from conary.lib import log
 from conary.lib import options
 import optparse
+import sys
 
 
 (NO_PARAM,  ONE_PARAM)  = (options.NO_PARAM, options.ONE_PARAM)
@@ -242,6 +243,11 @@ class CommandWithSubCommands(BaseCommand):
         return rc
 
     def subCommandUsage(self, subCommandName, errNo=1):
+        if not self._subCommands.has_key(subCommandName):
+            print "%s %s: no such subcommand: %s" % \
+                   (self.mainHandler.name, self.commands[0], subCommandName)
+            sys.exit(1)
+
         thisCommand = self._subCommands[subCommandName]()
         thisCommand.setMainHandler(self.mainHandler)
         params, _ = thisCommand.prepare()
