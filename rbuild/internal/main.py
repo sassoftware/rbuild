@@ -21,8 +21,10 @@ Example::
 """
 
 import errno
+import re
 import sys
 
+from conary.build import explain
 from conary.lib import log
 from conary.lib import mainhandler
 from conary import errors as conaryerrors
@@ -142,6 +144,26 @@ class RbuildMain(mainhandler.MainHandler):
             prof.print_stats()
 
         return rv
+
+    def _getParserFlags(self, thisCommand):
+        flags = mainhandler.MainHandler._getParserFlags(self, thisCommand)
+
+        # If thisCommand has no 'description' attribute, clean up epydoc
+        # formatting from the doc string and set it as the description. 
+        if not hasattr(thisCommand, 'description'):
+            docString = thisCommand.__doc__ or ''
+            docStringRe = re.compile('[A-Z]\{[^{}]*\}')
+            srch = re.search(docStringRe, docString)
+            while srch:
+                oldString = srch.group()
+                newString = explain._formatString(oldString)
+                docString = docString.replace(oldString, newString)
+                srch = re.search(docStringRe, docString)
+            # override the description returned from the super method with
+            # this new one.
+            flags['description'] = docString
+
+        return flags
 
 
 def main(argv=None):
