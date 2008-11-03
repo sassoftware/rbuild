@@ -150,7 +150,8 @@ class RbuildMain(mainhandler.MainHandler):
 
         # If thisCommand has no 'description' attribute, clean up epydoc
         # formatting from the doc string and set it as the description. 
-        if not hasattr(thisCommand, 'description'):
+        if not hasattr(thisCommand, 'description') or \
+           thisCommand.description is None:
             docString = thisCommand.__doc__ or ''
             docStringRe = re.compile('[A-Z]\{[^{}]*\}')
             srch = re.search(docStringRe, docString)
