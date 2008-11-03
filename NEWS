@@ -1,6 +1,9 @@
 Changes in @NEW@:
   o Bug Fixes:
     * Updated the rbuild init help text to note the appropriate usage (RBLD-74)
+    * Removed spurious epydoc formatting from various help messages (RBLD-70)
+    * Fix tracebacks when asking for help on non-existant subcommands
+      (RBLD-73)
 
 Changes in 0.7:
   o Bug Fixes:
