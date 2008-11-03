@@ -29,6 +29,7 @@ from conary.lib import log
 from conary.lib import mainhandler
 from conary import errors as conaryerrors
 
+from rmake import errors as rmakeerrors
 
 from rbuild import handle
 from rbuild import constants
@@ -192,8 +193,15 @@ def main(argv=None):
         return rc
     except debuggerException, err:
         raise
+    except rmakeerrors.OpenError, err:
+        log.error(err.args[0] + '''
+
+Could not contact the rMake server.  Perhaps the rMake service is not
+running.  To start the rMake service, as root, try running the command:
+service rmake restart''')
+        return 1
     except (errors.BaseError, conaryerrors.ConaryError, conaryerrors.ParseError,
-            conaryerrors.CvcError), err:
+            conaryerrors.CvcError, rmakeerrors.RmakeError), err:
         log.error(err)
         return 1
     except IOError, e:

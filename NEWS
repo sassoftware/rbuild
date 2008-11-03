@@ -1,8 +1,15 @@
 Changes in @NEW@:
+  o User Interface Changes:
+    * rBuild now prints a helpful error message if it attempts but
+      fails to contact the rMake service, and provides other rMake
+      errors verbatim, since they are meant to be readable. (RBLD-112)
+
   o Bug Fixes:
-    * Updated the rbuild init help text to note the appropriate usage (RBLD-74)
-    * Removed spurious epydoc formatting from various help messages (RBLD-70)
-    * Fix tracebacks when asking for help on non-existant subcommands
+    * Updated the rbuild init help text to note the appropriate usage.
+      (RBLD-74)
+    * Removed spurious epydoc formatting from various help messages.
+      (RBLD-70)
+    * Fix tracebacks when asking for help on non-existant subcommands.
       (RBLD-73)
 
 Changes in 0.7:
