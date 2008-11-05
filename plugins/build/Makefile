@@ -15,7 +15,8 @@
 plugin_files = \
 	__init__.py \
 	groups.py \
-	packages.py
+	packages.py \
+	refresh.py
 
 dist_files = Makefile $(plugin_files)
 
