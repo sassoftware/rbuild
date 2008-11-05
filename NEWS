@@ -1,4 +1,4 @@
-Changes in @NEW@:
+Changes in 0.8:
   o New Features:
     * Added a new --refresh argument to the "rbuild build packages"
       command that refreshes sources of packages being built. (RBLD-61)
