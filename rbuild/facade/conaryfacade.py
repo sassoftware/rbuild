@@ -38,6 +38,7 @@ from conary import versions
 from conary.lib import util
 
 from conary.build import loadrecipe
+from conary.build import use
 
 from rbuild import errors
 
@@ -279,6 +280,18 @@ class ConaryFacade(object):
         cfg = self.getConaryConfig()
         checkin.checkout(self._getRepositoryClient(), cfg,
                          targetDir, ['%s=%s' % (package, label)])
+
+    def refresh(self):
+        """
+        Refresh the checked-out sources for a conary source package.
+        @param packageList: list of package names to refresh. package names
+        are the C{string} type.
+        @type pacakgeList: C{list}
+        """
+        cfg = self.getConaryConfig()
+        self._initializeFlavors()
+        use.setBuildFlagsFromFlavor(None, cfg.buildFlavor, False)
+        return checkin.refresh(self._getRepositoryClient(), cfg)
 
     def updateCheckout(self, targetDir):
         """

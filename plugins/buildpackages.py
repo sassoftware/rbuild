@@ -16,6 +16,7 @@ from rbuild import pluginapi
 from rbuild.pluginapi import command
 
 from rbuild_plugins.build import packages
+from rbuild_plugins.build import refresh
 
 class BuildPackagesCommand(command.BaseCommand):
     """
@@ -28,7 +29,9 @@ class BuildPackagesCommand(command.BaseCommand):
 
     help = 'Build edited packages for this stage'
     paramHelp = '[package]*'
-    docs = {'no-watch' : 'do not watch the job after starting the build',
+    docs = {'refresh' : 'refreshes the source of specified packages, or all '
+                'checked-out packages if none are specified',
+            'no-watch' : 'do not watch the job after starting the build',
             'no-commit' : 'do not automatically commit successful builds',
             'no-recurse' : 'build exactly the packages listed on the '
                 'command line',
@@ -40,6 +43,7 @@ class BuildPackagesCommand(command.BaseCommand):
         argDef['no-watch'] = command.NO_PARAM
         argDef['no-commit'] = command.NO_PARAM
         argDef['no-recurse'] = command.NO_PARAM
+        argDef['refresh'] = command.NO_PARAM
 
     #pylint: disable-msg=R0201,R0903
     # could be a function, and too few public methods
@@ -47,10 +51,15 @@ class BuildPackagesCommand(command.BaseCommand):
         watch = not argSet.pop('no-watch', False)
         commit = not argSet.pop('no-commit', False)
         recurse = not argSet.pop('no-recurse', False)
+        refreshArg = argSet.pop('refresh', False)
         _, packageList, = self.requireParameters(args, allowExtra=True)
         if not packageList:
+            if refreshArg:
+                handle.BuildPackages.refreshAllPackages()
             jobId = handle.BuildPackages.buildAllPackages()
         else:
+            if refreshArg:
+                handle.BuildPackages.refreshPackages(packageList)
             jobId = handle.BuildPackages.buildPackages(packageList, recurse)
         if watch and commit:
             handle.Build.watchAndCommitJob(jobId)
@@ -82,3 +91,9 @@ class BuildPackages(pluginapi.Plugin):
     def createJobForPackages(self, packageList, recurse=True):
         return packages.createRmakeJobForPackages(self.handle, packageList,
             recurse)
+
+    def refreshPackages(self, packageList=None):
+        return refresh.refreshPackages(self.handle, packageList)
+
+    def refreshAllPackages(self):
+        return refresh.refreshAllPackages(self.handle)

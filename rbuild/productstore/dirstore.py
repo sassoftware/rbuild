@@ -128,12 +128,25 @@ class CheckoutProductStore(ProductStore):
         '''
         return self._baseDirectory + '/.rbuild/platform-definition'
 
-    def getStageDirectory(self, stageName):
-        stageDirectory = '%s/%s' % (self._baseDirectory, stageName)
-        if not os.path.exists(stageDirectory):
-            raise errors.RbuildError('Stage directory for %r'
-                                     ' does not exist' % stageName)
-        return stageDirectory
+    def getStageDirectory(self, stageName=None):
+        """
+        Get the absolute directory associated with a given stage name.
+        @param stageName: stage name, or None to use the active stage.
+        @type stageName: string
+        @return: string of absolute directory corrosponding to C{stageName},
+        if none found, then return None.
+        @rtype: string or None
+        """
+        if stageName is None:
+            stageName = self.getActiveStageName()
+        if stageName is not None:
+            stageDirectory = '%s/%s' % (self._baseDirectory, stageName)
+            if not os.path.exists(stageDirectory):
+                raise errors.RbuildError('Stage directory for %r'
+                                         ' does not exist' % stageName)
+            return stageDirectory
+        else:
+            return None
 
     def getEditedRecipeDicts(self, stageName = None):
         """
@@ -147,10 +160,8 @@ class CheckoutProductStore(ProductStore):
         packageDict = {}
         groupDict = {}
         conaryFacade = self._handle.facade.conary
-        if stageName is None:
-            stageName = self.getActiveStageName()
-        if stageName is not None:
-            stageDir = self.getStageDirectory(stageName)
+        stageDir = self.getStageDirectory(stageName)
+        if stageDir is not None:
             for dirName in os.listdir(stageDir):
                 packageDir = '%s/%s' % (stageDir, dirName)
                 if os.path.exists(packageDir + '/CONARY'):
@@ -162,6 +173,30 @@ class CheckoutProductStore(ProductStore):
                     else:
                         packageDict[packageName] =  recipePath
         return packageDict, groupDict
+
+    def getPackagePath(self, packageName, stageName=None):
+        """
+        Get the absolute filesystem path for the checked out package name.
+
+        @param packageName: package name
+        @type packageName: string
+        @param stageName: stage name to search for C{packageName}, or None to
+        use current stage.
+        @type stageName: string
+        @return: absolute path for C{packageName}, or None if no path is
+        found.
+        @rtype: string
+        """
+        conaryFacade = self._handle.facade.conary
+        stageDir = self.getStageDirectory(stageName)
+        if stageDir is not None:
+            for dirName in os.listdir(stageDir):
+                packageDir = '%s/%s' % (stageDir, dirName)
+                if os.path.exists(packageDir + '/CONARY'):
+                    if packageName == \
+                        conaryFacade.getNameForCheckout(packageDir):
+                        return packageDir
+        return None                        
 
     def getRbuildConfigData(self):
         return file(self.getRbuildConfigPath()).read()
