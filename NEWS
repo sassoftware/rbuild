@@ -1,7 +1,8 @@
 Changes in @NEW@:
   o New Features:
-    * Added a new --refresh argument to the "rbuild build packages" command
-      that refreshes sources of packages being built. (RBLD-61)
+    * Added a new --refresh argument to the "rbuild build packages"
+      command that refreshes sources of packages being built. (RBLD-61)
+
   o User Interface Changes:
     * rBuild now prints a helpful error message if it attempts but
       fails to contact the rMake service, and provides other rMake
