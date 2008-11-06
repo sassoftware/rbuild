@@ -162,3 +162,17 @@ class ProductStore(object):
         # could save self.getRmakeConfigData() to a temporary file
         raise errors.RbuildError(
             'Not Yet Implemented')
+
+    def getPlatformAutoLoadRecipes(self):
+        """
+        Get the autoLoadRecipe configurations for the platform defined in the
+        product definition.
+        @return: autoLoadRecipe configurations
+        @rtype: list of trove spec strings
+        """
+        autoLoadRecipes = []
+        for alr in self._handle.product.getPlatformAutoLoadRecipes():
+            autoLoadRecipes.append('%s=%s' % \
+                (alr.getTroveName(), alr.getLabel()))
+        return autoLoadRecipes
+
