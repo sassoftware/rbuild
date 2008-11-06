@@ -128,6 +128,19 @@ class CheckoutProductStore(ProductStore):
         '''
         return self._baseDirectory + '/.rbuild/platform-definition'
 
+    def getPlatformAutoLoadRecipes(self):
+        """
+        Get the autoLoadRecipe configurations for the platform defined in the
+        product definition.
+        @return: autoLoadRecipe configurations
+        @rtype: list of trove spec strings
+        """
+        autoLoadRecipes = []
+        for alr in self._handle.product.getPlatformAutoLoadRecipes():
+            autoLoadRecipes.append('%s=%s' % \
+                (alr.getTroveName(), alr.getLabel()))
+        return autoLoadRecipes
+
     def getStageDirectory(self, stageName=None):
         """
         Get the absolute directory associated with a given stage name.

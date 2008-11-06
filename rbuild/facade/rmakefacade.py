@@ -106,6 +106,9 @@ class RmakeFacade(object):
         cfg.contact = rbuildConfig.contact
         self._handle.facade.conary._parseRBuilderConfigFile(cfg)
 
+        cfg.autoLoadRecipes = \
+            self._handle.productStore.getPlatformAutoLoadRecipes()
+
         if os.path.exists(rmakeConfigPath):
             cfg.includeConfigFile(rmakeConfigPath)
 
