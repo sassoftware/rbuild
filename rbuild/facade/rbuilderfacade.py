@@ -91,20 +91,33 @@ class RbuilderClient(object):
             raise errors.RbuildError(*versionList)
 
         versionId = None
+        versionNames = []
         # W0612: leave unused variables as documentation
         # W0631: versionId is guaranteed to be defined
         #pylint: disable-msg=W0612,W0631
         for (versionId2, productId2,
              namespace, versionName2, desc)  in versionList:
+            versionNames.append(versionName2)
             if versionName == versionName2:
                 versionId = versionId2
                 break
-        error, stream = self.server.getProductDefinitionForVersion(versionId)
-        if error:
-            raise errors.RbuildError(*stream)
-        product = proddef.ProductDefinition(stream)
-        return product.getProductDefinitionLabel()
 
+        if versionId:
+            error, stream = self.server.getProductDefinitionForVersion(
+                versionId)
+            if error:
+                raise errors.RbuildError(*stream)
+            product = proddef.ProductDefinition(stream)
+            return product.getProductDefinitionLabel()
+        else:
+            errstr = '%s is not a valid version for product %s.' % \
+                (versionName, productName)
+            if versionNames:
+                errstr += '\nValid versions are: %s' % \
+                    ', '.join(versionNames)
+            else:
+                errstr += '\nNo versions found for product %s.' % productName
+            raise errors.RbuildError(errstr)
 
     def startProductBuilds(self, productName, versionName, stageName):
         error, productId = self.server.getProjectIdByHostname(productName)
