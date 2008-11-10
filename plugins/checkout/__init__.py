@@ -136,8 +136,15 @@ class Checkout(pluginapi.Plugin):
         if existingPackage:
             raise errors.RbuildError('\n'.join((
                 'This package already exists in the product.',
-                'Use "rbuild checkout %s" to checkout the existing package.' % \
+                'Use "rbuild checkout %s" to checkout the existing package, '
+                'or give the new package a different name.' % \
                 packageName)))
+
+        upstreamLatest = self._getUpstreamPackage(packageName)
+        if upstreamLatest:
+            self.handle.ui.warning('Replacing upstream package %s.' % \
+                packageName)
+
         currentLabel = self.handle.productStore.getActiveStageLabel()
         self.handle.facade.conary.createNewPackage(
                                             packageName, currentLabel)
