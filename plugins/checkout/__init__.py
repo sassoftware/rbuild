@@ -132,6 +132,12 @@ class Checkout(pluginapi.Plugin):
         self.handle.ui.info('Shadowed package %r', packageName)
 
     def newPackage(self, packageName):
+        existingPackage = self._getExistingPackage(packageName)
+        if existingPackage:
+            raise errors.RbuildError('\n'.join((
+                'This package already exists in the product.',
+                'Use "rbuild checkout %s" to checkout the existing package.' % \
+                packageName)))
         currentLabel = self.handle.productStore.getActiveStageLabel()
         self.handle.facade.conary.createNewPackage(
                                             packageName, currentLabel)
