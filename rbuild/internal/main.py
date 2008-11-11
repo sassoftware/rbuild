@@ -123,7 +123,8 @@ class RbuildMain(mainhandler.MainHandler):
         # runCommand is an *args, **kw method and pylint doesn't like that
         # in the override we specify these explicitly
         cfg = self.handle.getConfig()
-        if not self.handle.Config.isComplete(cfg):
+        if getattr(thisCommand, 'requireConfig', True) and \
+           not self.handle.Config.isComplete(cfg):
             self.handle.Config.initializeConfig(cfg)
         if 'stage' in argSet:
             stageName = argSet.pop('stage')

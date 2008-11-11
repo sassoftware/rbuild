@@ -27,6 +27,9 @@ class HelpCommand(BaseCommand):
     help = 'Display help information'
     commandGroup = 'Information Display'
 
+    # configuration setup is not required to run the help command
+    requireConfig = False
+
     def runCommand(self, handle, argSet, args):
         """
         Runs the help command, displaying either general help including
