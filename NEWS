@@ -3,6 +3,10 @@ Changes in @NEW@:
     * autoLoadRecipe tags are now read from the platform definition in the 
       product definition and set on the rMake config. (RBLD-95)
 
+  o Bug Fixes:
+    * A product update no longer prints an error message if the product is up
+      to date. (RBLD-117)
+
 Changes in 0.8:
   o New Features:
     * Added a new --refresh argument to the "rbuild build packages"

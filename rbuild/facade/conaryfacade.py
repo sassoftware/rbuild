@@ -39,6 +39,7 @@ from conary.lib import util
 
 from conary.build import loadrecipe
 from conary.build import use
+from conary.build import errors as builderrors
 
 from rbuild import errors
 
@@ -302,7 +303,16 @@ class ConaryFacade(object):
         @return: Status
         @rtype: bool
         """
-        return checkin.updateSrc(self._getRepositoryClient(), [targetDir])
+        try:
+            return checkin.nologUpdateSrc(self._getRepositoryClient(), [targetDir])
+        except builderrors.UpToDate:
+            # The end result is an up to date checkout, so ignore the exception
+            return True
+        except builderrors.CheckinError, e:
+            # All other exceptions are deemed failures
+            raise errors.RbuildError(str(e))
+        except AttributeError:
+            return checkin.updateSrc(self._getRepositoryClient(), [targetDir])
 
     def getCheckoutStatus(self, targetDir):
         """
