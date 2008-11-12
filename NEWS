@@ -6,7 +6,7 @@ Changes in @NEW@:
   o Bug Fixes:
     * A product update no longer prints an error message if the product is up
       to date. (RBLD-117)
-    * Don't force a run of the initialization sequence for the help or confing
+    * Don't force a run of the initialization sequence for the help or config
       commands. (RBLD-87)
     * Fix traceback that resulted from trying to fetch a product definition
       for a non-existant version. Give an error message specifying valid
