@@ -6,6 +6,15 @@ Changes in @NEW@:
   o Bug Fixes:
     * A product update no longer prints an error message if the product is up
       to date. (RBLD-117)
+    * Don't force a run of the initialization sequence for the help or confing
+      commands. (RBLD-87)
+    * Fix traceback that resulted from trying to fetch a product definition
+      for a non-existant version. Give an error message specifying valid
+      versions. (RBLD-82)
+    * When specifying "rbuild checkout <package> --new", don't try to create
+      the package if it already exists.  Improve messaging when --new causes
+      packages of the same name from upstream sources to be ignored.  Improve
+      messaging when --new is used and name conflicts result. (RBLD-30)
 
 Changes in 0.8:
   o New Features:
