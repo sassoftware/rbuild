@@ -23,6 +23,9 @@ all plugins through the C{handle} object.
 import copy
 import os
 
+from conary.deps import deps as conaryDeps
+from conary import versions as conaryVer
+from conary.repository import trovesource
 from rmake.build import buildcfg
 from rmake.cmdline import helper
 from rmake.cmdline import query
@@ -200,7 +203,7 @@ class RmakeFacade(object):
             rebuild=rebuild, recurseGroups=recurse, limitToLabels=[stageLabel],
             buildConfig=cfg)
 
-    def createImagesJobForStage(self):
+    def createImagesJobForStage(self, nameFilter = None):
         rmakeClient = self._getRmakeHelper()
         conaryFacade = self._handle.facade.conary
         stageName = self._handle.productStore.getActiveStageName()
@@ -211,6 +214,9 @@ class RmakeFacade(object):
         builds = self._handle.productStore.getBuildsWithFullFlavors(stageName)
         allImages = []
         for build, buildFlavor in builds:
+            if nameFilter is not None:
+                if not build.getBuildName() in nameFilter:
+                    continue
             buildFlavor = conaryFacade._getFlavor(buildFlavor)
             groupName = str(build.getBuildImageGroup())
             buildImageName = str(build.getBuildName())

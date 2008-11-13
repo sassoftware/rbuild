@@ -16,8 +16,15 @@ from rbuild import pluginapi
 from rbuild.pluginapi import command
 
 class BuildImagesCommand(command.BaseCommand):
+    '''
+    Builds specified images for the current stage.  If no images are specified,
+    builds all images defined by the product.
+    '''
     help = 'Build images for this stage'
-    docs = {'no-watch' : 'do not watch the job after starting the build' }
+    paramHelp = '[image name]*'
+    docs = {'no-watch' : 'do not watch the job after starting',
+           }
+
 
     def addLocalParameters(self, argDef):
         argDef['no-watch'] = command.NO_PARAM
@@ -26,9 +33,10 @@ class BuildImagesCommand(command.BaseCommand):
     # could be a function, and too few public methods
     def runCommand(self, handle, argSet, args):
         watch = not argSet.pop('no-watch', False)
-        # no allowed parameters
-        self.requireParameters(args)
-        jobId = handle.BuildImages.buildAllImages()
+        _, imageNames = self.requireParameters(args, allowExtra=True)
+        if imageNames == []:
+            imageNames = None
+        jobId = handle.BuildImages.buildImages(imageNames)
         if watch:
             handle.Build.watchJob(jobId)
 
@@ -40,8 +48,10 @@ class BuildImages(pluginapi.Plugin):
         self.handle.Commands.getCommandClass('build').registerSubCommand(
                                     'images', BuildImagesCommand)
 
-    def buildAllImages(self):
-        job = self.handle.facade.rmake.createImagesJobForStage()
+    def buildImages(self, names):
+        ''' Defaults to building all images, but can be filtered using exact name matching. '''
+        job = self.handle.facade.rmake.createImagesJobForStage(names)
         jobId = self.handle.facade.rmake.buildJob(job)
         self.handle.productStore.setImageJobId(jobId)
         return jobId
+

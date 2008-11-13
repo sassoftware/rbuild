@@ -42,7 +42,6 @@ import sys
 (OPT_PARAM, MULT_PARAM) = (options.OPT_PARAM, options.MULT_PARAM)
 (NORMAL_HELP, VERBOSE_HELP, SUPPRESS_HELP)  = (
     options.NORMAL_HELP, options.VERBOSE_HELP, optparse.SUPPRESS_HELP)
-# FIXME: pass docstring through de-epydocification (RBLD-70)
 
 class BaseCommand(command.AbstractCommand):
     """
