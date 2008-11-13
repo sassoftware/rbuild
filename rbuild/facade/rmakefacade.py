@@ -23,9 +23,6 @@ all plugins through the C{handle} object.
 import copy
 import os
 
-from conary.deps import deps as conaryDeps
-from conary import versions as conaryVer
-from conary.repository import trovesource
 from rmake.build import buildcfg
 from rmake.cmdline import helper
 from rmake.cmdline import query
