@@ -80,7 +80,7 @@ class ProductStore(object):
 
     def getGroupFlavors(self):
         product = self._handle.product
-        groupFlavors = [ (str(x.getBuildImageGroup()),
+        groupFlavors = [ (str(self.getBuildDefinitionGroupToBuild(x)),
                           str(x.getBuildBaseFlavor()))
                          for x in product.getBuildDefinitions() ]
         fullFlavors = self._handle.facade.conary._overrideFlavors(
@@ -88,6 +88,68 @@ class ProductStore(object):
                                              [x[1] for x in groupFlavors])
         fullFlavors = [ self._addInExtraFlavor(x) for x in fullFlavors ]
         return [(x[0][0], x[1]) for x in zip(groupFlavors, fullFlavors)]
+
+    def getBuildDefinitionGroupToBuild(self, buildDefinition):
+        """
+        Find the source group to build for this build definition.
+        @param buildDefinition: build definition defining the group to build.
+        @type buildDefinition: L{proddef.Build}
+        @rtype: string
+        @return: Look for and return the first group that is found out of:
+            - build definition source group
+            - top level source group
+            - build definition image group
+            - top level image group
+        """
+        sourceGroup = self._handle.product.getSourceGroup()
+        buildSourceGroup = buildDefinition.getBuildSourceGroup()
+
+        if buildSourceGroup:
+            return buildSourceGroup
+        elif sourceGroup:
+            return sourceGroup
+        else:
+            sourceGroupMatch = self.getSourceGroupMatch(buildDefinition)
+            if sourceGroupMatch:
+                return sourceGroupMatch
+
+        # No sourceGroup defined anywhere that we can use, use an imageGroup.
+        # getBuildImageGroup actually takes care of returning the top
+        # level image group if there's not one set for the build
+        # definition itself.
+        return buildDefinition.getBuildImageGroup()
+
+    def getSourceGroupMatch(self, buildDefinition):
+        """
+        Find a source group defined on a different build defintion that has a
+        matching build flavor and image group as the given build definition.
+
+        @param buildDefinition: build definition defining what flavor and
+        image group to match.
+        @type buildDefinition: L{proddef.Build}
+        @rtype: string
+        @return: source group name to build for this build definition. If none
+        is found, return None.
+        """
+        # If there is no image group defined on buildDefinition, there's no
+        # point in testing anything.
+        if not buildDefinition.imageGroup:
+            return None
+
+        for bd in self._handle.product.getBuildDefinitions():
+            # Test for flavor equality.
+            if bd.getBuildBaseFlavor() == buildDefinition.getBuildBaseFlavor():
+
+                # Test for image group equality.
+                if bd.imageGroup and \
+                   bd.imageGroup == buildDefinition.imageGroup:
+
+                    # If defined, return the source group for this definition.
+                    sourceGroup = bd.getBuildSourceGroup()
+                    if sourceGroup:
+                        return sourceGroup
+
+        return None                    
 
     def getBuildsWithFullFlavors(self, stageName):
         """
