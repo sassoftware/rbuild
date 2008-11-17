@@ -101,13 +101,12 @@ class ProductStore(object):
             - build definition image group
             - top level image group
         """
-        sourceGroup = self._handle.product.getSourceGroup()
+        # getBuildSourceGroup takes care of looking at sourceGroup definied
+        # on the build definition or at the top level.
         buildSourceGroup = buildDefinition.getBuildSourceGroup()
 
         if buildSourceGroup:
             return buildSourceGroup
-        elif sourceGroup:
-            return sourceGroup
         else:
             sourceGroupMatch = self.getSourceGroupMatch(buildDefinition)
             if sourceGroupMatch:
