@@ -5,6 +5,9 @@ Changes in @NEW@:
     * The build images command can now take an optional list of images to
       build, for example, rbuild images 'Image 1' 'Image 2' will build only
       those images with exactly matching names. (RBLD-44)
+    * The build groups command will now read sourceGroup elements from the
+      product definition, and use those source groups as the groups to build.
+      (RBLD-110)
 
   o Bug Fixes:
     * A product update no longer prints an error message if the product is up
