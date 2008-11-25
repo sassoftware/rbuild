@@ -90,7 +90,7 @@ class RmakeFacade(object):
         upstreamSources = self._handle.product.getSearchPaths()
         upstreamSources = [(x.troveName, x.label, None)
                             for x in upstreamSources]
-        cfg.resolveTroves = [upstreamSources]
+        cfg.resolveTroves = [[x] for x in upstreamSources]
 
         cfg.repositoryMap = rbuildConfig.repositoryMap
         #E1101: Instance of 'BuildConfiguration' has no 'user' member - untrue
