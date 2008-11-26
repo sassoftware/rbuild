@@ -8,6 +8,10 @@ Changes in @NEW@:
     * The build groups command will now read sourceGroup elements from the
       product definition, and use those source groups as the groups to build.
       (RBLD-110)
+    * The productDefinitionSearchPath macro is now set for package and
+      group builds so that the ApplianceGroupRecipe superclass can use
+      it to set a search path that matches the product definition.
+      (RBLD-108)
 
   o Bug Fixes:
     * A product update no longer prints an error message if the product is up

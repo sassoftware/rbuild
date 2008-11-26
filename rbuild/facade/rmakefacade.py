@@ -21,9 +21,11 @@ all plugins through the C{handle} object.
 """
 
 import copy
+import itertools
 import os
 
 from rmake.build import buildcfg
+from rmake.cmdline.buildcmd import _getResolveTroveTups
 from rmake.cmdline import helper
 from rmake.cmdline import query
 from rmake import plugins
@@ -88,9 +90,7 @@ class RmakeFacade(object):
         cfg.flavor = [baseFlavor]
         cfg.buildFlavor = baseFlavor
         upstreamSources = self._handle.product.getSearchPaths()
-        upstreamSources = [(x.troveName, x.label, None)
-                            for x in upstreamSources]
-        cfg.resolveTroves = [[x] for x in upstreamSources]
+        cfg.resolveTroves = [[x.getTroveTup()] for x in upstreamSources]
 
         cfg.repositoryMap = rbuildConfig.repositoryMap
         #E1101: Instance of 'BuildConfiguration' has no 'user' member - untrue
@@ -187,18 +187,25 @@ class RmakeFacade(object):
         if recurse:
             recurse = rmakeClient.BUILD_RECURSE_GROUPS_SOURCE
 
-        cfg = None
+        cfg = self._getRmakeConfigWithContexts()[0]
         if useLocal:
             conary = self._handle.facade.conary
             initialTroves = conary.getLatestPackagesOnLabel(stageLabel)
-
-            cfg = copy.copy(self._getRmakeConfigWithContexts()[0])
-            cfg.resolveTroves = copy.deepcopy(cfg.resolveTroves)
             cfg.resolveTroves.insert(0, initialTroves)
 
-        return rmakeClient.createBuildJob(itemList,
+        job = rmakeClient.createBuildJob(itemList,
             rebuild=rebuild, recurseGroups=recurse, limitToLabels=[stageLabel],
             buildConfig=cfg)
+
+        # Pass the "frozen" set of resolveTrove tups in as a macro, so
+        # that group-appliance can use it as a component of its search
+        # path.
+        for troveCfg in job.configs.itervalues():
+            troveCfg.macros['productDefinitionSearchPath'] = '\n'.join([
+                '%s=%s[%s]' % x for x in itertools.chain(
+                    *troveCfg.resolveTroveTups)])
+
+        return job
 
     def createImagesJobForStage(self, nameFilter = None):
         rmakeClient = self._getRmakeHelper()
