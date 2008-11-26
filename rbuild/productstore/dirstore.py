@@ -21,7 +21,14 @@ from rpath_common.proddef import api1 as proddef
 from rbuild import errors
 from rbuild.productstore.abstract import ProductStore
 
-def getDefaultProductDirectory(dirName=None):
+class MissingProductStoreError(errors.BaseError):
+    def __init__(self, directoryName):
+        errors.BaseError.__init__(self)
+        self.directoryName = directoryName
+    def __str__(self):
+        return 'Directory "%s" does not contain a product checkout' %self.directoryName
+
+def getDefaultProductDirectory(dirName=None, error=False):
     """
     Starting at the current directory, look up the directory tree
     for a product checkout.
@@ -32,6 +39,8 @@ def getDefaultProductDirectory(dirName=None):
     """
     if not dirName:
         dirName = os.getcwd()
+    origDirName = dirName
+
     productPath = dirName \
                     + '/.rbuild/product-definition/product-definition.xml'
     while not os.path.exists(productPath) and dirName != '/':
@@ -40,6 +49,10 @@ def getDefaultProductDirectory(dirName=None):
                     + '/.rbuild/product-definition/product-definition.xml'
     if dirName == '/':
         dirName = None
+
+    if dirName is None and error is not False:
+        raise MissingProductStoreError(origDirName)
+
     return dirName
 
 def getStageNameFromDirectory(dirName=None):
@@ -83,6 +96,9 @@ class CheckoutProductStore(ProductStore):
         if stageName is not None:
             # Cannot load product yet, so cannot validate
             self._currentStage = stageName
+
+    def getBaseDirectory(self):
+        return self._baseDirectory
 
     def getProduct(self):
         path = (self.getProductDefinitionDirectory()

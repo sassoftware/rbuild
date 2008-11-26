@@ -61,7 +61,7 @@ class IncompleteInterfaceError(BaseError):
     the context of repository operations.
     """
 
-class BadParameters(BaseError):
+class BadParameterError(BaseError):
     """
     Raised when a command is given bad parameters at the command line.
     """

@@ -12,6 +12,8 @@ Changes in @NEW@:
       group builds so that the ApplianceGroupRecipe superclass can use
       it to set a search path that matches the product definition.
       (RBLD-108)
+    * The rbuild status command has been significantly enhanced to give
+      more useful output. (RBLD-115)
 
   o Bug Fixes:
     * A product update no longer prints an error message if the product is up

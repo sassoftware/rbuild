@@ -27,8 +27,6 @@ class ConfigCommand(command.BaseCommand):
         argSet['ask'] = command.NO_PARAM
 
     def runCommand(self, handle, argSet, args):
-        # W0613: Unused variables
-        # pylint: disable-msg=W0613
         if argSet.pop('ask', False):
             handle.Config.updateConfig()
         else:

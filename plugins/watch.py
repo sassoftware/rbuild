@@ -23,24 +23,22 @@ class WatchCommand(command.CommandWithSubCommands):
     commands = ['watch']
 
 class WatchJobCommand(command.BaseCommand):
-    # unused argument
-    #pylint: disable-msg=W0613
-    def runCommand(self, handle, argSet, args):
+    def runCommand(self, handle, _, args):
         jobId, = self.requireParameters(args, 'jobId')[1:]
         handle.Build.watchJob(jobId)
 
 class WatchPackagesCommand(command.BaseCommand):
-    def runCommand(self, handle, argSet, args):
+    def runCommand(self, handle, _, args):
         self.requireParameters(args)
         handle.Watch.watchPackages()
 
 class WatchGroupsCommand(command.BaseCommand):
-    def runCommand(self, handle, argSet, args):
+    def runCommand(self, handle, _, args):
         self.requireParameters(args)
         handle.Watch.watchGroups()
 
 class WatchImagesCommand(command.BaseCommand):
-    def runCommand(self, handle, argSet, args):
+    def runCommand(self, handle, _, args):
         self.requireParameters(args)
         handle.Watch.watchImages()
 

@@ -296,7 +296,7 @@ class ConaryFacade(object):
 
     def updateCheckout(self, targetDir):
         """
-        Create a subdirectory containing a checkout of a conary
+        Update a subdirectory containing a checkout of a conary
         source package.  Similar to the C{cvc update} command.
         @param targetDir: subdirectory containing package to update
         @type targetDir: string
@@ -331,20 +331,130 @@ class ConaryFacade(object):
         return checkin.generateStatus(self._getRepositoryClient(),
                                       dirName=targetDir)
 
-    def iterCheckoutLog(self, targetDir, newerOnly=False):
+    def getCheckoutLog(self, targetDir, newerOnly=False, versionList=None):
         """
-        Yields lines of log messages relative to the specified
+        Returns list of lines of log messages relative to the specified
         targetDirectory.
         @param targetDir: name of directory for which to fetch status.
         @type targetDir: string
         @param newerOnly: (C{False}) whether to return only log messages
         newer than the current contents of the checkout.
         @type newerOnly: bool
+        @return: list of strings
         """
-        for message in checkin.iterLog(self._getRepositoryClient(),
-                                       newer=newerOnly, dirName=targetDir):
-            yield message
-        
+        repos, sourceState = self._getRepositoryStateFromDirectory(targetDir)
+        troveName = sourceState.getName()
+
+        if versionList is None:
+            if newerOnly:
+                versionList = self._getNewerRepositoryVersions(targetDir)
+            else:
+                versionList = self._getRepositoryVersions(targetDir)
+        else:
+            versionList = [self._getVersion(x) for x in versionList]
+
+        emptyFlavor = deps.Flavor()
+        nvfList = [(troveName, v, emptyFlavor) for v in versionList]
+        troves = repos.getTroves(nvfList)
+
+        return [message for message in checkin.iterLogMessages(troves)]
+
+    def iterRepositoryDiff(self, targetDir, lastver=None):
+        """
+        Returns list of lines of repository diff output relative to the
+        specified targetDirectory.
+        @param targetDir: name of directory for which to fetch status.
+        @type targetDir: string
+        @param versions: None for combined diff of all newer upstream,
+        or version or version string diff between current and specified
+        version
+        @yield: list of strings
+        """
+        repos, sourceState = self._getRepositoryStateFromDirectory(targetDir)
+        troveName = sourceState.getName()
+        ver = sourceState.getVersion()
+        label = ver.branch().label()
+
+        if lastver is None:
+            lastver = self._getNewerRepositoryVersions(targetDir)[-1]
+        else:
+            lastver = self._getVersion(lastver)
+
+        for line in checkin._getIterRdiff(repos, label, troveName,
+                                          ver.asString(), lastver.asString()):
+            yield line
+
+    def iterCheckoutDiff(self, targetDir):
+        """
+        Returns list of lines of checkout diff output relative to the
+        specified targetDirectory.
+        @param targetDir: name of directory for which to fetch status.
+        @type targetDir: string
+        @yield: list of strings
+        """
+        repos, sourceState = self._getRepositoryStateFromDirectory(targetDir)
+        ver = sourceState.getVersion()
+
+        i = checkin._getIterDiff(repos, ver.asString(),
+            pathList=None, logErrors=False, dirName=targetDir)
+        if i not in (0, 2):
+            # not an "error" case, so i really is an iterator
+            for line in i:
+                yield line
+
+    def _getNewerRepositoryVersionStrings(self, targetDir):
+        '''
+        Returns list of versions from the repository that are newer than the checkout
+        @param targetDir: directory containing Conary checkout
+        @return: list of version strings
+        '''
+        return [self._versionToString(x)
+                for x in self._getNewerRepositoryVersions(targetDir)]
+
+    def _getNewerRepositoryVersions(self, targetDir):
+        '''
+        Returns list of versions from the repository that are newer than the checkout
+        @param targetDir: directory containing Conary checkout
+        @return: list of conary.versions.Version
+        '''
+        repos, sourceState = self._getRepositoryStateFromDirectory(targetDir)
+        troveVersion = sourceState.getVersion()
+        return [ver for ver in self._getRepositoryVersions(targetDir)
+                if ver.isAfter(troveVersion)]
+
+    def _getRepositoryVersions(self, targetDir):
+        '''
+        List of versions of the this package checked into the repository
+        '''
+        repos, sourceState = self._getRepositoryStateFromDirectory(targetDir)
+        branch = sourceState.getBranch()
+        troveName = sourceState.getName()
+        verList = repos.getTroveVersionsByBranch({troveName: {branch: None}})
+        if verList:
+            verList = verList[troveName].keys()
+            verList.sort()
+            verList.reverse()
+        else:
+            verList = []
+        return verList
+
+    def _getRepositoryStateFromDirectory(self, targetDir):
+        '''
+        Create repository and state objects for working with a checkout
+        '''
+        repos = self._getRepositoryClient()
+        conaryState = state.ConaryStateFromFile(targetDir + '/CONARY', repos)
+        sourceState = conaryState.getSourceState()
+        return repos, sourceState
+
+
+    def isConaryCheckoutDirectory(self, targetDir):
+        '''
+        Return whether a directory contains a CONARY file
+        '''
+        return os.path.exists(os.sep.join((targetDir, 'CONARY')))
+
+
 
     def createNewPackage(self, package, label):
         """
@@ -484,10 +594,8 @@ class ConaryFacade(object):
         return dict((str(x[0]), x[1]) for x in descriptions.items())
 
     def _loadRecipeClassFromCheckout(self, recipePath):
-        repos =  self._getRepositoryClient()
         directory = os.path.dirname(recipePath)
-        conaryState = state.ConaryStateFromFile(directory + '/CONARY', repos)
-        sourceState = conaryState.getSourceState()
+        repos, sourceState = self._getRepositoryStateFromDirectory(directory)
 
         cfg = self.getConaryConfig()
         self._initializeFlavors()

@@ -72,7 +72,7 @@ class BaseCommand(command.AbstractCommand):
                 BaseCommand.addParameters(self, argDef)
                 argDef['localflag'] = command.NO_PARAM
                 argDef['localarg'] = command.ONE_PARAM
-        The parameters will then be parsed and included in the C{argSet}o
+        The parameters will then be parsed and included in the C{argSet}
         provided to the plugin's C{runCommand} method.
         @param argDef: dictionary to which command flags are added
         """
@@ -123,8 +123,8 @@ class BaseCommand(command.AbstractCommand):
 
         command.AbstractCommand.processConfigOptions(self, rbuildConfig,
                                                      cfgMap, argSet)
-        rbuildConfig.quiet = argSet.pop('quiet', False)
-        if argSet.pop('verbose', False):
+        rbuildConfig.quiet = argSet.get('quiet', False)
+        if argSet.get('verbose', False):
             log.setVerbosity(log.DEBUG)
         self.processLocalConfigOptions(rbuildConfig, argSet)
 
