@@ -51,6 +51,15 @@ class RbuildError(BaseError):
     not by plugins.
     """
 
+class PluginError(BaseError):
+    """
+    B{C{PluginError}} - rBuild plugin errors
+
+    This error may be raised directly only by rBuild plugins,
+    not by rBuild internals, and is the subclass for more
+    specific errors raised by rBuild plugins.
+    """
+
 class IncompleteInterfaceError(BaseError):
     """
     B{C{IncompleteInterfaceError}} - Interface unavailable in this configuration

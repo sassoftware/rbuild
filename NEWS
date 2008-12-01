@@ -27,6 +27,9 @@ Changes in @NEW@:
       the package if it already exists.  Improve messaging when --new causes
       packages of the same name from upstream sources to be ignored.  Improve
       messaging when --new is used and name conflicts result. (RBLD-30)
+    * Errors raised by plugins now are separate from errors raised by
+      rBuild internals; the new rbuild.errors.PluginError class is
+      available to raise or subclass for plugin-specific error conditions.
 
 Changes in 0.8:
   o New Features:

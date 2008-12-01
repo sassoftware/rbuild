@@ -160,7 +160,7 @@ class Update(pluginapi.Plugin):
         """
         stageName = self.handle.productStore.getActiveStageName()
         if not stageName:
-            raise errors.RbuildError('Could not find current stage')
+            raise errors.PluginError('Could not find current stage')
         self.updateStages([stageName])
 
     def updateStages(self, stageNames):

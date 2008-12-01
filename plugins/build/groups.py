@@ -27,17 +27,17 @@ def _createRmakeJobForGroups(handle, groupList=None):
                           if x[0] in groupList)
         if len(groupRecipes) < len(groupList):
             notFound = set(groupList) - set(groupRecipes)
-            raise errors.RbuildError(
+            raise errors.PluginError(
                 'the following groups'
                 ' were not found: %s' % ', '.join(sorted(notFound)))
         assert(len(groupRecipes) == len(groupList))
     elif not groupRecipes:
-        raise errors.RbuildError(
+        raise errors.PluginError(
                 'no groups are currently being edited - nothing to build')
 
     mainJob = _getJobBasedOnProductGroups(handle, groupRecipes)
     if mainJob is None:
-        raise errors.RbuildError('No groups found to build')
+        raise errors.PluginError('No groups found to build')
     return mainJob
 
 def _getJobBasedOnProductGroups(handle, groupRecipes, recurse=False):

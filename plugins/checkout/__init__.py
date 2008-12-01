@@ -95,7 +95,7 @@ class Checkout(pluginapi.Plugin):
             return rc
         upstreamLatest = self._getUpstreamPackage(packageName)
         if upstreamLatest:
-            raise errors.RbuildError('\n'.join((
+            raise errors.PluginError('\n'.join((
                     'The upstream source provides a version of this package.',
                     'Please specify:',
                     '  --shadow to shadow this package',
@@ -112,7 +112,7 @@ class Checkout(pluginapi.Plugin):
     def derivePackage(self, packageName):
         upstreamLatest = self._getUpstreamPackage(packageName)
         if not upstreamLatest:
-            raise errors.RbuildError(
+            raise errors.PluginError(
                         'cannot derive %s: no upstream binary' % packageName)
         derive.derive(self.handle, upstreamLatest)
         self.handle.ui.info('Derived %s from %s=%s[%s].', packageName, *upstreamLatest)
@@ -122,7 +122,7 @@ class Checkout(pluginapi.Plugin):
     def shadowPackage(self, packageName):
         upstreamLatest = self._getUpstreamPackage(packageName)
         if not upstreamLatest:
-            raise errors.RbuildError(
+            raise errors.PluginError(
                         'cannot shadow %s: no upstream binary' % packageName)
         name, version, flavor = upstreamLatest
         currentLabel = self.handle.productStore.getActiveStageLabel()
@@ -134,7 +134,7 @@ class Checkout(pluginapi.Plugin):
     def newPackage(self, packageName):
         existingPackage = self._getExistingPackage(packageName)
         if existingPackage:
-            raise errors.RbuildError('\n'.join((
+            raise errors.PluginError('\n'.join((
                 'This package already exists in the product.',
                 'Use "rbuild checkout %s" to checkout the existing package, '
                 'or give the new package a different name.' % \

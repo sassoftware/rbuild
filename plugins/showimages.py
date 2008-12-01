@@ -34,7 +34,7 @@ class ShowImages(pluginapi.Plugin):
     def showImageStatus(self):
         jobId = self.handle.productStore.getImageJobId()
         if not jobId:
-            raise errors.RbuildError('No images have been built'
+            raise errors.PluginError('No images have been built'
                                      ' in this environment')
         self.handle.Show.showJobStatus(jobId)
         return jobId

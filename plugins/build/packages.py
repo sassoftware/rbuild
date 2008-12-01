@@ -39,12 +39,12 @@ def _createRmakeJobForPackages(handle, packageList=None, recurse=True):
                                   if x[0] in packageList)
             if len(packageRecipes) < len(packageList):
                 notFound = set(packageList) - set(packageRecipes)
-                raise errors.RbuildError(
+                raise errors.PluginError(
                     'the following packages'
                     ' were not found: %s' % ', '.join(sorted(notFound)))
             assert(len(packageRecipes) == len(packageList))
         elif not packageRecipes:
-            raise errors.RbuildError(
+            raise errors.PluginError(
                     'no packages are currently being edited - nothing to build')
 
         mainJob = groups._getJobBasedOnProductGroups(handle, groupRecipes,
@@ -64,7 +64,7 @@ def _getJobFromNames(handle, packageList):
     contexts = handle.facade.rmake._getRmakeContexts()
 
     if not flavors:
-        raise errors.RbuildError("no image flavors defined; "
+        raise errors.PluginError("no image flavors defined; "
             "don't know what to build")
 
     toBuild = []

@@ -34,7 +34,7 @@ class ShowGroups(pluginapi.Plugin):
     def showGroupStatus(self):
         jobId = self.handle.productStore.getGroupJobId()
         if not jobId:
-            raise errors.RbuildError('No groups have been built'
+            raise errors.PluginError('No groups have been built'
                                      ' in this environment')
         self.handle.Show.showJobStatus(jobId)
         return jobId
