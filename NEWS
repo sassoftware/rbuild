@@ -14,6 +14,9 @@ Changes in @NEW@:
       (RBLD-108)
     * The rbuild status command has been significantly enhanced to give
       more useful output. (RBLD-115)
+    * The rbuild build packages, rbuild build groups, and rbuild build
+      images commands now warn (with an option to quit) if the product
+      definition is no longer up to date. (RBLD-34)
 
   o Bug Fixes:
     * A product update no longer prints an error message if the product is up

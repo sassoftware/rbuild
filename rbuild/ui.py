@@ -28,7 +28,7 @@ class UserInterface(object):
         self.errorStream = errorStream
         self.cfg = cfg
 
-    def write(self, msg, *args):
+    def write(self, msg='', *args):
         self.outStream.write('%s\n' % (msg % args, ))
 
     def writeError(self, errorMsg, *args):

@@ -50,6 +50,7 @@ class BuildImages(pluginapi.Plugin):
 
     def buildImages(self, names):
         ''' Defaults to building all images, but can be filtered using exact name matching. '''
+        self.handle.Build.warnIfOldProductDefinition('building images')
         job = self.handle.facade.rmake.createImagesJobForStage(names)
         jobId = self.handle.facade.rmake.buildJob(job)
         self.handle.productStore.setImageJobId(jobId)

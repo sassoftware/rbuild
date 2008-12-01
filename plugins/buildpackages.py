@@ -74,12 +74,14 @@ class BuildPackages(pluginapi.Plugin):
                                     'packages', BuildPackagesCommand)
 
     def buildAllPackages(self):
+        self.handle.Build.warnIfOldProductDefinition('building all packages')
         job = self.createJobForAllPackages()
         jobId = self.handle.facade.rmake.buildJob(job)
         self.handle.productStore.setPackageJobId(jobId)
         return jobId
 
     def buildPackages(self, packageList, recurse=True):
+        self.handle.Build.warnIfOldProductDefinition('building packages')
         job = self.createJobForPackages(packageList, recurse)
         jobId = self.handle.facade.rmake.buildJob(job)
         self.handle.productStore.setPackageJobId(jobId)

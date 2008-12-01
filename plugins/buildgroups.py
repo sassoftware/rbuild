@@ -49,12 +49,14 @@ class BuildGroups(pluginapi.Plugin):
                                     'groups', BuildGroupsCommand)
 
     def buildAllGroups(self):
+        self.handle.Build.warnIfOldProductDefinition('building all groups')
         job = self.createJobForAllGroups()
         jobId = self.handle.facade.rmake.buildJob(job)
         self.handle.productStore.setGroupJobId(jobId)
         return jobId
 
     def buildGroups(self, groupList):
+        self.handle.Build.warnIfOldProductDefinition('building groups')
         job = self.createJobForGroups(groupList)
         jobId = self.handle.facade.rmake.buildJob(job)
         self.handle.productStore.setGroupJobId(jobId)
