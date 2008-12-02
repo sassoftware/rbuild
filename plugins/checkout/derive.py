@@ -54,7 +54,7 @@ def derive(handle, troveToDerive):
     handle.ui.info('extracting files from %s=%s[%s]' % troveToDerive)
     troveName, version, flavor = troveToDerive
     conaryFacade.checkoutBinaryPackage(troveName, version, flavor,
-                                       extractDir)
+            extractDir, tagScript='/dev/null')
 
 def _writeDerivedRecipe(ui, conaryFacade, troveName, directory):
     recipeName = troveName + '.recipe'

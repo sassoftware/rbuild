@@ -33,6 +33,8 @@ Changes in @NEW@:
     * Errors raised by plugins now are separate from errors raised by
       rBuild internals; the new rbuild.errors.PluginError class is
       available to raise or subclass for plugin-specific error conditions.
+    * Tag scripts are no longer run on the binary checkout when checking
+      out a derived package. (RBLD-29)
 
 Changes in 0.8:
   o New Features:

@@ -521,7 +521,7 @@ class ConaryFacade(object):
     #pylint: disable-msg=R0913
     # too many args, but still better than self, troveTup, targetDir
     def checkoutBinaryPackage(self, name, version, flavor, targetDir,
-                              quiet=True):
+            quiet=True, tagScript=None):
         """
         Check out the contents of a binary package into a directory
         with a minimal derived recipe written and a binary checkout
@@ -539,6 +539,9 @@ class ConaryFacade(object):
         @param quiet: (C{True}) determines whether to print update status
         during the operation.
         @type quiet: bool
+        @param tagScript: If not C{None}, write tag scripts to this file
+        instead of running them in-place.
+        @type tagSCript: str
         """
         version = self._versionToString(version)
         flavor = self._flavorToString(flavor)
@@ -550,7 +553,7 @@ class ConaryFacade(object):
         cfg = copy.deepcopy(cfg)
         cfg.root = targetDir
         updatecmd.doUpdate(cfg, '%s=%s[%s]' % (name, version, flavor),
-                           callback=callback, depCheck=False)
+                callback=callback, depCheck=False, tagScript=tagScript)
 
     def _findPackageInGroups(self, groupList, packageName):
         repos = self._getRepositoryClient()
