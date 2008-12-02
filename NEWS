@@ -3,8 +3,8 @@ Changes in @NEW@:
     * autoLoadRecipe tags are now read from the platform definition in the 
       product definition and set on the rMake config. (RBLD-95)
     * The build images command can now take an optional list of images to
-      build, for example, rbuild images 'Image 1' 'Image 2' will build only
-      those images with exactly matching names. (RBLD-44)
+      build, for example, rbuild build images 'Image 1' 'Image 2' will
+      build only those images with exactly matching names. (RBLD-44)
     * The build groups command will now read sourceGroup elements from the
       product definition, and use those source groups as the groups to build.
       (RBLD-110)
