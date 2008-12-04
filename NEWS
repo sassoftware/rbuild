@@ -1,5 +1,8 @@
 Changes in @NEW@:
   o Bug Fixes:
+    * The productDefinitionSearchPath macro no longer includes
+      flavors, as macros cannot be defined differently between
+      different group flavors being built together. (RBLD-134)
     * The "rbuild update" command in a package checkout no longer
       fails with "IndexError: string index out of range". (RBLD-137)
     * The "rbuild update" command will now update group checkouts

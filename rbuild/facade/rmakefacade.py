@@ -200,9 +200,10 @@ class RmakeFacade(object):
         # Pass the "frozen" set of resolveTrove tups in as a macro, so
         # that group-appliance can use it as a component of its search
         # path.
+        # FIXME: this does not include the flavor right now due to RBLD-134
         for troveCfg in job.configs.itervalues():
             troveCfg.macros['productDefinitionSearchPath'] = '\n'.join([
-                '%s=%s[%s]' % x for x in itertools.chain(
+                '%s=%s' % x[0:2] for x in itertools.chain(
                     *troveCfg.resolveTroveTups)])
 
         return job
