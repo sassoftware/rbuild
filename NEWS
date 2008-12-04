@@ -1,4 +1,4 @@
-Changes in @NEW@:
+Changes in 0.10:
   o Bug Fixes:
     * The productDefinitionSearchPath macro no longer includes
       flavors, as macros cannot be defined differently between
