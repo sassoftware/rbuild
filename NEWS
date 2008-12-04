@@ -2,6 +2,8 @@ Changes in @NEW@:
   o Bug Fixes:
     * The "rbuild update" command in a package checkout no longer
       fails with "IndexError: string index out of range". (RBLD-137)
+    * The "rbuild update" command will now update group checkouts
+      as well as package checkouts. (RBLD-138)
 
 Changes in 0.9:
   o New Features:

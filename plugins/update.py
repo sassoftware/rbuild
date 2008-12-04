@@ -171,11 +171,11 @@ class Update(pluginapi.Plugin):
         """
         productStore = self.handle.productStore
         for stageName in stageNames:
-            for packageDir in sorted(productStore.getEditedRecipeDicts(
-                stageName)[0].values()):
-                if not os.path.isdir(packageDir):
-                    packageDir = os.path.dirname(packageDir)
-                self.handle.facade.conary.updateCheckout(packageDir)
+            for checkoutDict in productStore.getEditedRecipeDicts(stageName):
+                for packageDir in sorted(checkoutDict.values()):
+                    if not os.path.isdir(packageDir):
+                        packageDir = os.path.dirname(packageDir)
+                    self.handle.facade.conary.updateCheckout(packageDir)
 
     def updateCurrentDirectory(self):
         """
