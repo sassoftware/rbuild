@@ -181,4 +181,4 @@ class Update(pluginapi.Plugin):
         """
         Update the contents of the source package in the current directory
         """
-        self.handle.facade.conary.updateCheckout('.')
+        self.handle.facade.conary.updateCheckout(os.getcwd())

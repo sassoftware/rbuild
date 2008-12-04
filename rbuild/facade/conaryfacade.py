@@ -303,6 +303,8 @@ class ConaryFacade(object):
         @return: Status
         @rtype: bool
         """
+        # Conary likes absolute paths RBLD-137
+        targetDir = os.path.abspath(targetDir)
         try:
             return checkin.nologUpdateSrc(self._getRepositoryClient(), [targetDir])
         except builderrors.UpToDate:

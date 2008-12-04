@@ -1,3 +1,8 @@
+Changes in @NEW@:
+  o Bug Fixes:
+    * The "rbuild update" command in a package checkout no longer
+      fails with "IndexError: string index out of range". (RBLD-137)
+
 Changes in 0.9:
   o New Features:
     * autoLoadRecipe tags are now read from the platform definition in the 
