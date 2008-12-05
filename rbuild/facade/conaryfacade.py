@@ -363,14 +363,14 @@ class ConaryFacade(object):
 
     def iterRepositoryDiff(self, targetDir, lastver=None):
         """
-        Returns list of lines of repository diff output relative to the
+        Yields lines of repository diff output relative to the
         specified targetDirectory.
         @param targetDir: name of directory for which to fetch status.
         @type targetDir: string
         @param versions: None for combined diff of all newer upstream,
         or version or version string diff between current and specified
         version
-        @yield: list of strings
+        @return: yields strings
         """
         repos, sourceState = self._getRepositoryStateFromDirectory(targetDir)
         troveName = sourceState.getName()
@@ -388,11 +388,11 @@ class ConaryFacade(object):
 
     def iterCheckoutDiff(self, targetDir):
         """
-        Returns list of lines of checkout diff output relative to the
+        Yields lines of checkout diff output relative to the
         specified targetDirectory.
         @param targetDir: name of directory for which to fetch status.
         @type targetDir: string
-        @yield: list of strings
+        @return: yields strings
         """
         repos, sourceState = self._getRepositoryStateFromDirectory(targetDir)
         ver = sourceState.getVersion()
