@@ -1,4 +1,8 @@
 Changes in @NEW@:
+  o Internal Changes:
+    * Various small changes for consistency, primarily documentation
+      and removing unused imports and variables, as discovered by
+      pylint.
 
 Changes in 0.10:
   o Bug Fixes:

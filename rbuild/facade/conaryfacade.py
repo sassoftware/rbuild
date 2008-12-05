@@ -169,6 +169,8 @@ class ConaryFacade(object):
 
     def _findTrove(self, name, version, flavor=None, labelPath=None,
                    allowMissing=False):
+        #pylint: disable-msg=R0913
+        # findTrove really needs all these arguments to pass through
         """
         Gets a reference to a trove in the repository.
         @param name: package to find
@@ -259,6 +261,8 @@ class ConaryFacade(object):
             cfg = conarycfg.ConaryConfiguration(False)
             rbuildCfg = self._handle.getConfig()
             self._parseRBuilderConfigFile(cfg)
+            #pylint: disable-msg=E1101
+            # pylint does not understand config objects very well
             cfg.repositoryMap.update(rbuildCfg.repositoryMap)
             cfg.user.append(('*',) + rbuildCfg.user)
             cfg.name = rbuildCfg.name
@@ -287,7 +291,7 @@ class ConaryFacade(object):
         Refresh the checked-out sources for a conary source package.
         @param packageList: list of package names to refresh. package names
         are the C{string} type.
-        @type pacakgeList: C{list}
+        @type packageList: C{list}
         """
         cfg = self.getConaryConfig()
         self._initializeFlavors()
@@ -306,7 +310,8 @@ class ConaryFacade(object):
         # Conary likes absolute paths RBLD-137
         targetDir = os.path.abspath(targetDir)
         try:
-            return checkin.nologUpdateSrc(self._getRepositoryClient(), [targetDir])
+            return checkin.nologUpdateSrc(self._getRepositoryClient(),
+                                          [targetDir])
         except builderrors.UpToDate:
             # The end result is an up to date checkout, so ignore the exception
             return True
@@ -328,6 +333,7 @@ class ConaryFacade(object):
          - C{R}: File removed since last commit
         @param targetDir: name of directory for which to fetch status.
         @type targetDir: string
+        @return: lines of text describing differences
         @rtype: list
         """
         return checkin.generateStatus(self._getRepositoryClient(),
@@ -342,6 +348,10 @@ class ConaryFacade(object):
         @param newerOnly: (C{False}) whether to return only log messages
         newer than the current contents of the checkout.
         @type newerOnly: bool
+        @param versionList: (C{None}) if set, a list of versions for
+        which to return log messages.  If C{None}, return all log
+        messages.
+        @type versionList: list of strings or (opaque) conary version objects
         @return: list of strings
         """
         repos, sourceState = self._getRepositoryStateFromDirectory(targetDir)
@@ -367,9 +377,10 @@ class ConaryFacade(object):
         specified targetDirectory.
         @param targetDir: name of directory for which to fetch status.
         @type targetDir: string
-        @param versions: None for combined diff of all newer upstream,
-        or version or version string diff between current and specified
-        version
+        @param lastver: (C{None}) None for diff between directory and
+        latest version in repository, otherwise a string or (opaque)
+        conary version object specifying the repository version against
+        which to generated the diff.
         @return: yields strings
         """
         repos, sourceState = self._getRepositoryStateFromDirectory(targetDir)
@@ -417,16 +428,20 @@ class ConaryFacade(object):
         '''
         Returns list of versions from the repository that are newer than the checkout
         @param targetDir: directory containing Conary checkout
-        @return: list of conary.versions.Version
+        @return: list of C{conary.versions.Version}
         '''
-        repos, sourceState = self._getRepositoryStateFromDirectory(targetDir)
+        _, sourceState = self._getRepositoryStateFromDirectory(targetDir)
         troveVersion = sourceState.getVersion()
+        #pylint: disable-msg=E1103
+        # we know that ver does have an isAfter method
         return [ver for ver in self._getRepositoryVersions(targetDir)
                 if ver.isAfter(troveVersion)]
 
     def _getRepositoryVersions(self, targetDir):
         '''
         List of versions of the this package checked into the repository
+        @param targetDir: directory containing Conary checkout
+        @return: list of C{conary.versions.Version}
         '''
         repos, sourceState = self._getRepositoryStateFromDirectory(targetDir)
         branch = sourceState.getBranch()
@@ -443,6 +458,7 @@ class ConaryFacade(object):
     def _getRepositoryStateFromDirectory(self, targetDir):
         '''
         Create repository and state objects for working with a checkout
+        @param targetDir: directory containing Conary checkout
         '''
         repos = self._getRepositoryClient()
         conaryState = state.ConaryStateFromFile(targetDir + '/CONARY', repos)
@@ -450,9 +466,11 @@ class ConaryFacade(object):
         return repos, sourceState
 
 
-    def isConaryCheckoutDirectory(self, targetDir):
+    @staticmethod
+    def isConaryCheckoutDirectory(targetDir):
         '''
         Return whether a directory contains a CONARY file
+        @param targetDir: directory containing Conary checkout
         '''
         return os.path.exists(os.sep.join((targetDir, 'CONARY')))
 

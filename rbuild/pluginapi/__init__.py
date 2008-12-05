@@ -140,9 +140,15 @@ def _apiWrapper(self, function, prehooks, posthooks):
     """
     Internal function that adds support for calling pre- and post-hooks
     before calling api methods.
+    @param self: this is a function used as a method
+    @param function: actual function to wrap
+    @param prehooks: functions to call before calling actual function
+    @param posthooks: functions to call after calling actual function
     """
     @decorator
     def wrapper(apiMethod, _, *args, **kw):
+        #pylint: disable-msg=C0999
+        # internal wrapper function that merely preserves signature
         """
         Wrapper method around api calls that calls pre/post hooks.
         """

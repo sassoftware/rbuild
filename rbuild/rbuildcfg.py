@@ -70,28 +70,31 @@ class RbuildConfiguration(cfg.ConfigFile):
         and the value at the time this function was called. Some
         options will have their actual values set, and others will not
         appear at all.
+        @param path: name of file to write (absolute or relative path)
+        @type path: string
         """
         out = open(path, 'w')
         options = dict(prettyPrint=True)
 
-        OMIT_ITEMS = ['user', 'rmakeUser']
-        SET_ITEMS = ['repositoryMap']
+        omitItems = ['user', 'rmakeUser']
+        setItems = ['repositoryMap']
 
         def _formatItem(theItem, theValue):
             return ', '.join(theItem.valueType.toStrings(theValue, options))
 
         for key, item in sorted(self._options.items()):
-            if key in OMIT_ITEMS:
+            if key in omitItems:
                 # Omit these entirely
                 continue
 
             value = self[key]
-            if key in SET_ITEMS:
+            if key in setItems:
                 # Write values for these
                 out.write("# %s (Default: %s)\n" % (item.name,
                     _formatItem(item, item.default)))
                 self._writeKey(out, item, value, options)
             else:
                 # Write docs for these (the normal case)
-                out.write("# %s (Default: %s) (At `rbuild init': %s)\n" % (item.name,
+                out.write("# %s (Default: %s) (At `rbuild init': %s)\n" % (
+                    item.name,
                     _formatItem(item, item.default), _formatItem(item, value)))

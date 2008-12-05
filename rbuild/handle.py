@@ -95,6 +95,8 @@ class RbuildHandle(_PluginProxy):
         # Provide the command manager as if it were a plugin
         self['Commands'] = CommandManager()
 
+        #pylint: disable-msg=C0103
+        # this name is intentional
         self.ui = ui.UserInterface(self._cfg)
 
         if productStore is None:
@@ -109,9 +111,9 @@ class RbuildHandle(_PluginProxy):
             self.product = productStore.getProduct()
 
             if hasattr(productStore, 'getRbuildConfigPath'):
-                RbuildConfigPath = productStore.getRbuildConfigPath()
-                if RbuildConfigPath is not None:
-                    self._cfg.read(RbuildConfigPath, exception=False)
+                rBuildConfigPath = productStore.getRbuildConfigPath()
+                if rBuildConfigPath is not None:
+                    self._cfg.read(rBuildConfigPath, exception=False)
             elif hasattr(productStore, 'getRbuildConfigData'):
                 RbuildConfigData = productStore.getRbuildConfigData()
                 if RbuildConfigData is not None:

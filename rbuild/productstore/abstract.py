@@ -11,7 +11,6 @@
 # or fitness for a particular purpose. See the Common Public License for
 # full details.
 #
-import os
 
 from rpath_common.proddef import api1 as proddef
 
@@ -19,10 +18,12 @@ from rbuild import errors
 from rbuild.internal.internal_types import WeakReference
 
 
+#pylint: disable-msg=R0201,R0904
 # "Method could be a function"
 # Since this is a base class, methods here might look like they could
 # be functions, but really need to be methods in subclasses
-#pylint: disable-msg=R0201
+# "Too many public methods"
+# That's just the nature of this interface
 
 class ProductStore(object):
     """

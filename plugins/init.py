@@ -75,8 +75,8 @@ class Init(pluginapi.Plugin):
         self.handle.Commands.registerCommand(InitCommand)
 
     def getProductVersionByParts(self, repository, version):
-        labelStr = self.handle.facade.rbuilder.getProductLabelFromNameAndVersion(
-                                                        repository, version)
+        rb = self.handle.facade.rbuilder
+        labelStr = rb.getProductLabelFromNameAndVersion(repository, version)
         return self.getProductVersionByLabel(labelStr)
 
     def getProductVersionByLabel(self, label):
@@ -123,7 +123,8 @@ class Init(pluginapi.Plugin):
             open(stageDir + '/.stage', 'w').write(stage.name + '\n')
         oldumask = os.umask(077)
         try:
-            self.handle.getConfig().writeCheckoutFile(productDir + '/.rbuild/rbuildrc')
+            self.handle.getConfig().writeCheckoutFile(
+                productDir + '/.rbuild/rbuildrc')
         finally:
             os.umask(oldumask)
         self.handle.ui.info('Created checkout for %s at %s', 
