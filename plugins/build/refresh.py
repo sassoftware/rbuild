@@ -25,23 +25,16 @@ def refreshAllPackages(handle):
 
 def _refreshPackages(handle, packageList=None):
     conaryFacade = handle.facade.conary
-    currPath = os.getcwd()
 
-    try:
-        if not packageList:
-            # Get a list of all package paths.
-            packageDict, groupDict = handle.productStore.getEditedRecipeDicts()
-            packagePaths = packageDict.values()
-            for packagePath in packagePaths:
-                packageDir = os.path.dirname(packagePath)
-                os.chdir(packageDir)
-                conaryFacade.refresh()
-                os.chdir(currPath)
-        else:
-            for package in packageList:
-                packageDir = handle.productStore.getPackagePath(package)
-                os.chdir(packageDir)
-                conaryFacade.refresh()
-                os.chdir(currPath)
-    finally:                
-        os.chdir(currPath)
+    if not packageList:
+        # Get a list of all package paths
+        # Note: groups cannot be refreshed, so ignore them
+        packageDict, _ = handle.productStore.getEditedRecipeDicts()
+        packagePaths = packageDict.values()
+        for packagePath in packagePaths:
+            packageDir = os.path.dirname(packagePath)
+            conaryFacade.refresh(targetDir=packageDir)
+    else:
+        for package in packageList:
+            packageDir = handle.productStore.getPackagePath(package)
+            conaryFacade.refresh(targetDir=packageDir)

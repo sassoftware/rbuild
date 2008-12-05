@@ -4,6 +4,11 @@ Changes in @NEW@:
       and removing unused imports and variables, as discovered by
       pylint.
 
+  o API Changes:
+    * The conaryfacade.refresh method now takes an optional targetDir
+      parameter.  For this reason, refresh now will require Conary
+      2.0.32 or later. (RBLD-139)
+
 Changes in 0.10:
   o Bug Fixes:
     * The productDefinitionSearchPath macro no longer includes

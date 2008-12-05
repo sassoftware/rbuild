@@ -286,17 +286,17 @@ class ConaryFacade(object):
         checkin.checkout(self._getRepositoryClient(), cfg,
                          targetDir, ['%s=%s' % (package, label)])
 
-    def refresh(self):
+    def refresh(self, targetDir=None):
         """
         Refresh the checked-out sources for a conary source package.
-        @param packageList: list of package names to refresh. package names
-        are the C{string} type.
-        @type packageList: C{list}
+        @param targetDir: checkout directory to refresh
+        @type targetDir: string
         """
         cfg = self.getConaryConfig()
         self._initializeFlavors()
         use.setBuildFlagsFromFlavor(None, cfg.buildFlavor, False)
-        return checkin.refresh(self._getRepositoryClient(), cfg)
+        return checkin.refresh(self._getRepositoryClient(), cfg,
+                               dirName=targetDir)
 
     def updateCheckout(self, targetDir):
         """
