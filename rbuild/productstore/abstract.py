@@ -198,6 +198,14 @@ class ProductStore(object):
     def setImageJobId(self, jobId):
         self.setStatus('imageJobId', jobId)
 
+    def setStageReleaseId(self, releaseId):
+        self.setStatus('%s-%s' % (self.getActiveStageName(), 'releaseId'), 
+                       releaseId)
+
+    def getStageReleaseId(self):
+        return self.getStatus('%s-%s' % \
+            (self.getActiveStageName(), 'releaseId'))
+
     def getStatus(self, key):
         raise errors.IncompleteInterfaceError(
             'rBuild status storage unsupported for this configuration')

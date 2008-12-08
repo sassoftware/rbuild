@@ -231,6 +231,12 @@ class RmakeFacade(object):
 
         return rmakeClient.createImageJob(productName, allImages)
 
+    def getBuildIdsFromJobId(self, jobId):
+        client = self._getRmakeHelper()
+        job = client.getJob(jobId)
+        buildIds = [x.getImageBuildId() for x in job.troves.values()]
+        return buildIds
+
     def buildJob(self, job):
         """
         Submits the given job to the rMake server
@@ -255,12 +261,18 @@ class RmakeFacade(object):
         @param jobId: id of the job to watch
         """
         client = self._getRmakeHelper()
-        client.watch(jobId, showTroveLogs=True, showBuildLogs=True)
+        client.watch(jobId, showTroveLogs=True, showBuildLogs=True,
+                     exitOnFinish=True)
 
     def displayJob(self, jobId, troveList=None, showLogs=False):
         client = self._getRmakeHelper()
         query.displayJobInfo(client, jobId, troveList, showLogs=showLogs,
                              displayTroves=True)
+
+    def isJobBuilt(self, jobId):
+        client = self._getRmakeHelper()
+        job = client.getJob(jobId)
+        return job.isBuilt()
 
     @staticmethod
     def overlayJob(job1, job2):

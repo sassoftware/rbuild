@@ -31,6 +31,7 @@ class BuildPackagesCommand(command.BaseCommand):
     paramHelp = '[package]*'
     docs = {'refresh' : 'refreshes the source of specified packages, or all '
                 'checked-out packages if none are specified',
+            'message' : 'message describing why the commit was performed',
             'no-watch' : 'do not watch the job after starting the build',
             'no-commit' : 'do not automatically commit successful builds',
             'no-recurse' : 'build exactly the packages listed on the '
@@ -44,6 +45,7 @@ class BuildPackagesCommand(command.BaseCommand):
         argDef['no-commit'] = command.NO_PARAM
         argDef['no-recurse'] = command.NO_PARAM
         argDef['refresh'] = command.NO_PARAM
+        argDef['message'] = command.ONE_PARAM
 
     #pylint: disable-msg=R0201,R0903
     # could be a function, and too few public methods

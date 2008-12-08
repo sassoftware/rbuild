@@ -19,10 +19,12 @@ from rbuild_plugins.build import groups
 
 class BuildGroupsCommand(command.BaseCommand):
     help = 'Build groups for this stage'
-    docs = {'no-watch' : 'do not watch the job after starting the build',
+    docs = {'message' : 'message describing why the commit was performed',
+            'no-watch' : 'do not watch the job after starting the build',
             'no-commit' : 'do not automatically commit successful builds',}
 
     def addLocalParameters(self, argDef):
+        argDef['message'] = command.ONE_PARAM
         argDef['no-watch'] = command.NO_PARAM
         argDef['no-commit'] = command.NO_PARAM
 

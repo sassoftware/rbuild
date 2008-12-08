@@ -74,7 +74,19 @@ class RbuilderFacade(object):
             return False
         return True
 
+    def createRelease(self, buildIds):
+        client = self._getRbuilderClient()
+        product = self._handle.product
+        productName = str(product.getProductShortname())
+        return client.createRelease(productName, buildIds) 
 
+    def updateRelease(self, releaseId, data):
+        client = self._getRbuilderClient()
+        return client.updateRelease(releaseId, data)
+
+    def publishRelease(self, releaseId, shouldMirror):
+        client = self._getRbuilderClient()
+        return client.publishRelease(releaseId, shouldMirror)
 
 class RbuilderClient(object):
     def __init__(self, rbuilderUrl, user, pw):
@@ -163,6 +175,36 @@ class RbuilderClient(object):
                         del activeBuilds[buildId]
                 time.sleep(.5)
             time.sleep(5)
+
+    def getProductId(self, productName):
+        error, productId = self.server.getProjectIdByHostname(productName)
+        if error:
+            raise errors.RbuildError(*productId)
+        return productId            
+
+    def createRelease(self, productName, buildIds):
+        productId = self.getProductId(productName)
+        error, releaseId = self.server.newPublishedRelease(productId)
+        if error:
+            raise errors.RbuildError(*releaseId)
+        for buildId in buildIds:
+            error, msg = self.server.setBuildPublished(buildId,
+                                                       releaseId, True)
+            if error:
+                raise errors.RbuildError(*msg)
+        return releaseId
+
+    def updateRelease(self, releaseId, data):
+        error, result = self.server.updatePublishedRelease(releaseId, data)
+        if error:
+            raise errors.RbuildError(*result)
+
+    def publishRelease(self, releaseId, shouldMirror):
+        error, result = self.server.publishPublishedRelease(releaseId,
+            shouldMirror)
+        if error:
+            raise errors.RbuildError(*result)
+        return result
 
     # disable until writing rbuild publish
     #def publishAndMirror(self, productName, buildIds):

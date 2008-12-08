@@ -96,6 +96,7 @@ class CheckoutProductStore(ProductStore):
         if stageName is not None:
             # Cannot load product yet, so cannot validate
             self._currentStage = stageName
+        self.statusStore = None            
 
     def getBaseDirectory(self):
         return self._baseDirectory
@@ -105,6 +106,9 @@ class CheckoutProductStore(ProductStore):
                 + '/product-definition.xml')
         return proddef.ProductDefinition(fromStream=open(path))
 
+    def getProductVersion(self):
+        return self.getProduct().getProductVersion()
+    
     def update(self):
         """
         This is the only acceptable way to update a product definition
@@ -235,7 +239,13 @@ class CheckoutProductStore(ProductStore):
         statusStore.save()
 
     def _getStatusStore(self):
-        return _FileStatusStore(self._baseDirectory + '/.rbuild/status')
+        if self.statusStore is None:
+            for stageName in self.iterStageNames():
+                stageKey = "%s-%s" % (stageName, "releaseId")
+                setattr(_FileStatusStore, stageKey, cfgtypes.CfgInt)
+            self.statusStore = _FileStatusStore(self._baseDirectory + '/.rbuild/status')
+
+        return self.statusStore
 
     def checkoutPlatform(self):
         """
@@ -266,3 +276,7 @@ class _FileStatusStore(cfg.ConfigFile):
 
     def save(self):
         self.writeToFile(self._baseFile)
+
+    def __setitem__(self, key, value):
+
+        cfg.ConfigFile.__setitem__(self, key, value)
