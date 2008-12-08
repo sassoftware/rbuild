@@ -18,6 +18,8 @@ from rbuild import pluginapi
 from rbuild.pluginapi import command
 
 class WatchCommand(command.CommandWithSubCommands):
+    #pylint: disable-msg=R0923
+    # "the creature can't help its ancestry"
     help = 'Watches details about the result of rbuild operations'
 
     commands = ['watch']

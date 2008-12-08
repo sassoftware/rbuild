@@ -19,6 +19,8 @@ from rmake.lib import pluginlib
 PLUGIN_PREFIX = 'rbuild_plugins'
 
 class PluginManager(pluginlib.PluginManager):
+    #pylint: disable-msg=R0904
+    # "the creature can't help its ancestry"
 
     def registerCommands(self, main, handle):
         for plugin in self.plugins:

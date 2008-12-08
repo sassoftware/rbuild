@@ -94,6 +94,8 @@ class RbuilderClient(object):
         self.server = facade.ServerProxy(rpcUrl, username=user, password=pw)
 
     def getProductLabelFromNameAndVersion(self, productName, versionName):
+        #pylint: disable-msg=R0914
+        # not a great candidate for refactoring
         error, productId = self.server.getProjectIdByHostname(productName)
         if error:
             raise errors.RbuildError(*productId)

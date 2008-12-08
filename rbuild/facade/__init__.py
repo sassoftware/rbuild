@@ -27,7 +27,6 @@ Module functions, classes, and class methods that do not start
 with a C{_} character are public.
 """
 
-import string
 import sys
 import xmlrpclib
 from conary.lib import util
@@ -101,6 +100,8 @@ class ServerProxy(util.ServerProxy):
     messages.
     """
 
+    #pylint: disable-msg=R0913
+    # we really need all those arguments
     def __init__(self, uri, username=None, password=None, *args, **kwargs):
         util.ServerProxy.__init__(self, uri, *args, **kwargs)
 

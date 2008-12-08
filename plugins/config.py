@@ -26,7 +26,7 @@ class ConfigCommand(command.BaseCommand):
     def addLocalParameters(self, argSet):
         argSet['ask'] = command.NO_PARAM
 
-    def runCommand(self, handle, argSet, args):
+    def runCommand(self, handle, argSet, _):
         if argSet.pop('ask', False):
             handle.Config.updateConfig()
         else:

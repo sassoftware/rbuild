@@ -119,7 +119,7 @@ def _findCheckoutRoot():
     @return: directory name, or None if no checkout found
     """
     dirName = os.getcwd()
-    for i in range(dirName.count(os.path.sep)+1):
+    for _ in range(dirName.count(os.path.sep)+1):
         if os.path.isdir(os.path.join(dirName, '.rbuild')):
             return dirName
         dirName = os.path.dirname(dirName)
@@ -127,6 +127,8 @@ def _findCheckoutRoot():
 
 
 def genExcepthook(*args, **kw):
+    #pylint: disable-msg=C0999
+    # just passes arguments through
     """
     Generates an exception handling hook that brings up a debugger.
 
@@ -139,6 +141,8 @@ def genExcepthook(*args, **kw):
         sys.excepthook = genExceptHook(debugAll=True)
     """
 
+    #pylint: disable-msg=C0103
+    # follow external convention
     def excepthook(e_type, e_value, e_traceback):
         checkoutRoot = _findCheckoutRoot()
         outputDir = None
@@ -151,6 +155,8 @@ def genExcepthook(*args, **kw):
                     outputDir = None
             except:
                 # fall back gracefully if we can't create the directory
+                #pylint: disable-msg=W0702
+                # don't really need to handle specific exceptions here
                 outputDir = None
 
         if outputDir:

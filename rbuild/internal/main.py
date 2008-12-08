@@ -79,6 +79,8 @@ class RbuildMain(mainhandler.MainHandler):
         return mainhandler.MainHandler.getCommand(self, argv, cfg)
 
     def _getPreCommandOptions(self, argv, cfg):
+        #pylint: disable-msg=C0999
+        # internal interface
         """
         Handles flags that exist before the actual command.  These get read
         before the command is processed and thus can change things like
@@ -172,6 +174,7 @@ class RbuildMain(mainhandler.MainHandler):
 def main(argv=None):
     """
     Python hook for starting rbuild from the command line.
+    @param argv: standard argument vector
     """
     if argv is None:
         argv = sys.argv

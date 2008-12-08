@@ -20,12 +20,10 @@ via C{handle.facade.rmake} which is automatically available to
 all plugins through the C{handle} object.
 """
 
-import copy
 import itertools
 import os
 
 from rmake.build import buildcfg
-from rmake.cmdline.buildcmd import _getResolveTroveTups
 from rmake.cmdline import helper
 from rmake.cmdline import query
 from rmake import plugins
@@ -200,21 +198,24 @@ class RmakeFacade(object):
         # Pass the "frozen" set of resolveTrove tups in as a macro, so
         # that group-appliance can use it as a component of its search
         # path.
+        # FIXME: this does not include the flavor right now due to RBLD-134
         for troveCfg in job.configs.itervalues():
             troveCfg.macros['productDefinitionSearchPath'] = '\n'.join([
-                '%s=%s[%s]' % x for x in itertools.chain(
+                '%s=%s' % x[0:2] for x in itertools.chain(
                     *troveCfg.resolveTroveTups)])
 
         return job
 
     def createImagesJobForStage(self, nameFilter = None):
+        #pylint: disable-msg=R0914
+        # fewer local variables would make this hard; it's pretty simple
+        # despite the large number of locals
         rmakeClient = self._getRmakeHelper()
         conaryFacade = self._handle.facade.conary
         stageName = self._handle.productStore.getActiveStageName()
         stageLabel = self._handle.productStore.getActiveStageLabel()
         product = self._handle.product
         productName = str(product.getProductShortname())
-        versionName = str(product.getProductVersion())
         builds = self._handle.productStore.getBuildsWithFullFlavors(stageName)
         allImages = []
         for build, buildFlavor in builds:
@@ -227,7 +228,8 @@ class RmakeFacade(object):
             buildImageType = build.getBuildImage().containerFormat
             buildSettings = build.getBuildImage().fields.copy()
             troveSpec = (groupName, stageLabel, buildFlavor)
-            allImages.append((troveSpec, buildImageType, buildSettings, buildImageName))
+            allImages.append((troveSpec, buildImageType,
+                              buildSettings, buildImageName))
 
         return rmakeClient.createImageJob(productName, allImages)
 

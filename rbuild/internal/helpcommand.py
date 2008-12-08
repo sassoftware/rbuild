@@ -31,11 +31,13 @@ class HelpCommand(BaseCommand):
     requireConfig = False
 
     def runCommand(self, handle, argSet, args):
+        #pylint: disable-msg=C0999
+        # interface implementation does not require argument documentation
         """
         Runs the help command, displaying either general help including
         a list of commonly-used command, or help on a specific command.
         """
-        # W0613: unused variables handle, argSet.  This is expected.
+        # W0613: unused variables handle, argSet for implementing interface
         #pylint: disable-msg=W0613
         command, subCommands = self.requireParameters(args, allowExtra=True,
                                                       maxExtra=2)

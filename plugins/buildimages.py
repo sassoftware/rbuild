@@ -61,8 +61,13 @@ class BuildImages(pluginapi.Plugin):
         self.handle.Commands.getCommandClass('build').registerSubCommand(
                                     'images', BuildImagesCommand)
 
-    def buildImages(self, names):
-        ''' Defaults to building all images, but can be filtered using exact name matching. '''
+    def buildImages(self, names=None):
+        '''
+        Build all images, or all images named in C{names}
+        @param names: (C{None}) names of images to build (build all
+        images if C{None})
+        @type names: list of strings
+        '''
         self.handle.Build.warnIfOldProductDefinition('building images')
         job = self.handle.facade.rmake.createImagesJobForStage(names)
         jobId = self.handle.facade.rmake.buildJob(job)

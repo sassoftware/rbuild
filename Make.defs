@@ -12,7 +12,7 @@
 # full details.
 #
 
-VERSION=0.9
+VERSION=0.10
 # VERSION can be overridden by snapshot builds to force incompatible versions
 
 export prefix = /usr

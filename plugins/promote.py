@@ -58,9 +58,9 @@ class Promote(pluginapi.Plugin):
 
         activeStage = store.getActiveStageName()
         nextStage = store.getNextStageName(activeStage)
-        activeLabel = self.handle.product.getLabelForStage(activeStage)
+        activeLabel = product.getLabelForStage(activeStage)
 
-        fromTo = self.handle.product.getPromoteMapsForStages(activeStage, nextStage)
+        fromTo = product.getPromoteMapsForStages(activeStage, nextStage)
 
         groupSpecs = [ '%s[%s]' % x for x in store.getGroupFlavors() ]
         allTroves = cny._findTrovesFlattened(groupSpecs, activeLabel)

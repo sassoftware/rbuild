@@ -47,12 +47,12 @@ class UpdateProductCommand(pluginapi.command.BaseCommand):
     """
     help = 'Update product directory relative to working directory'
     def runCommand(self, handle, _, args):
+        #pylint: disable-msg=C0999,W0613
+        #can't have two args both called _ to make them be ignored
         """
         Process the command line provided for this plugin
         @param handle: context handle
         @type handle: rbuild.handle.RbuildHandle
-        @param args: command-line arguments
-        @type args: iterable
         """
         handle.productStore.update()
         return None
@@ -64,12 +64,12 @@ class UpdatePackagesCommand(pluginapi.command.BaseCommand):
     """
     help = 'Updates all packages in all stages'
     def runCommand(self, handle, _, args):
+        #pylint: disable-msg=C0999,W0613
+        #can't have two args both called _ to make them be ignored
         """
         Process the command line provided for this plugin
         @param handle: context handle
         @type handle: rbuild.handle.RbuildHandle
-        @param args: command-line arguments
-        @type args: iterable
         """
         handle.Update.updateAllStages()
         return None
@@ -82,6 +82,8 @@ class UpdateStageCommand(pluginapi.command.BaseCommand):
     help = 'Updates all packages in current or named stage(s)'
     paramHelp = '[stagename]*'
     def runCommand(self, handle, _, args):
+        #pylint: disable-msg=C0999,W0613
+        #can't have two args both called _ to make them be ignored
         """
         Process the command line provided for this plugin
         @param handle: context handle
@@ -103,12 +105,12 @@ class UpdateAllCommand(pluginapi.command.BaseCommand):
     """
     help = 'Updates all checkout contents, from any directory'
     def runCommand(self, handle, _, args):
+        #pylint: disable-msg=C0999,W0613
+        #can't have two args both called _ to make them be ignored
         """
         Process the command line provided for this plugin
         @param handle: context handle
         @type handle: rbuild.handle.RbuildHandle
-        @param args: command-line arguments
-        @type args: iterable
         """
         handle.productStore.update()
         handle.Update.updateAllStages()
@@ -171,11 +173,11 @@ class Update(pluginapi.Plugin):
         """
         productStore = self.handle.productStore
         for stageName in stageNames:
-            for packageDir in sorted(productStore.getEditedRecipeDicts(
-                stageName)[0].values()):
-                if not os.path.isdir(packageDir):
-                    packageDir = os.path.dirname(packageDir)
-                self.handle.facade.conary.updateCheckout(packageDir)
+            for checkoutDict in productStore.getEditedRecipeDicts(stageName):
+                for packageDir in sorted(checkoutDict.values()):
+                    if not os.path.isdir(packageDir):
+                        packageDir = os.path.dirname(packageDir)
+                    self.handle.facade.conary.updateCheckout(packageDir)
 
     def updateCurrentDirectory(self):
         """

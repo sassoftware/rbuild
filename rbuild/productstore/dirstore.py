@@ -26,7 +26,8 @@ class MissingProductStoreError(errors.BaseError):
         errors.BaseError.__init__(self)
         self.directoryName = directoryName
     def __str__(self):
-        return 'Directory "%s" does not contain a product checkout' %self.directoryName
+        return ('Directory "%s" does not contain a product checkout'
+                % self.directoryName)
 
 def getDefaultProductDirectory(dirName=None, error=False):
     """
@@ -34,8 +35,12 @@ def getDefaultProductDirectory(dirName=None, error=False):
     for a product checkout.
     @param dirName: (current working directory) Optional directory name
     to search
+    @param error: (C{False}) if set to C{True}, raise 
+    C{MissingProductStoreError} if no product directory is found
     @return: directory name, or C{None} if no checkout found.
     @rtype: str
+    @raise MissingProductStoreError: if C{error=True} and no product
+    directory is found.
     """
     if not dirName:
         dirName = os.getcwd()
@@ -81,6 +86,8 @@ def getStageNameFromDirectory(dirName=None):
 
 
 class CheckoutProductStore(ProductStore):
+    #pylint: disable-msg=R0904
+    # See ProductStore -- this is just a big class
     def __init__(self, handle=None, baseDirectory=None):
         ProductStore.__init__(self, handle)
         productDirectory = getDefaultProductDirectory(baseDirectory)
@@ -264,6 +271,9 @@ class _FileStatusStore(cfg.ConfigFile):
     # we will need to convert existing data.  Since that would create a
     # "flag day", we should only do that for a new major version
     # unless there is a strong reason otherwise.
+    #
+    #pylint: disable-msg=R0904
+    # too many public methods: "the creature can't help its ancestry"
 
     packageJobId  = cfgtypes.CfgInt
     groupJobId  = cfgtypes.CfgInt

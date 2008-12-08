@@ -195,6 +195,8 @@ class CommandWithSubCommands(BaseCommand):
         return None
 
     def runCommand(self, handle, argSet, args):
+        #pylint: disable-msg=C0999
+        # parameters documented by proxy
         """
         Takes the args list, determines the subcommand that is being called
         and calls that subcommand.

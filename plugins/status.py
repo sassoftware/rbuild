@@ -16,7 +16,6 @@ status command and related utilities.
 """
 import os
 
-from rbuild import errors
 from rbuild import pluginapi
 from rbuild.pluginapi import command
 
@@ -51,7 +50,8 @@ class StatusCommand(command.BaseCommand):
         'no-product' : 'Do not print status for the product definition',
         'concise' : 'Print one-line summary for each checkout',
         'local' : 'Print out only local changes not committed',
-        'repository' : 'Print out only changes in repository not applied locally',
+        'repository' :
+            'Print out only changes in repository not applied locally',
     }
 
     def addLocalParameters(self, argDef):
@@ -111,6 +111,9 @@ class Status(pluginapi.Plugin):
 
     def printDirectoryStatus(self, directory, verbosity=DEFAULT, product=False,
             local=True, repository=True):
+        #pylint: disable-msg=R0913,R0914
+        # conflating arguments would just make this harder to understand
+        # not amenable to refactoring to split up local variables
         '''
         Prints status of various things based on the current
         working directory.  The default output displays what
@@ -127,7 +130,8 @@ class Status(pluginapi.Plugin):
         '''
 
         if not local and not repository:
-            raise ValueError('At least one of local and repository must be True')
+            raise ValueError(
+                'At least one of local and repository must be True')
 
         productStore = dirstore.CheckoutProductStore(self.handle, directory)
         proddefDir = productStore.getProductDefinitionDirectory()
@@ -170,6 +174,10 @@ class Status(pluginapi.Plugin):
     def _printOneDirectoryStatus(self, dirName, displayName,
             verbosity, pendingAnnounce=None, proddef=False,
             local=True, repository=True):
+        #pylint: disable-msg=R0912,R0913,R0914
+        # branches are required by spec
+        # conflating arguments would just make this harder to understand
+        # not amenable to refactoring to split up local variables
         '''
         Prints directory status, if any, for a directory that is a
         checkout or stage.  For a directory that is neither a checkout
@@ -221,14 +229,16 @@ class Status(pluginapi.Plugin):
                 
                 if verbosity >= DEFAULT:
                     if localChanges and status:
-                        ui.write('  * Local changes not committed to repository:')
+                        ui.write('  * Local changes not committed'
+                                    ' to repository:')
                         for x, y in status:
                             ui.write('L-  %s   %s/%s' % (x, displayName, y))
                         if verbosity >= VERBOSE:
                             for line in conaryfacade.iterCheckoutDiff(dirName):
                                 ui.write(line)
                     if repositoryChanges:
-                        ui.write('  * Remote repository commit messages for newer versions:')
+                        ui.write('  * Remote repository commit messages'
+                                    ' for newer versions:')
                         for line in conaryfacade.getCheckoutLog(
                                 dirName, versionList=newerVersions):
                             ui.write('-R  %s', line)
