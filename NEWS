@@ -1,4 +1,9 @@
 Changes in @NEW@:
+  o New Features:
+    * There is a new rbuild publish command.  The publish command publishes
+      and mirrors (by default) a product release in rBuilder.  By default,
+      releases are now created at the end of image builds. (RBLD--42)
+
   o Internal Changes:
     * Various small changes for consistency, primarily documentation
       and removing unused imports and variables, as discovered by
