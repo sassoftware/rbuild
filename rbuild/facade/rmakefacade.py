@@ -244,6 +244,7 @@ class RmakeFacade(object):
         Submits the given job to the rMake server
         @param job: rMake job to submit
         @return: jobId of the job that is started
+        @rtype: int
         """
         client = self._getRmakeHelper()
         return client.buildJob(job)
