@@ -13,6 +13,12 @@ change.  All documentation regarding stable interfaces is relevant
 only to published stable releases; it is not in force for alpha
 and beta releases, including 0.x releases and any automated builds.
 
+Note also that API stability allows making changes that should be
+backward-compatible in well-formed Python code.  This includes things
+like adding additional optional keyword arguments and changing the
+error raised in any particular error condition to a subclass of
+the previous error.
+
 API documentation is available at http://cvs.rpath.com/rbuild-docs/
 or by running "make html" and viewing docs/developer/index.html (requires
 epydoc).
