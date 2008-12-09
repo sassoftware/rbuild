@@ -12,6 +12,8 @@
 # full details.
 #
 
+import datetime
+
 from rbuild import pluginapi
 from rbuild.pluginapi import command
 
@@ -25,8 +27,8 @@ class BuildImagesCommand(command.BaseCommand):
     '''
     help = 'Build images for this stage'
     paramHelp = '[image name]*'
-    docs = {'no-watch' : 'do not watch the job and do not create a ' + \
-                         'release after starting. ',
+    docs = {'no-watch' : 'do not watch the job and do not create a'
+                         ' release after starting. ',
             'no-release' : 'do not create a release.',
            }
 
@@ -44,14 +46,13 @@ class BuildImagesCommand(command.BaseCommand):
         if imageNames == []:
             imageNames = None
         jobId = handle.BuildImages.buildImages(imageNames)
-        # jobId = 55
         if watch:
             handle.Build.watchJob(jobId)
             if handle.facade.rmake.isJobBuilt(jobId) and release:
                 releaseId = handle.BuildImages.buildRelease(jobId)            
                 handle.productStore.setStageReleaseId(releaseId)
-        else:
-            handle.ui.writeError('Not grouping built images into a release.')
+        elif release:
+            handle.ui.writeError('Not grouping built images into a release due to --no-watch option.')
 
 
 class BuildImages(pluginapi.Plugin):
@@ -74,27 +75,48 @@ class BuildImages(pluginapi.Plugin):
         self.handle.productStore.setImageJobId(jobId)
         return jobId
 
-    def buildRelease(self, jobId):
+    def buildRelease(self, jobId, name=None, version=None, description=None):
         """
         Create a release in rBuilder from the build ids referenced by the
-        given job id.
+        given job id.  Keyword arguments will be given default values.
+        The default values chosen are not part of the API and may change
+        from release to release.
 
         @param jobId: Create a release from this job
+        @type jobId: int
+        @param name: Name of the release
+        @type name: string
+        @param version: Version of the release
+        @type version: string
+        @param description: Description of the release
+        @type description: string
         """
         if not jobId:
             return None
         buildIds = self.handle.facade.rmake.getBuildIdsFromJobId(jobId)
         releaseId = self.handle.facade.rbuilder.createRelease(buildIds)
         ui = self.handle.ui
+        productStore = self.handle.productStore
 
         # Update the created release with some relevant data.
-        stageName = self.handle.productStore.getActiveStageName()
-        data = {'name' : '%s images' % stageName,
-                'version' : self.handle.productStore.getProductVersion(),
-                'description' : 'Release from rBuild. Built by %s.' % \
-                    self.handle.getConfig().user[0]}
+        if name is None:
+            stageName = productStore.getActiveStageName()
+            name = '%s images' % stageName
+        if version is None:
+            version = productStore.getProductVersion()
+        if description is None:
+            description = productStore.getProductDescription()
+        if not description:
+            # empty productDescription, say something possibly useful
+            description = 'Release built by %s on %s' %(
+                self.handle.getConfig().user[0],
+                self._getTimeString())
 
-        self.handle.facade.rbuilder.updateRelease(releaseId, data)
-        ui.write('Created release "%s", release id %s' % \
-            (data['name'], releaseId))
+        self.handle.facade.rbuilder.updateRelease(releaseId, name=name,
+            version=version, description=description)
+        ui.write('Created release "%s", release id %s' %(name, releaseId))
         return releaseId
+
+    @staticmethod
+    def _getTimeString():
+        return datetime.datetime.now().ctime()

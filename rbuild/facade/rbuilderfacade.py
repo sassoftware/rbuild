@@ -80,9 +80,19 @@ class RbuilderFacade(object):
         productName = str(product.getProductShortname())
         return client.createRelease(productName, buildIds) 
 
-    def updateRelease(self, releaseId, data):
+    def updateRelease(self, releaseId, **kwargs):
+        '''
+        Update release C{releaseId} with arguments passed as keyword
+        arguments.
+
+        @param releaseId: rBuilder identifier for a release (see C{createRelease})
+        @type releaseId: int
+        @raises: C{errors.RbuilderError} particularly if arguments
+        have been passed that are not understood by the version of
+        rBuilder being contacted.
+        '''
         client = self._getRbuilderClient()
-        return client.updateRelease(releaseId, data)
+        return client.updateRelease(releaseId, kwargs)
 
     def publishRelease(self, releaseId, shouldMirror):
         client = self._getRbuilderClient()
