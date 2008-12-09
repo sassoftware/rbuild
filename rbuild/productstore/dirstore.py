@@ -21,13 +21,6 @@ from rpath_common.proddef import api1 as proddef
 from rbuild import errors
 from rbuild.productstore.abstract import ProductStore
 
-class MissingProductStoreError(errors.BaseError):
-    def __init__(self, directoryName):
-        errors.BaseError.__init__(self)
-        self.directoryName = directoryName
-    def __str__(self):
-        return ('Directory "%s" does not contain a product checkout'
-                % self.directoryName)
 
 def getDefaultProductDirectory(dirName=None, error=False):
     """
@@ -56,7 +49,7 @@ def getDefaultProductDirectory(dirName=None, error=False):
         dirName = None
 
     if dirName is None and error is not False:
-        raise MissingProductStoreError(origDirName)
+        raise errors.MissingProductStoreError(origDirName)
 
     return dirName
 
@@ -250,7 +243,8 @@ class CheckoutProductStore(ProductStore):
             for stageName in self.iterStageNames():
                 stageKey = "%s-%s" % (stageName, "releaseId")
                 setattr(_FileStatusStore, stageKey, cfgtypes.CfgInt)
-            self.statusStore = _FileStatusStore(self._baseDirectory + '/.rbuild/status')
+            self.statusStore = _FileStatusStore(self._baseDirectory
+                    + '/.rbuild/status')
 
         return self.statusStore
 

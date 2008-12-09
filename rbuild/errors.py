@@ -22,45 +22,114 @@ from conary.lib import util
 # pylint: disable-msg=W0611
 from conary.errors import ParseError
 
-class InternalError(Exception):
+
+class RbuildBaseError(RuntimeError):
     """
-    B{C{InternalError}} - superclass for all errors that are not meant to be
+    B{C{RbuildBaseError}} - Base class for all rBuild exceptions.
+
+    New exceptions should derive from a subclass of this one, for
+    example C{RbuildPluginError}.
+
+    @cvar template: A template string used when displaying the
+                    exception. Must use only keyword substitution.
+    @cvar params: A list of parameter names used in the above template.
+    """
+    template = 'An unknown error has occurred'
+    params = []
+
+    def __init__(self, *args, **kwargs):
+        RuntimeError.__init__(self)
+        name = self.__class__.__name__
+
+        # Sanity check
+        for param in self.params:
+            assert not hasattr(self.__class__, param), ("Parameter %r "
+                    "conflicts with class dictionary, name it "
+                    "something else." % param)
+            assert param not in self.__dict__, ("Parameter %r "
+                    "conflicts with instance dictionary, name it "
+                    "something else." % param)
+
+        self._values = dict()
+        if kwargs:
+            # Use keyword arguments
+            if args:
+                raise TypeError("Exception %s cannot take both positional "
+                    "and keyword arguments" % name)
+
+            missing = set(self.params) - set(kwargs)
+            if missing:
+                missingStr = ", ".join("%r" % x for x in missing)
+                raise TypeError("Expected argument%s %s to exception %s" % (
+                    len(missing) != 1 and 's' or '', missingStr, name))
+
+            for key, value in kwargs.iteritems():
+                if key not in self.params:
+                    raise TypeError("Exception %s got an unexpected "
+                        "argument %r" % (name, key))
+                self._values[key] = value
+        else:
+            # Use positional arguments
+            if len(self.params) != len(args):
+                raise TypeError("Exception %s takes exactly %d argument%s "
+                    "(%d given)" % (name, len(self.params),
+                    len(self.params) != 1 and "s" or "", len(args)))
+
+            for name, value in zip(self.params, args):
+                self._values[name] = value
+
+    def __getattr__(self, name):
+        if name in self._values:
+            return self._values[name]
+        raise AttributeError(name)
+
+    def __str__(self):
+        return self.template % self._values
+
+    def __repr__(self):
+        params = ', '.join('%s=%r' % (x, self._values[x])
+                for x in self.params)
+        return '%s(%s)' % (self.__class__.__name__, params)
+
+
+class RbuildInternalError(RbuildBaseError):
+    """
+    B{C{RbuildInternalError}} - superclass for all errors that are not meant to be
     seen.
 
     Errors deriving from InternalError should never occur, but when they do
     they indicate a failure within the code to handle some unexpected case.
+
+    Do not raise this exception directly.
     """
 
-class BaseError(Exception):
-    """
-    B{C{BaseError}} - superclass for all well-defined errors.
 
-    If you create an error in rBuild, it should derive from this class,
-    and have a str() that is acceptable output for the command line,
-    with the string "C{error: }" prepended to it.
-
-    Any relevant data for this error should be stored outside of the
-    string so it can be accessed from non-command-line interfaces.
-    """
-
-class RbuildError(BaseError):
+class RbuildError(RbuildBaseError):
     """
     B{C{RbuildError}} - Internal rBuild errors
 
-    This error may be raised directly only by rBuild internals,
-    not by plugins.
+    This error may be raised only by rBuild internals, not by plugins.
+    It may be raised directly but creating a new subclass for each
+    specific case is recommended.
     """
+    template = "%(message)s"
+    params = ['message']
 
-class PluginError(BaseError):
+
+class PluginError(RbuildBaseError):
     """
-    B{C{PluginError}} - rBuild plugin errors
+    B{C{RbuildPluginError}} - rBuild plugin errors
 
-    This error may be raised directly only by rBuild plugins,
-    not by rBuild internals, and is the subclass for more
-    specific errors raised by rBuild plugins.
+    This error may be raised only by rBuild plugins, not by rBuild
+    internals, and is the superclass for more specific errors raised
+    by rBuild plugins. It may be raised directly but creating a new
+    subclass for each specific case is recommended.
     """
+    template = "%(message)s"
+    params = ['message']
 
-class IncompleteInterfaceError(BaseError):
+
+class IncompleteInterfaceError(RbuildBaseError):
     """
     B{C{IncompleteInterfaceError}} - Interface unavailable in this configuration
 
@@ -69,23 +138,54 @@ class IncompleteInterfaceError(BaseError):
     of filesystem operations might raise this error if called in
     the context of repository operations.
     """
+    template = "Unsupported interface: %(message)s"
+    params = ['message']
 
-class BadParameterError(BaseError):
+
+class BadParameterError(RbuildBaseError):
     """
     Raised when a command is given bad parameters at the command line.
     """
+    template = "%(message)s"
+    params = ['message']
 
 
-class MissingPluginError(InternalError):
+## BEGIN Internal Errors
+class InvalidAPIMethodError(RbuildInternalError):
+    "Raised when an unknown API method is referenced by an internal call."
+    template = "No such API method %(method)r"
+    params = ['method']
+
+
+class InvalidHookReturnError(RbuildInternalError):
+    "Raised when a prehook returns something unexpected."
+    template = ("Invalid return value from prehook %(hook)r "
+            "for function %(method)r")
+    params = ['hook', 'method']
+
+
+class MissingPluginError(RbuildInternalError):
     """
     Raised on attempts to access a plugin that is not known to the
     C{RbuildHandle} object.
     """
-    def __init__(self, pluginName):
-        InternalError.__init__(self)
-        self.pluginName = pluginName
-    def __str__(self):
-        return "Plugin %r is not loaded" % self.pluginName
+    template = "Plugin %(pluginName)r is not loaded"
+    params = ['pluginName']
+
+## END Internal Errors
+
+
+## BEGIN rBuild Errors
+class MissingProductStoreError(RbuildError):
+    template = "Directory %(path)r does not contain a product checkout"
+    params = ['path']
+
+
+class RbuilderError(RbuildError):
+    template = "rBuilder error %(error)s: %(frozen)r"
+    params = ['error', 'frozen']
+
+## END rBuild Errors
 
 
 #: error that is output when a Python exception makes it to the command 
@@ -144,9 +244,13 @@ def genExcepthook(*args, **kw):
     #pylint: disable-msg=C0103
     # follow external convention
     def excepthook(e_type, e_value, e_traceback):
+        """Exception hook wrapper"""
         checkoutRoot = _findCheckoutRoot()
         outputDir = None
         if checkoutRoot:
+            #pylint: disable-msg=W0702
+            # No exception type(s) specified - a generic handler is
+            # warranted as this is in an exception handler.
             try:
                 outputDir = checkoutRoot + '/.rbuild/tracebacks'
                 if not os.path.exists(outputDir):
@@ -155,8 +259,6 @@ def genExcepthook(*args, **kw):
                     outputDir = None
             except:
                 # fall back gracefully if we can't create the directory
-                #pylint: disable-msg=W0702
-                # don't really need to handle specific exceptions here
                 outputDir = None
 
         if outputDir:

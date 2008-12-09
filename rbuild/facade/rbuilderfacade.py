@@ -98,11 +98,11 @@ class RbuilderClient(object):
         # not a great candidate for refactoring
         error, productId = self.server.getProjectIdByHostname(productName)
         if error:
-            raise errors.RbuildError(*productId)
+            raise errors.RbuilderError(*productId)
         error, versionList = self.server.getProductVersionListForProduct(
                                                                     productId)
         if error:
-            raise errors.RbuildError(*versionList)
+            raise errors.RbuilderError(*versionList)
 
         versionId = None
         versionNames = []
@@ -120,7 +120,7 @@ class RbuilderClient(object):
             error, stream = self.server.getProductDefinitionForVersion(
                 versionId)
             if error:
-                raise errors.RbuildError(*stream)
+                raise errors.RbuilderError(*stream)
             product = proddef.ProductDefinition(stream)
             return product.getProductDefinitionLabel()
         else:
@@ -136,11 +136,11 @@ class RbuilderClient(object):
     def startProductBuilds(self, productName, versionName, stageName):
         error, productId = self.server.getProjectIdByHostname(productName)
         if error:
-            raise errors.RbuildError(*productId)
+            raise errors.RbuilderError(*productId)
         error, versionList = self.server.getProductVersionListForProduct(
                                                                     productId)
         if error:
-            raise errors.RbuildError(*versionList)
+            raise errors.RbuilderError(*versionList)
 
         versionId = None
         # W0612: leave unused variables as documentation
@@ -159,7 +159,7 @@ class RbuilderClient(object):
                                                 versionId, stageName, False)
 
         if error:
-            raise errors.RbuildError(buildIds)
+            raise errors.RbuilderError(*buildIds)
         return buildIds
 
     def watchImages(self, buildIds):
@@ -169,7 +169,7 @@ class RbuilderClient(object):
             for buildId in list(activeBuilds):
                 error, buildStatus = self.server.getBuildStatus(buildId)
                 if error:
-                    raise errors.RbuildError(buildStatus)
+                    raise errors.RbuilderError(*buildStatus)
                 if activeBuilds[buildId] != buildStatus:
                     activeBuilds[buildId] = buildStatus
                     print '%s: %s' % (buildId, buildStatus['message'])
@@ -181,29 +181,29 @@ class RbuilderClient(object):
     def getProductId(self, productName):
         error, productId = self.server.getProjectIdByHostname(productName)
         if error:
-            raise errors.RbuildError(*productId)
+            raise errors.RbuilderError(*productId)
         return productId            
 
     def createRelease(self, productName, buildIds):
         productId = self.getProductId(productName)
         error, releaseId = self.server.newPublishedRelease(productId)
         if error:
-            raise errors.RbuildError(*releaseId)
+            raise errors.RbuilderError(*releaseId)
         for buildId in buildIds:
             error, msg = self.server.setBuildPublished(buildId,
                                                        releaseId, True)
             if error:
-                raise errors.RbuildError(*msg)
+                raise errors.RbuilderError(*msg)
         return releaseId
 
     def updateRelease(self, releaseId, data):
         error, result = self.server.updatePublishedRelease(releaseId, data)
         if error:
-            raise errors.RbuildError(*result)
+            raise errors.RbuilderError(*result)
 
     def publishRelease(self, releaseId, shouldMirror):
         error, result = self.server.publishPublishedRelease(releaseId,
             shouldMirror)
         if error:
-            raise errors.RbuildError(*result)
+            raise errors.RbuilderError(*result)
         return result

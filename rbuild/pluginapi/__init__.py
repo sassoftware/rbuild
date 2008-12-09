@@ -95,8 +95,7 @@ class Plugin(pluginlib.Plugin):
         try:
             self._prehooks[apiName].append(hookFunction)
         except KeyError:
-            raise errors.InternalError('Cannot install prehook:'
-                                       ' No such api method %r' % apiName)
+            raise errors.InvalidAPIMethodError(apiName)
 
     def _getPrehooks(self, apiName):
         """
@@ -107,8 +106,7 @@ class Plugin(pluginlib.Plugin):
         try:
             return self._prehooks[apiName]
         except KeyError:
-            raise errors.InternalError('Cannot get prehooks:'
-                                       ' No such api method %r' % apiName)
+            raise errors.InvalidAPIMethodError(apiName)
 
     def _installPosthook(self, apiName, hookFunction):
         """
@@ -121,8 +119,7 @@ class Plugin(pluginlib.Plugin):
         try:
             self._posthooks[apiName].append(hookFunction)
         except KeyError:
-            raise errors.InternalError('Cannot install posthook:'
-                                       ' No such api method %r' % apiName)
+            raise errors.InvalidAPIMethodError(apiName)
 
     def _getPosthooks(self, apiName):
         """
@@ -133,8 +130,7 @@ class Plugin(pluginlib.Plugin):
         try:
             return self._posthooks[apiName]
         except KeyError:
-            raise errors.InternalError('Cannot get posthooks:'
-                                       ' No such api method %r' % apiName)
+            raise errors.InvalidAPIMethodError(apiName)
 
 def _apiWrapper(self, function, prehooks, posthooks):
     """
@@ -158,10 +154,8 @@ def _apiWrapper(self, function, prehooks, posthooks):
                 if isinstance(rv, (tuple, list)) and len(rv) == 2:
                     args, kw = rv
                 else:
-                    raise errors.InternalError(
-                        'Invalid return value from prehook %r'
-                        ' for function %r' % (prehook,
-                                              function.im_func.__name__))
+                    raise errors.InvalidHookReturnError(hook=prehook,
+                            method=function.im_func.__name__)
         rv = apiMethod(*args, **kw)
         for posthook in posthooks:
             rv = posthook(rv, *args, **kw)

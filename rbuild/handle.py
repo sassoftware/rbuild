@@ -153,9 +153,7 @@ class RbuildHandle(_PluginProxy):
         try:
             plugin = self[pluginName]
         except KeyError:
-            raise errors.InternalError(
-                    'Could not install pre hook %r:'
-                    ' No such plugin %r' % (hookFunction.__name__, pluginName))
+            raise errors.MissingPluginError(pluginName)
         # W0212: Access to a protected member _installPrehook.  Since 
         # we're calling into plugin, whose public methods are api calls,
         # we need to do this here.
@@ -180,9 +178,7 @@ class RbuildHandle(_PluginProxy):
         try:
             plugin = self[pluginName]
         except KeyError:
-            raise errors.InternalError(
-                    'Could not install post hook %r:'
-                    ' No such plugin %r' % (hookFunction.__name__, pluginName))
+            raise errors.MissingPluginError(pluginName)
         # W0212: Access to a protected member _installPosthook.  Since 
         # we're calling into plugin, whose public methods are api calls,
         # we need to do this here.

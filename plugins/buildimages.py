@@ -78,10 +78,12 @@ class BuildImages(pluginapi.Plugin):
         """
         Create a release in rBuilder from the build ids referenced by the
         given job id.
+
+        @param jobId: Create a release from this job
         """
         if not jobId:
             return None
-        buildIds = self.handle.facade.rmake.getBuildIdsFromJobId(jobId)            
+        buildIds = self.handle.facade.rmake.getBuildIdsFromJobId(jobId)
         releaseId = self.handle.facade.rbuilder.createRelease(buildIds)
         ui = self.handle.ui
 

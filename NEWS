@@ -13,6 +13,14 @@ Changes in @NEW@:
     * The conaryfacade.refresh method now takes an optional targetDir
       parameter.  For this reason, refresh now will require Conary
       2.0.32 or later. (RBLD-139)
+    * The base exception class now makes subclassing rBuild exceptions
+      with meaningful parameters simpler. (RBLD-38)
+    * The exceptions BaseError and InternalError have been renamed to
+      RbuildBaseError and RbuildInternalError, respectively. (RBLD-38)
+
+  o Bug Fixes:
+    * rBuilder facade errors are now output with more context and have
+      their own exception class RbuilderError. (RBLD-38)
 
 Changes in 0.10:
   o Bug Fixes:

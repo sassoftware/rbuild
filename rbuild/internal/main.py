@@ -39,9 +39,6 @@ from rbuild.internal import pluginloader
 from rbuild.internal import helpcommand
 from rbuild.pluginapi import command
 
-if 'BaseException' not in __builtins__:
-    #pylint: disable-msg=C0103,W0622
-    BaseException = Exception
 
 class RbuildMain(mainhandler.MainHandler):
     """
@@ -181,14 +178,14 @@ def main(argv=None):
     #pylint: disable-msg=E0701
     # pylint complains about except clauses here because we sometimes
     # redefine debuggerException
-    debuggerException = BaseException
+    debuggerException = Exception
     try:
         argv = list(argv)
         debugAll = '--debug-all' in argv
         if debugAll:
             argv.remove('--debug-all')
         else:
-            debuggerException = errors.InternalError
+            debuggerException = errors.RbuildInternalError
         sys.excepthook = errors.genExcepthook(debug=debugAll,
                                               debugCtrlC=debugAll)
         rc =  RbuildMain().main(argv, debuggerException=debuggerException)
@@ -204,7 +201,8 @@ Could not contact the rMake server.  Perhaps the rMake service is not
 running.  To start the rMake service, as root, try running the command:
 service rmake restart''')
         return 1
-    except (errors.BaseError, conaryerrors.ConaryError, conaryerrors.ParseError,
+    except (errors.RbuildBaseError, conaryerrors.ConaryError,
+            conaryerrors.ParseError,
             conaryerrors.CvcError, rmakeerrors.RmakeError), err:
         log.error(err)
         return 1
