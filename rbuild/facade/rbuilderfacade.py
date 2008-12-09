@@ -207,19 +207,3 @@ class RbuilderClient(object):
         if error:
             raise errors.RbuildError(*result)
         return result
-
-    # disable until writing rbuild publish
-    #def publishAndMirror(self, productName, buildIds):
-    #    error, productId = self.server.getProjectIdByHostname(productName)
-    #    if error:
-    #        raise RbuildError(*productId)
-    #    error, releaseId = self.server.newPublishedRelease(productId)
-    #    if error:
-    #        raise RbuildError(*newPublishedRelease)
-    #    for buildId in buildIds:
-    #        error, msg = self.server.setBuildPublished(buildId, 
-    #                                                   releaseId, True)
-    #        if error:
-    #            raise RbuildError(*msg)
-    #    mirror = True
-    #    self.server.publishPublishedRelease(self.pubReleaseId, mirror)

@@ -43,10 +43,10 @@ class BuildImagesCommand(command.BaseCommand):
         _, imageNames = self.requireParameters(args, allowExtra=True)
         if imageNames == []:
             imageNames = None
-        # jobId = handle.BuildImages.buildImages(imageNames)
-        jobId = 55
+        jobId = handle.BuildImages.buildImages(imageNames)
+        # jobId = 55
         if watch:
-            # handle.Build.watchJob(jobId)
+            handle.Build.watchJob(jobId)
             if handle.facade.rmake.isJobBuilt(jobId) and release:
                 releaseId = handle.BuildImages.buildRelease(jobId)            
                 handle.productStore.setStageReleaseId(releaseId)

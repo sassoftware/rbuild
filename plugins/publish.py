@@ -32,12 +32,13 @@ class PublishCommand(command.BaseCommand):
     #pylint: disable-msg=R0201,R0903
     # could be a function, and too few public methods
     def runCommand(self, handle, argSet, args):
-        mirror = not argSet.pop('no-commit', False)
+        mirror = not argSet.pop('no-mirror', False)
         releaseId = handle.Publish.getReleaseId()
         if not releaseId:
             handle.ui.writeError(
                 'No release Id found to publish for current stage')
-        handle.Publish.publishRelease(releaseId, mirror)
+        else:
+            handle.Publish.publishRelease(releaseId, mirror)
 
 class Publish(pluginapi.Plugin):
     name = 'publish'
