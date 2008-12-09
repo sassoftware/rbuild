@@ -54,7 +54,7 @@ class Build(pluginapi.Plugin):
         @param actionName: String naming the action being taken; shown
         in informational messages to the user
         @param display: (True) Prints the contents of the differences
-        @raises OutdatedProductDefinitionError: If user requests to
+        @raise OutdatedProductDefinitionError: If user requests to
         abort the action
         '''
         if not hasattr(self.handle.productStore, 'getProductDefinitionDirectory'):

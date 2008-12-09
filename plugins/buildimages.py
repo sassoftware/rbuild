@@ -65,7 +65,8 @@ class BuildImagesCommand(command.BaseCommand):
                     name=name, version=version, description=description)
                 handle.productStore.setStageReleaseId(releaseId)
         elif release:
-            handle.ui.writeError('Not grouping built images into a release due to --no-watch option.')
+            handle.ui.writeError('Not grouping built images into a release'
+                                 ' due to --no-watch option.')
 
 
 class BuildImages(pluginapi.Plugin):
@@ -123,7 +124,7 @@ class BuildImages(pluginapi.Plugin):
             description = productStore.getProductDescription()
         if not description:
             # empty productDescription, say something possibly useful
-            description = 'Release built by %s on %s' %(
+            description = 'Release built by %s on %s' % (
                 self.handle.getConfig().user[0],
                 self._getTimeString())
 

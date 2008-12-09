@@ -82,12 +82,14 @@ class RbuilderFacade(object):
 
     def updateRelease(self, releaseId, **kwargs):
         '''
-        Update release C{releaseId} with arguments passed as keyword
-        arguments.
+        Update release C{releaseId} with rBuilder release information
+        dictionary elements passed as keyword arguments.
 
         @param releaseId: rBuilder identifier for a release (see C{createRelease})
         @type releaseId: int
-        @raises: C{errors.RbuilderError} particularly if arguments
+        @param kwargs: rBuilder release information dictionary elements
+        @type kwargs: dict
+        @raise: C{errors.RbuilderError} particularly if arguments
         have been passed that are not understood by the version of
         rBuilder being contacted.
         '''
