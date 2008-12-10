@@ -561,7 +561,7 @@ class ConaryFacade(object):
         @type quiet: bool
         @param tagScript: If not C{None}, write tag scripts to this file
         instead of running them in-place.
-        @type tagSCript: str
+        @type tagScript: str
         """
         version = self._versionToString(version)
         flavor = self._flavorToString(flavor)

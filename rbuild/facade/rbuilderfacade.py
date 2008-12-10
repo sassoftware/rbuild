@@ -84,14 +84,16 @@ class RbuilderFacade(object):
         '''
         Update release C{releaseId} with rBuilder release information
         dictionary elements passed as keyword arguments.
+        Raises C{errors.RbuilderError} particularly if arguments
+        have been passed that are not understood by the version of
+        rBuilder being contacted.  At least C{name}, C{version},
+        and C{description} will be accepted.
 
         @param releaseId: rBuilder identifier for a release (see C{createRelease})
         @type releaseId: int
         @param kwargs: rBuilder release information dictionary elements
         @type kwargs: dict
-        @raise: C{errors.RbuilderError} particularly if arguments
-        have been passed that are not understood by the version of
-        rBuilder being contacted.
+        @raise errors.RbuilderError
         '''
         client = self._getRbuilderClient()
         return client.updateRelease(releaseId, kwargs)
