@@ -24,7 +24,7 @@ class BuildGroupsCommand(command.BaseCommand):
             'no-commit' : 'do not automatically commit successful builds',}
 
     def addLocalParameters(self, argDef):
-        argDef['message'] = command.ONE_PARAM
+        argDef['message'] = '-m', command.ONE_PARAM
         argDef['no-watch'] = command.NO_PARAM
         argDef['no-commit'] = command.NO_PARAM
 

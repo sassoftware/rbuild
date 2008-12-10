@@ -8,7 +8,7 @@ Changes in @NEW@:
       be used to describe the release created as part of building
       images. (RBLD-42)
     * The "rbuild build packages" and "rbuild images" commands now
-      take a --message argument. (RBLD-120)
+      take a --message (or -m) argument. (RBLD-120)
 
   o Internal Changes:
     * Various small changes for consistency, primarily documentation

@@ -45,7 +45,7 @@ class BuildPackagesCommand(command.BaseCommand):
         argDef['no-commit'] = command.NO_PARAM
         argDef['no-recurse'] = command.NO_PARAM
         argDef['refresh'] = command.NO_PARAM
-        argDef['message'] = command.ONE_PARAM
+        argDef['message'] = '-m', command.ONE_PARAM
 
     #pylint: disable-msg=R0201,R0903
     # could be a function, and too few public methods
