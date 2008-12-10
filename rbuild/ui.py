@@ -56,6 +56,28 @@ class UserInterface(object):
                                 validationFn=validationFn,
                                 inputFn=self.inputPassword)
 
+    def getYn(self, prompt, default=True):
+        '''
+        Get a yes/no response from the user.  Return a bool representing
+        the user's choice.  Note that any "yes" response is always True,
+        and any "no" response is always false, whether or not it is the
+        default.  C{ui.getYn('really?', False)} will return False if the
+        user presses return or enters C{N}.
+
+        @param prompt: string to display
+        @type prompt: str
+        @param default: default value: True for yes, False for no
+        @type default: bool
+        @return: True for yes, False for no
+        @rtype: bool
+        '''
+        if default:
+            defaultChar = 'Y'
+        else:
+            defaultChar = 'N'
+        response = self.getResponse(prompt, default=defaultChar)
+        return response[0].upper() == 'Y'
+
     def getResponse(self, prompt, default=None, validationFn=None,
                     inputFn=None):
         if inputFn is None:

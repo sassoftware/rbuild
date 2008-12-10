@@ -91,10 +91,10 @@ class Build(pluginapi.Plugin):
         ui.write('and run the command "rbuild update product" to update')
         ui.write('your local copy of the product definition.')
         ui.write()
-        response = ui.getResponse('Proceed with %s, ignoring differences in'
-                                  ' product definition?' %actionName,
-                                  default='Y')
+        response = ui.getYn('Proceed with %s, ignoring differences in'
+                            ' product definition?' %actionName,
+                            default=True)
 
-        if response and response[0] not in ('y', 'Y'):
+        if not response:
             raise OutdatedProductDefinitionError(
                 '%s product definition out of date' %productName)
