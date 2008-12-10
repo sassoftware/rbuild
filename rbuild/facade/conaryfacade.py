@@ -581,14 +581,21 @@ class ConaryFacade(object):
                                                              keepNone=True))
                       for x in groupList ]
         results = repos.findTroves(None, groupList, None)
-        troveTups = list(itertools.chain(*results.itervalues()))
+        troveTups = []
+        # it's important that we go through this list in order so
+        # that you'll find matches earlier on the searchPath first.
+        for groupSpec in groupList:
+            if groupSpec not in results:
+                continue
+            troveList = results[groupSpec]
+            # we may have multiple flavors here.  We only want those
+            # flavors of these groups that have been built most recently
+            # to be taken into account
+            maxVersion = sorted(troveList, key=lambda x:x[1])[-1][1]
+            troveTups += [ x for x in troveList if x[1] == maxVersion ]
+
         if not troveTups:
             return []
-        # we will get multiple flavors here.  We only want those
-        # flavors of these groups that have been built most recently
-        # to be taken into account
-        maxVersion = sorted(troveTups, key=lambda x:x[1])[-1][1]
-        troveTups = [ x for x in troveTups if x[1] == maxVersion ]
 
         troves = repos.getTroves(troveTups, withFiles=False)
         matchingTroveList = []

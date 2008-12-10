@@ -27,6 +27,10 @@ Changes in @NEW@:
   o Bug Fixes:
     * rBuilder facade errors are now output with more context and have
       their own exception class RbuilderError. (RBLD-38)
+    * When multiple searchPath elements are present in the product
+      definition, rBuild now looks for packages in the latest versions
+      of each group listed in the searchPath, rather than only in the
+      most recently committed group on the searchPath. (RBLD-146)
 
 Changes in 0.10:
   o Bug Fixes:
