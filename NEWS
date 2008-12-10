@@ -6,7 +6,7 @@ Changes in @NEW@:
       created at the end of image builds.  Optional --release-name,
       --release-version, and --release-description arguments can
       be used to describe the release created as part of building
-      images. (RBLD-42)
+      images.  Requires rMake 1.0.25 or later. (RBLD-42)
     * The "rbuild build packages" and "rbuild images" commands now
       take a --message (or -m) argument. (RBLD-120)
 
