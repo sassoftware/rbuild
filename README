@@ -1,30 +1,66 @@
-This is rBuild, the unified interface for Conary, rMake,
-and rBuilder.  The purpose of this tool is to provide a single,
-unified, and fully-documented interface (command line and Python
-API) to developers using rPath technologies, using an extensible
-plugin framework.
+INTRODUCTION
+============
+
+rBuild is the unified interface for Conary, rMake, and rBuilder.
+The purpose of this tool is to provide a single, unified, and
+fully-documented interface (command line and Python API) to
+developers using rPath technologies, using an extensible plugin
+framework, which automates many of the steps required to follow
+rPath's recommended best practices.
+
+rBuild depends on product-definition packages that define the
+characteristics of the product you are building, including which
+images you build, what platform your product is based on, and
+so forth.  Use the rBuilder interface to create and edit these
+packages.  rBuild updates them automatically when appropriate.
 
 A shell script written using the command-line interface should be
 relatively easy to transform to a Python program that uses the Python
-API.  You can provide your own plugins that follow the same model.
+API.  You can provide your own plugins that dynamically extend that
+command-line interface and Python API.  Your plugins can also hook
+into other parts of the API, allowing you to enforce preconditions
+and take action following successful actions.
+
+
+DEVELOPMENT
+===========
 
 Note that until version 1.0 is released, public APIs are subject to
 change.  All documentation regarding stable interfaces is relevant
 only to published stable releases; it is not in force for alpha
 and beta releases, including 0.x releases and any automated builds.
 
-Note also that API stability allows making changes that should be
-backward-compatible in well-formed Python code.  This includes things
-like adding additional optional keyword arguments and changing the
-error raised in any particular error condition to a subclass of
-the previous error.
+Public interfaces will be kept stable.  The general rule is that API
+stability allows making changes that should be backward-compatible
+in well-formed Python code.  For rBuild, "stable" is defined as:
+ o  Adding optional keyword parameters is acceptable.
+ o  Adding additional methods, classes, and functions is
+    acceptable.
+ o  Raising a more specific error class is acceptable, as
+    long as the more specific error class is a subclass of
+    the error previously raised.
+ o  Modifying the semantics of existing arguments is not
+    acceptable, except to extend them in ways that are
+    generally functionally compatible.
+
+The general exception is that if a significant functional bug
+cannot be fixed without an interface change, the interface may
+be changed (and the change noted in the NEWS file), and we will
+make our best effort to mitigate the effects of the change.
+
+When interfaces are deprecated, the deprecated interface will be
+supported for a major release cycle.  That is, if an interface is
+deprecated during 1.x releases after 1.0 is released, it will be
+available during 2.x releases, and may be removed starting with 3.0.
+During 2.x, it will be possible to request that that API will raise
+rbuild.errors.DeprecatedInterfaceError; otherwise, the APIs will
+provide a warning (printed to standard error in the command-line
+use case).
 
 API documentation is available at http://cvs.rpath.com/rbuild-docs/
 or by running "make html" and viewing docs/developer/index.html (requires
 epydoc).
 
-
-DEVELOPMENT
 
 Pylint Hooks
 ============

@@ -129,6 +129,20 @@ class PluginError(RbuildBaseError):
     params = ['message']
 
 
+#Uncomment this, possibly modifying it, when we add deprecation
+#infrastructure -- https://issues.rpath.com/browse/RBLD-147
+#class DeprecatedInterfaceError(RbuildBaseError):
+#    """
+#    B{C{DeprecatedInterfaceError}} - Interface deprecated
+#
+#    This interface has been deprecated and may be removed in the
+#    specified version.
+#    """
+#    Unsupportedtemplate = ('Deprecated interface %(name)s:'
+#                           ' will be removed in rBuild %(version)s')
+#    params = ['name', 'version' ]
+
+
 class IncompleteInterfaceError(RbuildBaseError):
     """
     B{C{IncompleteInterfaceError}} - Interface unavailable in this configuration
