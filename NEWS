@@ -24,6 +24,9 @@ Changes in @NEW@:
     * The exceptions BaseError and InternalError have been renamed to
       RbuildBaseError and RbuildInternalError, respectively. (RBLD-38)
     * The handle.ui object now has a getYn method. (RBLD-30)
+    * rbuild.constants.VERSION_TUPLE is now available as a tuple
+      of integers in the rBuild version (not including any changeset
+      IDs appended to the rBuild version string).
 
   o Bug Fixes:
     * rBuilder facade errors are now output with more context and have
