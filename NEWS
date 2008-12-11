@@ -1,4 +1,4 @@
-Changes in @NEW@:
+Changes in 0.11:
   o New Features:
     * There is a new rbuild publish command.  The publish command now
       (by default) publishes and mirrors (if mirroring is enabled) a
