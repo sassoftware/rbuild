@@ -318,14 +318,14 @@ class RbuilderClient(object):
         buildTypeId = validBuildTypes[buildType.upper()]
         xmlBuildType = xmlImageNames[buildTypeId]
 
-        error, buildId = self.server.newBuildWithOptions(productId, productName, groupName,
-                groupVersion, groupFlavor, xmlBuildType, options)
-        if error:
-            if buildId[0] == 'MethodNotSupported':
+        #error, buildId = self.server.newBuildWithOptions(productId, productName, groupName,
+        #        groupVersion, groupFlavor, xmlBuildType, options)
+        #if error:
+        #    if buildId[0] == 'MethodNotSupported':
                 #Backwards compatibility with 4.x servers
-                buildId = self._oldCreateImage(productId, productName, groupName, groupVersion, groupFlavor, buildTypeId, options)
-            else:
-                raise errors.RbuilderError(*buildId)
+        buildId = self._oldCreateImage(productId, productName, groupName, groupVersion, groupFlavor, buildTypeId, options)
+        #    else:
+        #        raise errors.RbuilderError(*buildId)
 
         if buildName:
             error, success = self.server.setBuildName(buildId, buildName)

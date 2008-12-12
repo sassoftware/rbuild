@@ -17,6 +17,7 @@ python_files =	\
 		buildcmds.py		\
 		config.py		\
 		projectadd.py		\
+		rbuildercommand.py	\
 		usercreate.py
 
 SUBDIRS =

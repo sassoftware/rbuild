@@ -14,9 +14,11 @@
 
 import sys
 from rbuild import pluginapi
+from rbuild.internal.rbuilder import rbuildercommand
 from rbuild.pluginapi import command
 
-class RbuilderConfigCommand(command.BaseCommand):
+
+class RbuilderConfigCommand(rbuildercommand.RbuilderCommand):
     """
     Dumps the current configuration
     """

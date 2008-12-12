@@ -14,11 +14,12 @@
 
 import sys, os
 from rbuild import errors
+from rbuild.facade import rbuilderfacade
+from rbuild.internal.rbuilder import rbuildercommand
 from rbuild.pluginapi import command
 
-from rbuild.facade import rbuilderfacade
 
-class RbuilderBuildURLCommand(command.BaseCommand):
+class RbuilderBuildURLCommand(rbuildercommand.RbuilderCommand):
     """
     Shows all the urls related to a build
     """
@@ -41,7 +42,7 @@ class RbuilderBuildURLCommand(command.BaseCommand):
 
         return 0
 
-class RbuilderBuildWaitCommand(command.BaseCommand):
+class RbuilderBuildWaitCommand(rbuildercommand.RbuilderCommand):
     """
     Waits for a build to finish building
     """
@@ -76,7 +77,7 @@ class RbuilderBuildWaitCommand(command.BaseCommand):
 
         return 0
 
-class RbuilderBuildProjectCommand(command.BaseCommand):
+class RbuilderBuildProjectCommand(rbuildercommand.RbuilderCommand):
     '''
     Builds specified images for the specified product version and stage.
     Requires an rBuilder that supports building from Product Definition.
@@ -127,7 +128,7 @@ class RbuilderBuildProjectCommand(command.BaseCommand):
         return 0
 
 
-class RbuilderBuildCreateCommand(command.BaseCommand):
+class RbuilderBuildCreateCommand(rbuildercommand.RbuilderCommand):
     '''
 Available build types:
 
@@ -245,6 +246,7 @@ Note: all build types may not be supported by all rBuilder servers.
         'interval': 'Time, in seconds, between polling queries, default 30',
         'wait':         'Wait until a build finishes before returning',
         }
+    requireConfig = False
 
     def addLocalParameters(self, argDef):
         argDef["option"] = command.MULT_PARAM

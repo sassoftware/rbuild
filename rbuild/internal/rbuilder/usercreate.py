@@ -14,11 +14,12 @@
 
 import sys
 from rbuild import errors
+from rbuild.facade import rbuilderfacade
+from rbuild.internal.rbuilder import rbuildercommand
 from rbuild.pluginapi import command
 
-from rbuild.facade import rbuilderfacade
 
-class RbuilderUserCreateCommand(command.BaseCommand):
+class RbuilderUserCreateCommand(rbuildercommand.RbuilderCommand):
     """
     Create a new user on your rbuilder.  This method requires that your user
     credentials have rbuilder administration rights.

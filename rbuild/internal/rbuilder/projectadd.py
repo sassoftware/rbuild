@@ -13,11 +13,12 @@
 #
 
 import sys
+from rbuild.facade import rbuilderfacade
+from rbuild.internal.rbuilder import rbuildercommand
 from rbuild.pluginapi import command
 
-from rbuild.facade import rbuilderfacade
 
-class RbuilderProjectAddCommand(command.BaseCommand):
+class RbuilderProjectAddCommand(rbuildercommand.RbuilderCommand):
     """
     Add a user to a product with the given privilege level
     """
