@@ -1,4 +1,4 @@
-Changes in @NEW@:
+Changes in 0.12:
   o New Features:
     * The "rbuilder" program has been added as a backward-compatible
       user interface for the rbuilder command line previously included
@@ -6,8 +6,7 @@ Changes in @NEW@:
       interfaces may be removed over time as the "rbuild" program
       gains capabilities.  For that reason, rPath recommends using
       the "rbuild" program where there is overlap between the "rbuilder"
-      and "rbulid" programs, such as building images. (RBLD-119)
-
+      and "rbuild" programs, such as building images. (RBLD-119)
 
 Changes in 0.11:
   o New Features:
