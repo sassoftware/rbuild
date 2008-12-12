@@ -17,35 +17,12 @@ import sys
 import os
 
 from conary.lib import options
-from conary.lib.cfg import ConfigFile
-from conary import errors as conaryerrors
-from conary.lib.cfgtypes import CfgPathList
 from conary.lib import mainhandler
-from conary.lib import log
 
-from rmake import errors as rmakeerrors
-
-from rbuild import errors
 from rbuild import handle
 from rbuild.internal import helpcommand
 from rbuild.internal import main as rbuild_main
 from rbuild.internal.rbuilder import config, projectadd, usercreate, buildcmds
-
-(NO_PARAM,  ONE_PARAM)  = (options.NO_PARAM, options.ONE_PARAM)
-(OPT_PARAM, MULT_PARAM) = (options.OPT_PARAM, options.MULT_PARAM)
-
-class RBuilderShellConfig(ConfigFile):
-    serverUrl =  None
-
-    def __init__(self, readConfigFiles = True):
-        ConfigFile.__init__(self)
-        if readConfigFiles:
-            self.readFiles()
-
-    def readFiles(self):
-        if os.environ.has_key("HOME"):
-            fn = '/'.join((os.environ["HOME"], ".rbuilderrc"))
-            self.read(fn, exception=False)
 
 class RBuilderMain(rbuild_main.RbuildMain):
     ''''''
