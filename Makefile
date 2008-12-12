@@ -31,7 +31,6 @@ extra_files = \
 	EULA_rBuild.txt		\
 	LICENSE
 
-dist_files = $(extra_files)
 
 .PHONY: clean dist install subdirs html
 
@@ -56,7 +55,7 @@ dist:
 	$(MAKE) forcedist
 
 
-archive: $(dist_files)
+archive:
 	hg archive  --exclude .hgignore -t tbz2 rbuild-$(VERSION).tar.bz2
 
 forcedist: archive

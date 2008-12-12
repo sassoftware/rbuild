@@ -29,7 +29,6 @@ plugin_files = \
 	update.py \
 	watch.py
 
-dist_files = Makefile $(plugin_files)
 
 SUBDIRS = build checkout
 

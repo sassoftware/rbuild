@@ -12,8 +12,6 @@
 # full details.
 #
 
-dist_files = init_pylint.py  Makefile  pylintrc  run_pylint
-
 all: pylint
 install:
 

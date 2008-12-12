@@ -16,15 +16,11 @@ python_files =  __init__.py	\
                 command.py
 
 
-dist_files = Makefile $(python_files)
-
 SUBDIRS = 
 
 all: default-subdirs default-all
 
 install: all install-subdirs pyfiles-install default-install
-	$(PYTHON) -c "import compileall; compileall.compile_dir('$(DESTDIR)$(rbuilddir)/pluginapi', ddir='$(rbuilddir)/pluginapi', quiet=1)"
-	$(PYTHON) -OO -c "import compileall; compileall.compile_dir('$(DESTDIR)$(rbuilddir)/pluginapi', ddir='$(rbuilddir)/pluginapi', quiet=1)"
 
 dist: default-dist
 

@@ -18,15 +18,12 @@ plugin_files = \
 	packages.py \
 	refresh.py
 
-dist_files = Makefile $(plugin_files)
 
 all: default-subdirs default-all
 
 install: all install-subdirs default-install
 	mkdir -p $(DESTDIR)$(plugindir)/build/
 	cp -a $(plugin_files) $(DESTDIR)$(plugindir)/build/
-	$(PYTHON) -c "import compileall; compileall.compile_dir('$(DESTDIR)$(plugindir)/build', ddir='$(plugindir)/build', quiet=1)"
-	$(PYTHON) -OO -c "import compileall; compileall.compile_dir('$(DESTDIR)$(plugindir)/build', ddir='$(plugindir)/build', quiet=1)"
 
 dist: default-dist
 

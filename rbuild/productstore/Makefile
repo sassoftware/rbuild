@@ -18,15 +18,11 @@ python_files =  __init__.py \
                 dirstore.py
 
 
-dist_files = Makefile $(python_files)
-
 SUBDIRS = 
 
 all: default-subdirs default-all
 
 install: all install-subdirs pyfiles-install default-install
-	$(PYTHON) -c "import compileall; compileall.compile_dir('$(DESTDIR)$(rbuilddir)/productstore', ddir='$(rbuilddir)/productstore', quiet=1)"
-	$(PYTHON) -OO -c "import compileall; compileall.compile_dir('$(DESTDIR)$(rbuilddir)/productstore', ddir='$(rbuilddir)/productstore', quiet=1)"
 
 dist: default-dist
 

@@ -18,15 +18,11 @@ python_files =  __init__.py \
                 rmakefacade.py
 
 
-dist_files = Makefile $(python_files)
-
 SUBDIRS = 
 
 all: default-subdirs default-all
 
 install: all install-subdirs pyfiles-install default-install
-	$(PYTHON) -c "import compileall; compileall.compile_dir('$(DESTDIR)$(rbuilddir)/facade', ddir='$(rbuilddir)/facade', quiet=1)"
-	$(PYTHON) -OO -c "import compileall; compileall.compile_dir('$(DESTDIR)$(rbuilddir)/facade', ddir='$(rbuilddir)/facade', quiet=1)"
 
 dist: default-dist
 

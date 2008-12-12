@@ -18,7 +18,6 @@ python_files =  __init__.py	\
                 rbuildcfg.py \
                 ui.py
 
-dist_files = Makefile constants.py.in $(python_files)
 
 SUBDIRS = internal pluginapi facade productstore
 
@@ -32,6 +31,7 @@ install: all install-subdirs pyfiles-install default-install
 	install constants.py $(DESTDIR)$(rbuilddir)/constants.py
 	$(PYTHON) -c "import compileall; compileall.compile_dir('$(DESTDIR)$(rbuilddir)', ddir='$(rbuilddir)', quiet=1)"
 	$(PYTHON) -OO -c "import compileall; compileall.compile_dir('$(DESTDIR)$(rbuilddir)', ddir='$(rbuilddir)', quiet=1)"
+
 
 dist: default-dist
 

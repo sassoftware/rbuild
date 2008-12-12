@@ -19,7 +19,6 @@ bin_files = \
 
 extra_dist = Makefile rbuild-wrapper rbuilder-wrapper
 
-dist_files = $(bin_files) $(extra_dist) $(sbin_files)
 
 all: default-all 
 	mkdir -p $(TOPDIR)/bin
