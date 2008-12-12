@@ -1,3 +1,14 @@
+Changes in @NEW@:
+  o New Features:
+    * The "rbuilder" program has been added as a backward-compatible
+      user interface for the rbuilder command line previously included
+      within the rBuilder product.  Portions of the "rbuilder" program
+      interfaces may be removed over time as the "rbuild" program
+      gains capabilities.  For that reason, rPath recommends using
+      the "rbuild" program where there is overlap between the "rbuilder"
+      and "rbulid" programs, such as building images. (RBLD-119)
+
+
 Changes in 0.11:
   o New Features:
     * There is a new rbuild publish command.  The publish command now

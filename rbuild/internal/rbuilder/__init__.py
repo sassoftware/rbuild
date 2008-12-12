@@ -75,8 +75,12 @@ class RBuilderMain(rbuild_main.RbuildMain):
         print \
 '''rbuilder: command-line interface to an rBuilder Server
 
-    WARNING: This command is deprecated in favor of using rbuild and product
-    definitions'''
+    WARNING: This command is provided primarily for backward compatibility
+    with the "rbuilder" command line program provided as part of rBuilder
+    4.x and earlier.  Use the "rbuild" command line program where possible.
+    After functionality provided by the "rbuilder" command line program
+    has been made available in "rbuild", the duplicate functionality may
+    be removed from "rbuilder".'''
 
         if not showAll:
             print
