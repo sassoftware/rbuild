@@ -318,6 +318,7 @@ class RbuilderClient(object):
         buildTypeId = validBuildTypes[buildType.upper()]
         xmlBuildType = xmlImageNames[buildTypeId]
 
+        # Don't use newBuildWithOptions until RBL-4015 is fixed -- jtate
         #error, buildId = self.server.newBuildWithOptions(productId, productName, groupName,
         #        groupVersion, groupFlavor, xmlBuildType, options)
         #if error:
