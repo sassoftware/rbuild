@@ -29,7 +29,7 @@ from rbuild import errors
 from rbuild import handle
 from rbuild.internal import helpcommand
 from rbuild.internal import main as rbuild_main
-from rbuild.internal.rbuilder import config, projectadd, usercreate, buildcmds, refs
+from rbuild.internal.rbuilder import config, projectadd, usercreate, buildcmds
 
 (NO_PARAM,  ONE_PARAM)  = (options.NO_PARAM, options.ONE_PARAM)
 (OPT_PARAM, MULT_PARAM) = (options.OPT_PARAM, options.MULT_PARAM)
@@ -58,7 +58,6 @@ class RBuilderMain(rbuild_main.RbuildMain):
         buildcmds.RbuilderBuildWaitCommand,
         buildcmds.RbuilderBuildProjectCommand,
         buildcmds.RbuilderBuildCreateCommand,
-        #refs.RbuilderReferencesCommand,
     ]
 
     def getCommand(self, argv, cfg):
