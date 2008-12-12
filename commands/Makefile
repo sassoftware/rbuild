@@ -15,17 +15,19 @@
 TOPDIR=..
 
 bin_files = \
-	rbuild
+	rbuild rbuilder
 
-extra_dist = Makefile rbuild-wrapper
+extra_dist = Makefile rbuild-wrapper rbuilder-wrapper
 
 dist_files = $(bin_files) $(extra_dist) $(sbin_files)
 
 all: default-all 
 	mkdir -p $(TOPDIR)/bin
 	install -m755 rbuild-wrapper $(TOPDIR)/bin/rbuild-wrapper
+	install -m755 rbuilder-wrapper $(TOPDIR)/bin/rbuilder-wrapper
 	for f in $(bin_files) $(sbin_files); do \
 		ln -sf rbuild-wrapper $(TOPDIR)/bin/$$f; \
+		ln -sf rbuilder-wrapper $(TOPDIR)/bin/$$f; \
 	done
 
 install-mkdirs:

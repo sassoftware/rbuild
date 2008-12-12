@@ -199,6 +199,9 @@ class RbuilderError(RbuildError):
     template = "rBuilder error %(error)s: %(frozen)r"
     params = ['error', 'frozen']
 
+class RbuilderUserError(RbuilderError):
+    template = 'Error retrieving user details: %(error)s: %(frozen)r'
+
 ## END rBuild Errors
 
 

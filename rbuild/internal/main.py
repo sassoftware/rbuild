@@ -168,7 +168,7 @@ class RbuildMain(mainhandler.MainHandler):
         return flags
 
 
-def main(argv=None):
+def _main(argv, MainClass):
     """
     Python hook for starting rbuild from the command line.
     @param argv: standard argument vector
@@ -188,7 +188,7 @@ def main(argv=None):
             debuggerException = errors.RbuildInternalError
         sys.excepthook = errors.genExcepthook(debug=debugAll,
                                               debugCtrlC=debugAll)
-        rc =  RbuildMain().main(argv, debuggerException=debuggerException)
+        rc =  MainClass().main(argv, debuggerException=debuggerException)
         if rc is None:
             return 0
         return rc
@@ -213,3 +213,10 @@ service rmake restart''')
     except KeyboardInterrupt:
         return 1
     return 0
+
+def main(argv=None):
+    """
+    Python hook for starting rbuild from the command line.
+    @param argv: standard argument vector
+    """
+    return _main(argv, RbuildMain)
