@@ -22,6 +22,9 @@ all plugins through the C{handle} object.
 import urllib2
 import socket
 
+from conary.conaryclient import cmdline as conarycmdline
+from conary import versions as conaryversions
+from conary.deps import deps as conarydeps
 from conary.lib import log
 from conary.lib import util
 
@@ -52,6 +55,26 @@ class RbuilderFacade(object):
         return RbuilderClient(cfg.serverUrl, cfg.user[0], cfg.user[1])
 
     def createImage(self, productName, groupName, groupVersion, groupFlavor, buildType, buildName, buildNotes, options):
+        """
+        Create an image according to the parameters given
+
+        @param productName: Short name of the product/project to produce images on
+        @type productName: str
+        @param groupName: Name of the group to use to build the image
+        @type groupName: str
+        @type groupVersion: Frozen version string of the group used to build the image
+        @type groupVersion: str
+        @param groupFlavor: Frozen flavor string of the group used to build the image
+        @type groupFlavor: str
+        @param buildType: Name of the build type to produce
+        @type buildType: str
+        @param buildName: Name to give to the build, or the empty string
+        @type buildName: str
+        @param buildNotes: Build notes to add as metadata for the image, or the empty string
+        @type buildNotes: str
+        @param options: Set of options (key=value) to apply to the build.
+        @type options: dict(str=str)
+        """
         client = self._getRbuilderClient()
         return client.createImage(productName, groupName, groupVersion, groupFlavor, buildType, buildName, buildNotes, options)
 
@@ -261,6 +284,7 @@ class RbuilderClient(object):
         error, buildId = self.server.newBuild(productId, productName)
         if error:
             raise errors.RbuilderError(*buildId)
+        #Look up the name version flavor
         error, success = self.server.setBuildTrove(buildId, groupName, groupVersion, groupFlavor)
         if error:
             raise errors.RbuilderError(*success)
@@ -268,6 +292,16 @@ class RbuilderClient(object):
         if error:
             raise errors.RbuilderError(*success)
         for name, val in options.iteritems():
+            if optionTypes[name] == RDT_TROVE:
+                #Do a lookup on the trovespec
+                n2,v2,f2 = conarycmdline.parseTroveSpec(val)
+                # The version as an unresolved partial or full version string
+                # is looked up on the server
+                f2 = conarydeps.parseFlavor(f2)
+                error, val = self.server.resolveExtraTrove(productId, n2, v2,
+                            f2.freeze(), groupVersion, groupFlavor)
+                if error:
+                    raise errors.RbuilderError(*val)
             error, success = self.server.setBuildDataValue(buildId, name, val, optionTypes[name])
             if error:
                 raise errors.RbuilderError(*success)
