@@ -23,7 +23,6 @@ import urllib2
 import socket
 
 from conary.conaryclient import cmdline as conarycmdline
-from conary import versions as conaryversions
 from conary.deps import deps as conarydeps
 from conary.lib import log
 from conary.lib import util
@@ -297,9 +296,13 @@ class RbuilderClient(object):
                 n2,v2,f2 = conarycmdline.parseTroveSpec(val)
                 # The version as an unresolved partial or full version string
                 # is looked up on the server
-                f2 = conarydeps.parseFlavor(f2)
+                if v2 is None:
+                    v2 = ''
+                if f2 is not None:
+                    f2 = conarydeps.parseFlavor(f2).freeze()
+                else: f2 = ''
                 error, val = self.server.resolveExtraTrove(productId, n2, v2,
-                            f2.freeze(), groupVersion, groupFlavor)
+                            f2, groupVersion, groupFlavor)
                 if error:
                     raise errors.RbuilderError(*val)
             error, success = self.server.setBuildDataValue(buildId, name, val, optionTypes[name])

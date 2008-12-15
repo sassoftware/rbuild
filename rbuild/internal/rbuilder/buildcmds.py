@@ -307,6 +307,7 @@ Note: all build types may not be supported by all rBuilder servers.
         buildId = handle.facade.rbuilder.createImage(productName, n, buildTroveVersion,
                 buildTroveFlavor, buildType, name, buildNotes, buildOptions)
 
+        print "Build %d created" % buildId
         if wait:
             handle.facade.rbuilder.watchImages([buildId], timeout=timeout, interval=interval, quiet=quiet)
         return 0
