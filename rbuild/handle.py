@@ -90,7 +90,7 @@ class RbuildHandle(_PluginProxy):
             'conary': rbuild.facade.conaryfacade.ConaryFacade(self),
             'rmake': rbuild.facade.rmakefacade.RmakeFacade(self),
             'rbuilder': rbuild.facade.rbuilderfacade.RbuilderFacade(self),
-          })
+        })
 
         # Provide the command manager as if it were a plugin
         self['Commands'] = CommandManager()
