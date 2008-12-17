@@ -8,3 +8,5 @@
 ^bin/.*
 ^rbuild-.*.tar.bz2
 ^docs/developer/.*
+rpath_common
+tags

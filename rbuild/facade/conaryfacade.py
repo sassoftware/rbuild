@@ -141,13 +141,14 @@ class ConaryFacade(object):
         return flavor
 
     def _findTrovesFlattened(self, specList, labelPath=None,
-                             allowMissing=False):
+                             defaultFlavor=None, allowMissing=False):
         results = self._findTroves(specList, labelPath=labelPath, 
+                                   defaultFlavor=defaultFlavor,
                                    allowMissing=allowMissing)
         return list(itertools.chain(*results.values()))
 
     def _findTroves(self, specList, labelPath=None,
-                    allowMissing=False):
+                    defaultFlavor=None, allowMissing=False):
         newSpecList = []
         specMap = {}
         for spec in specList:
@@ -163,12 +164,14 @@ class ConaryFacade(object):
         elif labelPath:
             labelPath = self._getLabel(labelPath)
 
+        defaultFlavor = self._getFlavor(defaultFlavor, keepNone=True)
         results = repos.findTroves(labelPath, newSpecList,
+                                   defaultFlavor = defaultFlavor,
                                    allowMissing=allowMissing)
         return dict((specMap[x[0]], x[1]) for x in results.items())
 
     def _findTrove(self, name, version, flavor=None, labelPath=None,
-                   allowMissing=False):
+                   defaultFlavor = None, allowMissing=False):
         #pylint: disable-msg=R0913
         # findTrove really needs all these arguments to pass through
         """
@@ -182,16 +185,20 @@ class ConaryFacade(object):
         @param labelPath: label(s) to find package on
         @type labelPath: None, conary.versions.Label, or list of
         conary.versions.Label
+        @param defaultFlavor: Flavor to use for those troves specifying None
+        for their flavor.
+        @type defaultFlavor: str or None
         @param allowMissing: if True, allow None as a return value if 
-        the package
-        was not found.
+        the package was not found.
         @return: C{(name, version, flavor)} tuple.
         Note that C{version} and C{flavor} objects are B{opaque}.
         @rtype: (string, conary.versions.Version conary.deps.deps.Flavor)
         """
         repos = self._getRepositoryClient()
         flavor = self._getFlavor(flavor)
+        defaultFlavor = self._getFlavor(defaultFlavor)
         results = repos.findTroves(labelPath, [(name, version, flavor)],
+                                   defaultFlavor=defaultFlavor,
                                    allowMissing=allowMissing)
         if not results:
             return None

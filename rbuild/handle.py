@@ -86,11 +86,7 @@ class RbuildHandle(_PluginProxy):
             plugin.setHandle(self)
 
         # Provide access to facades
-        self.facade = _PluginProxy({
-            'conary': rbuild.facade.conaryfacade.ConaryFacade(self),
-            'rmake': rbuild.facade.rmakefacade.RmakeFacade(self),
-            'rbuilder': rbuild.facade.rbuilderfacade.RbuilderFacade(self),
-        })
+        self.facade = _PluginProxy(self._getFacades())
 
         # Provide the command manager as if it were a plugin
         self['Commands'] = CommandManager()
@@ -118,6 +114,16 @@ class RbuildHandle(_PluginProxy):
                 RbuildConfigData = productStore.getRbuildConfigData()
                 if RbuildConfigData is not None:
                     self._cfg.readObject('INTERNAL', RbuildConfigData)
+
+    def _getFacades(self):
+        '''
+        Override this method to provide your own versions of these facades.
+        '''
+        return {
+            'conary': rbuild.facade.conaryfacade.ConaryFacade(self),
+            'rmake': rbuild.facade.rmakefacade.RmakeFacade(self),
+            'rbuilder': rbuild.facade.rbuilderfacade.RbuilderFacade(self),
+        }
 
     def __repr__(self):
         if self.product:

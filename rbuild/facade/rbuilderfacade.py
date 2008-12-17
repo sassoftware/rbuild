@@ -53,30 +53,6 @@ class RbuilderFacade(object):
         cfg = self._handle.getConfig()
         return RbuilderClient(cfg.serverUrl, cfg.user[0], cfg.user[1])
 
-    def createImage(self, productName, groupName, groupVersion, groupFlavor, buildType, buildName, buildNotes, options):
-        """
-        Create an image according to the parameters given
-
-        @param productName: Short name of the product/project to produce images on
-        @type productName: str
-        @param groupName: Name of the group to use to build the image
-        @type groupName: str
-        @type groupVersion: Frozen version string of the group used to build the image
-        @type groupVersion: str
-        @param groupFlavor: Frozen flavor string of the group used to build the image
-        @type groupFlavor: str
-        @param buildType: Name of the build type to produce
-        @type buildType: str
-        @param buildName: Name to give to the build, or the empty string
-        @type buildName: str
-        @param buildNotes: Build notes to add as metadata for the image, or the empty string
-        @type buildNotes: str
-        @param options: Set of options (key=value) to apply to the build.
-        @type options: dict(str=str)
-        """
-        client = self._getRbuilderClient()
-        return client.createImage(productName, groupName, groupVersion, groupFlavor, buildType, buildName, buildNotes, options)
-
     def buildAllImagesForStage(self):
         client = self._getRbuilderClient()
         stageName = self._handle.productStore.getActiveStageName()
@@ -90,34 +66,6 @@ class RbuilderFacade(object):
         client = self._getRbuilderClient()
         return client.getProductLabelFromNameAndVersion(productName,
                                                         versionName)
-
-    def createUser(self, username, email, password, fullName):
-        '''
-        Creates the user specified on the rbuilder
-
-        @param username: The username to add
-        @type username: str
-        @param email: The e-mail address to associate with the user
-        @type email: str
-        @param password: The password to assign to the user
-        @type password: str
-        '''
-        client = self._getRbuilderClient()
-        return client.createUser(username, email, password, fullName)
-        
-    def addUserToProduct(self, productName, username, level):
-        '''
-        Adds the user to the specified product at the provided level.
-
-        @param productName: product short name
-        @type productName: str
-        @param username: username to add
-        @type username: str
-        @param level: permission level (currently developer or owner)
-        @type level: str
-        '''
-        client = self._getRbuilderClient()
-        return client.addUserToProduct(productName, username, level)
 
     def watchImages(self, buildIds, timeout=0, interval = 5, quiet = False):
         client = self._getRbuilderClient()
@@ -247,140 +195,6 @@ class RbuilderClient(object):
                 raise errors.RbuilderError(*buildIds)
         return buildIds
 
-    def _oldCreateImage(self, productId, productName, groupName, groupVersion, groupFlavor, buildTypeId, options):
-        '''
-        Used when talking to rbuilder 4.x
-        '''
-        (RDT_STRING,
-         RDT_BOOL,
-         RDT_INT,
-         RDT_ENUM,
-         RDT_TROVE)= range(5)
-
-        optionTypes = {
-            'anaconda-custom': RDT_TROVE,
-            'anaconda-templates': RDT_TROVE,
-            'media-template': RDT_TROVE,
-            'bugsUrl': RDT_STRING,
-            'installLabelPath': RDT_STRING,
-            'autoResolve': RDT_BOOL,
-            'baseFileName': RDT_STRING,
-            'showMediaCheck': RDT_BOOL,
-            'betaNag': RDT_BOOL,
-            'maxIsoSize': RDT_ENUM,
-            'freespace': RDT_INT,
-            'swapSize': RDT_INT,
-            'vmMemory': RDT_INT,
-            'vmSnapshots': RDT_BOOL,
-            'diskAdapter': RDT_ENUM,
-            'natNetworking': RDT_BOOL,
-            'unionfs': RDT_BOOL,
-            'zisofs': RDT_BOOL,
-            'vhdDiskType': RDT_ENUM,
-            'amiHugeDiskMountpoint': RDT_STRING
-        }
-        #Outline of the calls
-        error, buildId = self.server.newBuild(productId, productName)
-        if error:
-            raise errors.RbuilderError(*buildId)
-        #Look up the name version flavor
-        error, success = self.server.setBuildTrove(buildId, groupName, groupVersion, groupFlavor)
-        if error:
-            raise errors.RbuilderError(*success)
-        error, success = self.server.setBuildType(buildId, buildTypeId)
-        if error:
-            raise errors.RbuilderError(*success)
-        for name, val in options.iteritems():
-            if optionTypes[name] == RDT_TROVE:
-                #Do a lookup on the trovespec
-                n2,v2,f2 = conarycmdline.parseTroveSpec(val)
-                # The version as an unresolved partial or full version string
-                # is looked up on the server
-                if v2 is None:
-                    v2 = ''
-                if f2 is not None:
-                    f2 = conarydeps.parseFlavor(f2).freeze()
-                else: f2 = ''
-                error, val = self.server.resolveExtraTrove(productId, n2, v2,
-                            f2, groupVersion, groupFlavor)
-                if error:
-                    raise errors.RbuilderError(*val)
-            error, success = self.server.setBuildDataValue(buildId, name, val, optionTypes[name])
-            if error:
-                raise errors.RbuilderError(*success)
-        return buildId
-
-    def createImage(self, productName, groupName, groupVersion, groupFlavor, buildType, buildName, buildNotes, options):
-        productId = self.getProductId(productName)
-
-        validBuildTypes = {
-            'BOOTABLE_IMAGE'    : 0,
-            'INSTALLABLE_ISO'   : 1,
-            'STUB_IMAGE'        : 2,
-            'RAW_FS_IMAGE'      : 3,
-            'NETBOOT_IMAGE'     : 4,
-            'TARBALL'           : 5,
-            'LIVE_ISO'          : 6,
-            'RAW_HD_IMAGE'      : 7,
-            'VMWARE_IMAGE'      : 8,
-            'VMWARE_ESX_IMAGE'  : 9,
-            'VIRTUAL_PC_IMAGE'  : 10,
-            'XEN_OVA'           : 11,
-            'VIRTUAL_IRON'      : 12,
-            'PARALLELS'         : 13,
-            'AMI'               : 14,
-            'UPDATE_ISO'        : 15,
-            'APPLIANCE_ISO'     : 16,
-        }
-        xmlImageNames = {
-            1: 'installableIsoImage',
-            3: 'rawFsImage',
-            4: 'netbootImage',
-            5: 'tarballImage',
-            6: 'liveIsoImage',
-            7: 'rawHdImage',
-            8: 'vmwareImage',
-            9: 'vmwareEsxImage',
-            10: 'vhdImage',
-            11: 'xenOvaImage',
-            12: 'virtualIronImage',
-            14: 'amiImage',
-            15: 'updateIsoImage',
-            16: 'applianceIsoImage'
-        }
-
-        # parse --option parameters
-        if buildType.upper() not in validBuildTypes:
-            raise errors.RbuildError( "%s is not a valid build type. See --help." % buildType.upper())
-        buildTypeId = validBuildTypes[buildType.upper()]
-        xmlBuildType = xmlImageNames[buildTypeId]
-
-        # Don't use newBuildWithOptions until RBL-4015 is fixed -- jtate
-        #error, buildId = self.server.newBuildWithOptions(productId, productName, groupName,
-        #        groupVersion, groupFlavor, xmlBuildType, options)
-        #if error:
-        #    if buildId[0] == 'MethodNotSupported':
-                #Backwards compatibility with 4.x servers
-        buildId = self._oldCreateImage(productId, productName, groupName, groupVersion, groupFlavor, buildTypeId, options)
-        #    else:
-        #        raise errors.RbuilderError(*buildId)
-
-        if buildName:
-            error, success = self.server.setBuildName(buildId, buildName)
-            if error:
-                raise errors.RbuilderError(*success)
-
-        if buildNotes:
-            error, success = self.server.setBuildDesc(buildId, buildNotes)
-            if error:
-                raise errors.RbuilderError(*success)
-
-        error, job = self.server.startImageJob(buildId)
-        if error:
-            raise errors.RbuilderError(*job)
-
-        return buildId
-
     def watchImages(self, buildIds, timeout = 0, interval = 5, quiet=False):
         interval = 10
         st = time.time()
@@ -475,48 +289,6 @@ class RbuilderClient(object):
                 print urlBase % (filename['fileId'])
 
 
-
-    def createUser(self, username, email, password, fullName):
-        # Server method signature
-        #    def registerNewUser(self, username, password, fullName, email,
-        #                displayEmail, blurb, active):
-        error, userId = self.server.registerNewUser(username, password, fullName,
-            email, "", "", True)
-        if error:
-            raise errors.RbuilderError(*userId)
-        return userId
-
-    def addUserToProduct(self, productName, username, level):
-        productId = self.getProductId(productName)
-        error, userId = self.server.getUserIdByName(username)
-        if error:
-            raise errors.RbuilderUserError(*userId)
-
-        # This level list comes from rbuilder API, and may change at any time
-        NONMEMBER = -1
-        userlevels = {
-            'owner': 0,
-            'developer': 1,
-        }
-        try:
-            levelId = userlevels[level.lower()]
-        except KeyError:
-            raise errors.RbuildError("invalid user level: %s" % level)
-
-        error, userlevel = self.server.getUserLevel(userId, productId)
-        if error:
-            raise errors.RbuilderError(*userlevel)
-
-        if userlevel == NONMEMBER:
-            error, foo = self.server.addMember(productId, userId, username, levelId)
-            if error:
-                raise errors.RbuilderError(*foo)
-            print ("User %s added to project %s as a %s" % (username, productName, level.title()))
-        else:
-            error, foo = self.server.setUserLevel(userId, productId, levelId)
-            if error:
-                raise errors.RbuilderError(*foo)
-            print ("User %s changed to %s on project %s" % (username, level.title(), productName))
 
     def getProductId(self, productName):
         error, productId = self.server.getProjectIdByHostname(productName)
