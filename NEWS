@@ -1,3 +1,9 @@
+Changes in @NEW@:
+  o Internal Changes:
+    * The "rbuilder" program has been moved to a separate source tree
+      because of fundamental differences in ideology which did not fit
+      with the rbuild tool. (RBLD-152)
+
 Changes in 0.12:
   o New Features:
     * The "rbuilder" program has been added as a backward-compatible
