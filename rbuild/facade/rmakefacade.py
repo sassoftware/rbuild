@@ -182,7 +182,8 @@ class RmakeFacade(object):
         @return: The new build job object
         """
         rmakeClient = self._getRmakeHelperWithContexts()[0]
-        stageLabel = self._handle.productStore.getActiveStageLabel()
+        handle = self._handle
+        stageLabel = handle.productStore.getActiveStageLabel()
         if recurse:
             recurse = rmakeClient.BUILD_RECURSE_GROUPS_SOURCE
 
@@ -190,7 +191,7 @@ class RmakeFacade(object):
         if useLocal:
             # Insert troves from the build label into resolveTroves
             # to emulate a recursive job's affinity for built troves.
-            conary = self._handle.facade.conary
+            conary = handle.facade.conary
             initialTroves = conary.getLatestPackagesOnLabel(stageLabel)
             cfg.resolveTroves.insert(0, initialTroves)
 
@@ -202,7 +203,7 @@ class RmakeFacade(object):
         # finding them first in the lookups rMake did for
         # resolveTroveTups, then with findTroves.
         searchPathTups = [x.getTroveTup()
-                for x in self._handle.product.getGroupSearchPaths()]
+                          for x in handle.product.getGroupSearchPaths()]
 
         # Iterate over each config that belongs to at least one trove
         # (generally one per context)
@@ -217,7 +218,7 @@ class RmakeFacade(object):
             toFind = [x for x in searchPathTups if x not in alreadyFoundMap]
 
             # Look up the remaining ones using the config's flavor.
-            results = self._handle.facade.conary._findTroves(toFind,
+            results = handle.facade.conary._findTroves(toFind,
                     troveCfg.installLabelPath, troveCfg.flavor,
                     allowMissing=True)
 
