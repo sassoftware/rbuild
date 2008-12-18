@@ -27,6 +27,7 @@ from rmake.build import buildcfg
 from rmake.cmdline import helper
 from rmake.cmdline import query
 from rmake import plugins
+from rbuild import errors
 
 class RmakeFacade(object):
     """
@@ -87,7 +88,7 @@ class RmakeFacade(object):
         cfg.installLabelPath = [ stageLabel ]
         cfg.flavor = [baseFlavor]
         cfg.buildFlavor = baseFlavor
-        upstreamSources = self._handle.product.getSearchPaths()
+        upstreamSources = self._handle.product.getResolveTroves()
         cfg.resolveTroves = [[x.getTroveTup()] for x in upstreamSources]
 
         cfg.repositoryMap = rbuildConfig.repositoryMap
@@ -187,6 +188,8 @@ class RmakeFacade(object):
 
         cfg = self._getRmakeConfigWithContexts()[0]
         if useLocal:
+            # Insert troves from the build label into resolveTroves
+            # to emulate a recursive job's affinity for built troves.
             conary = self._handle.facade.conary
             initialTroves = conary.getLatestPackagesOnLabel(stageLabel)
             cfg.resolveTroves.insert(0, initialTroves)
@@ -195,14 +198,40 @@ class RmakeFacade(object):
             rebuild=rebuild, recurseGroups=recurse, limitToLabels=[stageLabel],
             buildConfig=cfg)
 
-        # Pass the "frozen" set of resolveTrove tups in as a macro, so
-        # that group-appliance can use it as a component of its search
-        # path.
-        # FIXME: this does not include the flavor right now due to RBLD-134
-        for troveCfg in job.configs.itervalues():
-            troveCfg.macros['productDefinitionSearchPath'] = '\n'.join([
-                '%s=%s' % x[0:2] for x in itertools.chain(
-                    *troveCfg.resolveTroveTups)])
+        # Populate the group's productDefinitionSearchPath macro by
+        # finding them first in the lookups rMake did for
+        # resolveTroveTups, then with findTroves.
+        import epdb;epdb.st()
+        searchPathTups = [x.getTroveTup()
+                for x in self._handle.product.getGroupSearchPaths()]
+        for trove in job.iterTroves():
+            troveCfg = trove.cfg
+
+            # Figure out which troves we need to look up by filtering
+            # out the ones rMake already looked up for us.
+            alreadyFoundMap = dict((troveSpec, troveTup)
+                    for (troveSpec, troveTup) in itertools.izip(
+                        itertools.chain(*troveCfg.resolveTroves),
+                        itertools.chain(*troveCfg.resolveTroveTups)))
+            toFind = [x for x in searchPathTups if x not in alreadyFoundMap]
+
+            # Look up the remaining ones using the config's flavor.
+            results = self._handle.facade.conary._findTroves(toFind,
+                    troveCfg.installLabelPath, troveCfg.flavor,
+                    allowMissing=True)
+
+            groupSearchPath = []
+            for troveSpec in searchPathTups:
+                if troveSpec in alreadyFoundMap:
+                    troveTup = alreadyFoundMap[troveSpec]
+                elif troveSpec in results:
+                    troveTup = max(results[troveSpec])
+                else:
+                    raise errors.MissingGroupSearchPathElementError(*troveSpec)
+                groupSearchPath.append('%s=%s' % troveTup[:2])
+
+            troveCfg.macros['productDefinitionSearchPath'] = '\n'.join(
+                    groupSearchPath)
 
         return job
 

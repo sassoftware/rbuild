@@ -186,6 +186,14 @@ class MissingPluginError(RbuildInternalError):
     template = "Plugin %(pluginName)r is not loaded"
     params = ['pluginName']
 
+class InternalRmakeFacadeError(RbuildError):
+    """
+    Raised when rMake returns results that rBuild does not know how
+    to interpret.
+    """
+    template = "Unexpected results from rMake: %(message)r"
+    params = ['message']
+
 ## END Internal Errors
 
 
@@ -193,6 +201,12 @@ class MissingPluginError(RbuildInternalError):
 class MissingProductStoreError(RbuildError):
     template = "Directory %(path)r does not contain a product checkout"
     params = ['path']
+
+
+class MissingGroupSearchPathElementError(RbuildError):
+    template = ("Group search path element "
+            "%(name)s=%(version)s[%(flavor)s] was not found")
+    params = ['name', 'version', 'flavor']
 
 
 class RbuilderError(RbuildError):
