@@ -14,8 +14,7 @@
 
 TOPDIR=..
 
-bin_files = \
-	rbuild rbuilder
+bin_files = rbuild
 
 extra_dist = Makefile rbuild-wrapper
 
