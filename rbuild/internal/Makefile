@@ -20,7 +20,7 @@ python_files =	\
 		pluginloader.py
 
 
-SUBDIRS = rbuilder
+SUBDIRS =
 
 all: default-subdirs default-all
 
