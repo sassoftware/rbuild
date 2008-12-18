@@ -201,12 +201,13 @@ class RmakeFacade(object):
         # Populate the group's productDefinitionSearchPath macro by
         # finding them first in the lookups rMake did for
         # resolveTroveTups, then with findTroves.
-        import epdb;epdb.st()
         searchPathTups = [x.getTroveTup()
                 for x in self._handle.product.getGroupSearchPaths()]
-        for trove in job.iterTroves():
-            troveCfg = trove.cfg
 
+        # Iterate over each config that belongs to at least one trove
+        # (generally one per context)
+        troveConfigs = dict((id(x.cfg), x.cfg) for x in job.iterTroves())
+        for troveCfg in troveConfigs.itervalues():
             # Figure out which troves we need to look up by filtering
             # out the ones rMake already looked up for us.
             alreadyFoundMap = dict((troveSpec, troveTup)
