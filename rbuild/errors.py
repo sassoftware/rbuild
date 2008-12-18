@@ -186,6 +186,23 @@ class MissingPluginError(RbuildInternalError):
     template = "Plugin %(pluginName)r is not loaded"
     params = ['pluginName']
 
+class InternalRmakeFacadeError(RbuildError):
+    """
+    Raised when rMake returns results that rBuild does not know how
+    to interpret.
+    """
+    template = "Unexpected results from rMake: %(message)r"
+    params = ['message']
+
+class InternalRmakeFacadeSearchPathTroveMismatchError(RbuildError):
+    """
+    Raised when rBuild encounters unexpected trove names in
+    search path data from rMake.
+    """
+    template = ('rMake returned unexpected trove name:'
+                ' expected %(expected)r, got %(got)r')
+    params = ['expected', 'got']
+
 ## END Internal Errors
 
 

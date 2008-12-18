@@ -1,8 +1,20 @@
 Changes in @NEW@:
-  o Internal Changes:
-    * The "rbuilder" program has been moved to a separate source tree
-      because of fundamental differences in ideology which did not fit
-      with the rbuild tool. (RBLD-152)
+  o New Features:
+    * Use new distinction between searchPath elements intended to
+      be part of a development environment for building the product
+      but not included in the product itself, and those searchPath
+      elements which are available to include within the product by
+      default.  This allows the development environment to be kept
+      separate from the platform, but still kept synchronized with
+      the "rbuild rebase" command.  Requires rpath-product-definition
+      0.5 or later to build groups. (RBLD-150)
+
+  o User Interface Changes:
+    * The "rbuilder" program has been moved to a separate package,
+      rbuilder-client, because it has a different operating model
+      than the rbuild tool.  In particular, it expressly does not
+      honor product-definition, instead taking all data from
+      command-line arguments. (RBLD-152)
 
 Changes in 0.12:
   o New Features:

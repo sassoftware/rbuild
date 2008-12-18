@@ -27,6 +27,7 @@ from rmake.build import buildcfg
 from rmake.cmdline import helper
 from rmake.cmdline import query
 from rmake import plugins
+from rbuild import errors
 
 class RmakeFacade(object):
     """
@@ -87,7 +88,7 @@ class RmakeFacade(object):
         cfg.installLabelPath = [ stageLabel ]
         cfg.flavor = [baseFlavor]
         cfg.buildFlavor = baseFlavor
-        upstreamSources = self._handle.product.getSearchPaths()
+        upstreamSources = self._handle.product.getResolveTroves()
         cfg.resolveTroves = [[x.getTroveTup()] for x in upstreamSources]
 
         cfg.repositoryMap = rbuildConfig.repositoryMap
@@ -195,14 +196,65 @@ class RmakeFacade(object):
             rebuild=rebuild, recurseGroups=recurse, limitToLabels=[stageLabel],
             buildConfig=cfg)
 
-        # Pass the "frozen" set of resolveTrove tups in as a macro, so
-        # that group-appliance can use it as a component of its search
-        # path.
-        # FIXME: this does not include the flavor right now due to RBLD-134
-        for troveCfg in job.configs.itervalues():
-            troveCfg.macros['productDefinitionSearchPath'] = '\n'.join([
-                '%s=%s' % x[0:2] for x in itertools.chain(
-                    *troveCfg.resolveTroveTups)])
+        def raiseErrorIfMismatch(expected, got):
+            if expected != got:
+                # trove name mismatch -- no information here on
+                # what caused this error, but cannot continue
+                raise errors.InternalRmakeFacadeSearchPathTroveMismatchError(
+                    expected=expected, got=got)
+
+        # populate the group's productDefinitionSearchPath macro
+        # based on the troves rMake has looked up for resolveTroves,
+        # removing items that are not intended to be included.
+        groupSearchPath = []
+
+        troveCfgs = [x for x in job.configs.itervalues()]
+        for troveCfg in troveCfgs:
+            rMakeTroves = [x[0:2] for x in
+                           itertools.chain(*troveCfg.resolveTroveTups)]
+            if not rMakeTroves:
+                # no rMake resolved troves in this config, no more work to do
+                continue
+
+            if useLocal:
+                for localTrove in initialTroves:
+                    # initialTroves should be included for consistency
+                    localTroveName = localTrove[0]
+                    resolvedTrove = rMakeTroves.pop(0)
+                    resolvedTroveName = resolvedTrove[0]
+                    raiseErrorIfMismatch(localTroveName, resolvedTroveName)
+                    groupSearchPath.append(resolvedTrove)
+
+            for pathElement in self._handle.product.getSearchPaths():
+                if pathElement.notGroupSearchPath:
+                    if not pathElement.notResolveTrove:
+                        # resolveTroves element that does not belong in
+                        # group searchPath, such as rPL development
+                        # groups when building for rLS -- rMake has
+                        # resolved it, but we do not include it in
+                        # the group searchPath
+                        rMakeTroves.pop(0)
+                    # otherwise, element used neither for resolveTroves
+                    # nor for group searchPath -- this is reserved for
+                    # future extensions not yet proposed as of this comment
+                    continue
+                else:
+                    # element belongs in the group search path
+                    if pathElement.notResolveTrove:
+                        # rMake did not resolve this, so just put in whatever
+                        # we found from the product definition
+                        groupSearchPath.append(pathElement.getTroveTup()[0:2])
+                    else:
+                        # rMake has resolved this, so it must be the next
+                        # item in the queue
+                        rMakeTrove = rMakeTroves.pop(0)
+                        rMakeTroveName = rMakeTrove[0]
+                        pathElementName = pathElement.getTroveTup()[0]
+                        raiseErrorIfMismatch(pathElementName, rMakeTroveName)
+                        groupSearchPath.append(rMakeTrove)
+            
+            troveCfg.macros['productDefinitionSearchPath'] = '\n'.join(
+                '%s=%s' %tup for tup in groupSearchPath)
 
         return job
 
