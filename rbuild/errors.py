@@ -194,15 +194,6 @@ class InternalRmakeFacadeError(RbuildError):
     template = "Unexpected results from rMake: %(message)r"
     params = ['message']
 
-class InternalRmakeFacadeSearchPathTroveMismatchError(RbuildError):
-    """
-    Raised when rBuild encounters unexpected trove names in
-    search path data from rMake.
-    """
-    template = ('rMake returned unexpected trove name:'
-                ' expected %(expected)r, got %(got)r')
-    params = ['expected', 'got']
-
 ## END Internal Errors
 
 
@@ -210,6 +201,12 @@ class InternalRmakeFacadeSearchPathTroveMismatchError(RbuildError):
 class MissingProductStoreError(RbuildError):
     template = "Directory %(path)r does not contain a product checkout"
     params = ['path']
+
+
+class MissingGroupSearchPathElementError(RbuildError):
+    template = ("Group search path element "
+            "%(name)s=%(version)s[%(flavor)s] was not found")
+    params = ['name', 'version', 'flavor']
 
 
 class RbuilderError(RbuildError):
