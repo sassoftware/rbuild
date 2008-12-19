@@ -113,15 +113,16 @@ class BuildImages(pluginapi.Plugin):
         releaseId = self.handle.facade.rbuilder.createRelease(buildIds)
         ui = self.handle.ui
         productStore = self.handle.productStore
+        product = self.handle.product
 
         # Update the created release with some relevant data.
         if name is None:
             stageName = productStore.getActiveStageName()
             name = '%s images' % stageName
         if version is None:
-            version = productStore.getProductVersion()
+            version = product.getProductVersion()
         if description is None:
-            description = productStore.getProductDescription()
+            description = product.getProductDescription()
         if not description:
             # empty productDescription, say something possibly useful
             description = 'Release built by %s on %s' % (

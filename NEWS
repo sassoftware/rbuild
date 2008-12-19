@@ -16,6 +16,11 @@ Changes in @NEW@:
       honor product-definition, instead taking all data from
       command-line arguments. (RBLD-152)
 
+  o Bug Fixes:
+    * After successfully building a set of images, rBuild previously
+      failed to correctly compose a release in rBuilder due to an
+      undefined symbol.  This has been fixed. (RBLD-154)
+
 Changes in 0.12:
   o New Features:
     * The "rbuilder" program has been added as a backward-compatible
