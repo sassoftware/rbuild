@@ -15,11 +15,16 @@ Changes in @NEW@:
       than the rbuild tool.  In particular, it expressly does not
       honor product-definition, instead taking all data from
       command-line arguments. (RBLD-152)
+    * The "rbuild rebase" command now provides both a "from" and a
+      "to" version in its output, to make it clearer what operations
+      happened during the rebase operation.
 
   o Bug Fixes:
     * After successfully building a set of images, rBuild previously
       failed to correctly compose a release in rBuilder due to an
       undefined symbol.  This has been fixed. (RBLD-154)
+    * The "rbuild rebase" command updates the product definition before
+      rebasing, to avoid regression in product definition data. (RBLD-155)
 
 Changes in 0.12:
   o New Features:

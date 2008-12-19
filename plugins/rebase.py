@@ -40,9 +40,19 @@ class Rebase(pluginapi.Plugin):
     def rebaseProduct(self, label=None):
         handle = self.handle
         conaryClient = handle.facade.conary._getConaryClient()
+        # First, update to latest upstream to avoid regressions (RBLD-155)
+        handle.productStore.update()
+        oldPlatformSource = handle.product.getPlatformSourceTrove()
         handle.product.rebase(conaryClient, label=label)
         handle.product.saveToRepository(conaryClient)
         handle.productStore.update()
         platformSource = handle.product.getPlatformSourceTrove()
+        def trailingVersionDifference(a, b):
+            a = a.split('/')
+            b = b.split('/')
+            for i in range(len(b)):
+                if a[i] != b[i]:
+                    return '/'.join(b[i:])
         handle.ui.info(
-         'Now using latest platform from %s' % (platformSource,))
+            'Updated from %s to latest %s' % (oldPlatformSource,
+                trailingVersionDifference(oldPlatformSource, platformSource,)))
