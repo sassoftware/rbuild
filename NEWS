@@ -8,6 +8,8 @@ Changes in @NEW@:
       separate from the platform, but still kept synchronized with
       the "rbuild rebase" command.  Requires rpath-product-definition
       0.5 or later to build groups. (RBLD-150)
+    * The commit message when building and committing packages or groups can 
+      now be specified with the --message or -m flag. (RBLD-120)
 
   o User Interface Changes:
     * The "rbuilder" program has been moved to a separate package,
