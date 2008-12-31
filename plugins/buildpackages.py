@@ -54,6 +54,7 @@ class BuildPackagesCommand(command.BaseCommand):
         commit = not argSet.pop('no-commit', False)
         recurse = not argSet.pop('no-recurse', False)
         refreshArg = argSet.pop('refresh', False)
+        message = argSet.pop('message', None)
         _, packageList, = self.requireParameters(args, allowExtra=True)
         if not packageList:
             if refreshArg:
@@ -64,7 +65,7 @@ class BuildPackagesCommand(command.BaseCommand):
                 handle.BuildPackages.refreshPackages(packageList)
             jobId = handle.BuildPackages.buildPackages(packageList, recurse)
         if watch and commit:
-            handle.Build.watchAndCommitJob(jobId)
+            handle.Build.watchAndCommitJob(jobId, message)
         elif watch:
             handle.Build.watchJob(jobId)
 

@@ -22,8 +22,8 @@ class BuildImagesCommand(command.BaseCommand):
     Builds specified images for the current stage.  If no images are specified,
     builds all images defined by the product.  
 
-    Optionally creates a release containing the built images.  The job must be
-    watched for a release to be created.
+    Creates a release containing the built images.  The job must be watched
+    for a release to be created.
     '''
     help = 'Build images for this stage'
     paramHelp = '[image name]*'

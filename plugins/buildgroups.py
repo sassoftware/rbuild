@@ -33,13 +33,14 @@ class BuildGroupsCommand(command.BaseCommand):
     def runCommand(self, handle, argSet, args):
         watch = not argSet.pop('no-watch', False)
         commit = not argSet.pop('no-commit', False)
+        message = argSet.pop('message', None)
         _, groupList, = self.requireParameters(args, allowExtra=True)
         if not groupList:
             jobId = handle.BuildGroups.buildAllGroups()
         else:
             jobId = handle.BuildGroups.buildGroups(groupList)
         if watch and commit:
-            handle.Build.watchAndCommitJob(jobId)
+            handle.Build.watchAndCommitJob(jobId, message)
         elif watch:
             handle.Build.watchJob(jobId)
 

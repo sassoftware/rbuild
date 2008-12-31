@@ -280,14 +280,17 @@ class RmakeFacade(object):
         client = self._getRmakeHelper()
         return client.buildJob(job)
 
-    def watchAndCommitJob(self, jobId):
+    def watchAndCommitJob(self, jobId, message):
         """
         Waits for the job to commit and watches.
         @param jobId: id of the job to watch and commit.
         """
+        if not message:
+            message='Automatic commit by rbuild'
+
         client = self._getRmakeHelper()
         client.watch(jobId, commit=True, showTroveLogs=True,
-                showBuildLogs=True, message='Automatic commit by rbuild')
+                showBuildLogs=True, message=message)
 
     def watchJob(self, jobId):
         """
