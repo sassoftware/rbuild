@@ -27,6 +27,7 @@ Changes in @NEW@:
       undefined symbol.  This has been fixed. (RBLD-154)
     * The "rbuild rebase" command updates the product definition before
       rebasing, to avoid regression in product definition data. (RBLD-155)
+    * Epydoc generation has been fixed. (RBLD-144)
 
 Changes in 0.12:
   o New Features:
