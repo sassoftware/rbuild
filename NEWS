@@ -1,4 +1,4 @@
-Changes in @NEW@:
+Changes in 0.13:
   o New Features:
     * Use new distinction between searchPath elements intended to
       be part of a development environment for building the product

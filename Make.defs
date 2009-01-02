@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2006-2008 rPath, Inc.
+# Copyright (c) 2006-2009 rPath, Inc.
 #
 # This program is distributed under the terms of the Common Public License,
 # version 1.0. A copy of this license should have been distributed with this
@@ -12,7 +12,7 @@
 # full details.
 #
 
-VERSION=0.12
+VERSION=0.13
 # VERSION can be overridden by snapshot builds to force incompatible versions
 
 export prefix = /usr
