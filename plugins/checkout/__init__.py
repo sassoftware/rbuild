@@ -18,7 +18,6 @@ import os
 import tempfile
 
 from conary.lib import util
-from conary.conaryclient.cmdline import parseTroveSpec
 
 from rbuild import errors
 from rbuild import pluginapi
@@ -121,7 +120,7 @@ class Checkout(pluginapi.Plugin):
                 'Edit recipe to add changes your changes to the binary package')
 
     def shadowPackage(self, packageName):
-        origName, version, flavor = parseTroveSpec(packageName)
+        origName, version, flavor = self.handle.facade.conary.parseTroveSpec(packageName)
         package = None
 
         if version:
@@ -186,6 +185,8 @@ class Checkout(pluginapi.Plugin):
                                                     allowMissing=True)
 
     def _getRemotePackage(self, packageName, label):
-        return self.handle.facade.conary._findTrove(packageName + ':source',
+        troveList =  self.handle.facade.conary._findTrove(packageName + ':source',
                                                     label, 
                                                     allowMissing=True)
+        if troveList:
+            return troveList[0]
