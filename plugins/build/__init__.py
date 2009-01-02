@@ -40,7 +40,7 @@ class Build(pluginapi.Plugin):
     def registerCommands(self):
         self.handle.Commands.registerCommand(BuildCommand)
 
-    def watchAndCommitJob(self, jobId, message):
+    def watchAndCommitJob(self, jobId, message=None):
         return self.handle.facade.rmake.watchAndCommitJob(jobId, message)
 
     def watchJob(self, jobId):

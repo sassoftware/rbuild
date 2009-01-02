@@ -280,7 +280,7 @@ class RmakeFacade(object):
         client = self._getRmakeHelper()
         return client.buildJob(job)
 
-    def watchAndCommitJob(self, jobId, message):
+    def watchAndCommitJob(self, jobId, message=None):
         """
         Waits for the job to commit and watches.
         @param jobId: id of the job to watch and commit.
