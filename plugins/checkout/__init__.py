@@ -122,21 +122,21 @@ class Checkout(pluginapi.Plugin):
 
     def shadowPackage(self, packageName):
         origName, version, flavor = parseTroveSpec(packageName)
+        package = None
+
         if version:
             package = self._getRemotePackage(origName, version)
             if package is None:
                 raise errors.PluginError(
                         '%s:source does not exist on label %s.' % \
                         (origName, version))
-            else:
-                name, version, flavor = package
         else:
-            upstreamLatest = self._getUpstreamPackage(packageName)
-            name, version, flavor = upstreamLatest
-
-        if not version:
-            raise errors.PluginError(
+            package = self._getUpstreamPackage(packageName)
+            if package is None:
+                raise errors.PluginError(
                         'cannot shadow %s: no upstream binary' % packageName)
+
+        name, version, flavor = package            
 
         currentLabel = self.handle.productStore.getActiveStageLabel()
         self.handle.facade.conary.shadowSourceForBinary(name, version, flavor,
