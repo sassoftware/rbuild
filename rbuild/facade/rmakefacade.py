@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2008 rPath, Inc.
+# Copyright (c) 2008-2009 rPath, Inc.
 #
 # This program is distributed under the terms of the Common Public License,
 # version 1.0. A copy of this license should have been distributed with this
@@ -167,7 +167,7 @@ class RmakeFacade(object):
         return helper.rMakeHelper(buildConfig=cfg)
 
     def createBuildJobForStage(self, itemList, recurse=True, rebuild=True,
-      useLocal=False):
+      useLocal=False, progress=True):
         """
         @param itemList: list of troveSpec style items to build or
             paths to recipes.  May include version (after =) flavor
@@ -179,10 +179,17 @@ class RmakeFacade(object):
             packages that do not need to be rebuilt.
         @param useLocal: if C{True}, built packages on the stage label
             will be inserted into resolveTroves
+        @param progress: if C{True} (the default), print a progress
+            indication at the start of the operation
         @return: The new build job object
         """
         rmakeClient = self._getRmakeHelperWithContexts()[0]
         handle = self._handle
+
+        if progress:
+            handle.ui.progress('Creating rMake build job for %d items'
+                               %len(itemList))
+
         stageLabel = handle.productStore.getActiveStageLabel()
         if recurse:
             recurse = rmakeClient.BUILD_RECURSE_GROUPS_SOURCE

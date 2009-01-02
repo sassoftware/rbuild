@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2008 rPath, Inc.
+# Copyright (c) 2008-2009 rPath, Inc.
 #
 # This program is distributed under the terms of the Common Public License,
 # version 1.0. A copy of this license should have been distributed with this
@@ -15,6 +15,7 @@ User interface module for rbuild.
 """
 import getpass
 import sys
+import time
 
 from rbuild import errors
 
@@ -34,12 +35,32 @@ class UserInterface(object):
     def writeError(self, errorMsg, *args):
         self.errorStream.write('warning: %s\n' % (errorMsg % args, ))
 
+    def writeProgress(self, msg='', *args):
+        timeStamp = time.ctime(time.time())
+        self.outStream.write('[%s] %s\n' % (timeStamp, msg % args))
+
     def info(self, msg, *args):
         if not self.cfg.quiet:
             self.write(msg, *args)
 
     def warning(self, msg, *args):
         self.writeError(msg, *args)
+
+    def progress(self, msg, *args):
+        '''
+        Writes progress message; used to indicate that a potentially
+        long-running operation has been started, unless quiet mode
+        has been selected in the configuration.  This is intended to
+        be overrideable in different UIs in ways that could include
+        not displaying the message at all or display it only transiently
+        while the operation is underway.  This method should not
+        be used to display important information that should not be
+        missed by the user.
+        @param msg: printf-style string
+        @param args: printf-style variable arguments
+        '''
+        if not self.cfg.quiet:
+            self.writeProgress(msg, *args)
 
     def input(self, prompt):
         try:

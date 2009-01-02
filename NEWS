@@ -21,6 +21,9 @@ Changes in @NEW@:
     * The "rbuild rebase" command now provides both a "from" and a
       "to" version in its output, to make it clearer what operations
       happened during the rebase operation.
+    * Some long-running operations print a time-stamped status
+      message during normal operation (disabled during quiet
+      operation) as a "pacifier". (RBLD-156)
 
   o Bug Fixes:
     * After successfully building a set of images, rBuild previously
@@ -29,6 +32,11 @@ Changes in @NEW@:
     * The "rbuild rebase" command updates the product definition before
       rebasing, to avoid regression in product definition data. (RBLD-155)
     * Epydoc generation has been fixed. (RBLD-144)
+
+  o API Changes:
+    * The ui.progress() method has been added for providing non-essential
+      progress information to users.  The default implementation prints
+      a timestamp preceding the message. (RBLD-156)
 
 Changes in 0.12:
   o New Features:
