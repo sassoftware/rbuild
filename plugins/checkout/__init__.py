@@ -18,6 +18,7 @@ import os
 import tempfile
 
 from conary.lib import util
+from conary.conaryclient.cmdline import parseTroveSpec
 
 from rbuild import errors
 from rbuild import pluginapi
@@ -120,15 +121,27 @@ class Checkout(pluginapi.Plugin):
                 'Edit recipe to add changes your changes to the binary package')
 
     def shadowPackage(self, packageName):
-        upstreamLatest = self._getUpstreamPackage(packageName)
-        if not upstreamLatest:
+        origName, version, flavor = parseTroveSpec(packageName)
+        if version:
+            package = self._getRemotePackage(origName, version)
+            if package is None:
+                raise errors.PluginError(
+                        '%s:source does not exist on label %s.' % \
+                        (origName, version))
+            else:
+                name, version, flavor = package
+        else:
+            upstreamLatest = self._getUpstreamPackage(packageName)
+            name, version, flavor = upstreamLatest
+
+        if not version:
             raise errors.PluginError(
                         'cannot shadow %s: no upstream binary' % packageName)
-        name, version, flavor = upstreamLatest
+
         currentLabel = self.handle.productStore.getActiveStageLabel()
         self.handle.facade.conary.shadowSourceForBinary(name, version, flavor,
                                                         currentLabel)
-        self.checkoutPackage(packageName)
+        self.checkoutPackage(origName)
         self.handle.ui.info('Shadowed package %r', packageName)
 
     def newPackage(self, packageName):
@@ -170,4 +183,9 @@ class Checkout(pluginapi.Plugin):
         currentLabel = self.handle.productStore.getActiveStageLabel()
         return self.handle.facade.conary._findTrove(packageName + ':source',
                                                     currentLabel,
+                                                    allowMissing=True)
+
+    def _getRemotePackage(self, packageName, label):
+        return self.handle.facade.conary._findTrove(packageName + ':source',
+                                                    label, 
                                                     allowMissing=True)
