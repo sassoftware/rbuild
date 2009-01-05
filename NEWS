@@ -10,9 +10,12 @@ Changes in 0.13:
       separate from the platform, but still kept synchronized with
       the "rbuild rebase" command.  Requires rpath-product-definition
       0.5 or later to build groups. (RBLD-150)
-    * The commit message when building and committing packages or groups
-      can now be specified with the --message or -m command-line
-      argument. (RBLD-120)
+    * The commit message when building and committing packages or groups can 
+      now be specified with the --message or -m flag. (RBLD-120)
+    * The interview process during initial configuration now checks that the
+      provided url is an rbuilder, and it tries to authorize the provided
+      credentials.  If either fail, prompts are displayed for re-entry.
+      (RBLD-113)
 
   o User Interface Changes:
     * The "rbuilder" program has been moved to a separate package,

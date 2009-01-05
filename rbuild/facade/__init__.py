@@ -105,7 +105,7 @@ class ServerProxy(util.ServerProxy):
     def __init__(self, uri, username=None, password=None, *args, **kwargs):
         util.ServerProxy.__init__(self, uri, *args, **kwargs)
 
-        if username:
+        if username is not None:
             password = util.ProtectedString(password)
             self.__host = ProtectedTemplate('${user}:${password}@${host}',
                 user=username, password=password, host=self.__host)
