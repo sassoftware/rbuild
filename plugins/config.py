@@ -80,27 +80,88 @@ Please answer the following questions to begin using rBuild:
         ui.write("You should now begin working with a product by running"
                    " 'rbuild init <short name> <version>'")
 
+    def getServerUrl(self, defaultUrl):
+        ui = self.handle.ui
+        validateUrl = self.handle.facade.rbuilder.validateUrl
+        serverUrl = ui.getResponse('URL to use to contact rBuilder'
+                                       ' (start with http:// or https://)',
+                                       validationFn=validateUrl,
+                                       default=defaultUrl)
+        ui.write('rBuilder contacted successfully.')
+        return serverUrl
+
+    def getUserPass(self, defaultUser, defaultPassword):
+        ui = self.handle.ui
+        user =  ui.getResponse('Your rbuilder user name',
+                               default=defaultUser)
+        passwd = ui.getPassword('Your rbuilder password',
+                                default=defaultPassword)
+        return user, passwd                                
+
+    def promptReEnterUrl(self):
+        ui = self.handle.ui
+        reEnterUrl = ui.getYn(
+            'Would you like to re-enter the rBuilder url? (Y/N)',
+            default=False)
+        return reEnterUrl            
+
+    def promptReEnterUserPasswd(self):
+        ui = self.handle.ui
+        reEnterUserPasswd = ui.getYn(
+            'Would you like to re-enter the user name and '
+            'password? (Y/N)', default=False)
+        return reEnterUserPasswd            
+
     def updateConfig(self, cfg=None):
         if cfg is None:
             cfg = self.handle.getConfig()
         ui = self.handle.ui
-        validateUrl = self.handle.facade.rbuilder.validateUrl
-        cfg.serverUrl = ui.getResponse('URL to use to contact rBuilder'
-                                       ' (start with http:// or https://)',
-                                       validationFn=validateUrl,
-                                       default=cfg.serverUrl)
-        ui.write('rBuilder contacted ok.')
         if cfg.user:
             defaultUser = cfg.user[0]
             defaultPassword = cfg.user[1]
         else:
             defaultUser = defaultPassword = None
 
-        user =  ui.getResponse('Your rbuilder user name',
-                               default=defaultUser)
-        passwd = ui.getPassword('Your rbuilder password',
-                                default=defaultPassword)
+        authorized = False
+        reEnterUrl = True
+        reEnterUserPasswd = True
+
+        while not authorized:
+            if reEnterUrl:
+                serverUrl = self.getServerUrl(cfg.serverUrl)
+            validRbuilderUrl = self.handle.facade.rbuilder.validateRbuilderUrl(
+                serverUrl)
+            if not validRbuilderUrl[0]:
+                ui.write('The rBuilder url is a valid server, but there was '
+                    'an error communicating with the rBuilder at that '
+                    'location: %s' % validRbuilderUrl[1])
+                reEnterUrl = self.promptReEnterUrl()
+                if reEnterUrl:
+                    continue
+                
+            if reEnterUserPasswd:                
+                user, passwd = self.getUserPass(defaultUser, defaultPassword)
+            validCredentials = self.handle.facade.rbuilder.validateCredentials(
+                user, passwd, serverUrl)
+            authorized = validCredentials
+
+            if not authorized:
+                ui.write('The specified credentials were not successfully '
+                         'authorized against the rBuilder at %s.' % serverUrl)
+                reEnterUrl = self.promptReEnterUrl()
+
+                if reEnterUrl:                    
+                    reEnterUserPasswd = False                    
+                else:                    
+                    reEnterUserPasswd = self.promptReEnterUserPasswd()
+                if not reEnterUrl and not reEnterUserPasswd:
+                    # continue anyway
+                    authorized = True
+            else:
+                ui.write('rBuilder authorized successfully.')
+
         cfg.user = (user, passwd)
+        cfg.serverUrl = serverUrl
         cfg.name = ui.getResponse('Name to display when committing',
                                   default=cfg.name)
         cfg.contact = ui.getResponse('Contact - usually email or url',

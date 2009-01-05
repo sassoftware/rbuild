@@ -81,6 +81,23 @@ class RbuilderFacade(object):
             return False
         return True
 
+    def validateRbuilderUrl(self, serverUrl):
+        try:
+            client = RbuilderClient(serverUrl, '', '')
+            client.checkAuth()
+        except Exception, err:
+            return False, err
+
+        return True, ''
+
+    def validateCredentials(self, username, password, serverUrl):
+        client = RbuilderClient(serverUrl, username, password)
+        try:
+            ret = client.checkAuth()
+            return ret['authorized']
+        except Exception, err:
+            return False
+
     def getBuildFiles(self, buildId):
         return self._getRbuilderClient().getBuildFiles(buildId)
 
@@ -316,6 +333,12 @@ class RbuilderClient(object):
     def publishRelease(self, releaseId, shouldMirror):
         error, result = self.server.publishPublishedRelease(releaseId,
             shouldMirror)
+        if error:
+            raise errors.RbuilderError(*result)
+        return result
+
+    def checkAuth(self):
+        error, result = self.server.checkAuth()
         if error:
             raise errors.RbuilderError(*result)
         return result
