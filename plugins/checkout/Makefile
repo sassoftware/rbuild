@@ -12,10 +12,7 @@
 # full details.
 #
 
-plugin_files = \
-	__init__.py \
-	derive.py
-
+plugin_files = $(wildcard *.py)
 
 all: default-subdirs default-all
 

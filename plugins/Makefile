@@ -12,23 +12,7 @@
 # full details.
 #
 
-plugin_files = \
-	buildgroups.py \
-	buildimages.py \
-	buildpackages.py \
-	buildplatform.py \
-	config.py \
-	__init__.py \
-	init.py \
-	promote.py \
-	rebase.py \
-	showgroups.py \
-	showpackages.py \
-	show.py \
-	status.py \
-	update.py \
-	watch.py
-
+plugin_files = $(wildcard *.py)
 
 SUBDIRS = build checkout
 
