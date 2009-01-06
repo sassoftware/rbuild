@@ -54,6 +54,7 @@ class Promote(pluginapi.Plugin):
         to the next stage.
         """
         store, product = self.handle.productStore, self.handle.product
+        ui = self.handle.ui
         cny = self.handle.facade.conary
 
         activeStage = store.getActiveStageName()
@@ -63,6 +64,7 @@ class Promote(pluginapi.Plugin):
         fromTo = product.getPromoteMapsForStages(activeStage, nextStage)
 
         groupSpecs = [ '%s[%s]' % x for x in store.getGroupFlavors() ]
+        ui.progress('Preparing to promote %d troves', len(groupSpecs))
         allTroves = cny._findTrovesFlattened(groupSpecs, activeLabel)
         promotedList = cny.promoteGroups(allTroves, fromTo)
 

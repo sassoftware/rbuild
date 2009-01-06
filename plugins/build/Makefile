@@ -12,12 +12,7 @@
 # full details.
 #
 
-plugin_files = \
-	__init__.py \
-	groups.py \
-	packages.py \
-	refresh.py
-
+plugin_files = $(wildcard *.py)
 
 all: default-subdirs default-all
 
