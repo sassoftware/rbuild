@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2008 rPath, Inc.
+# Copyright (c) 2008-2009 rPath, Inc.
 #
 # This program is distributed under the terms of the Common Public License,
 # version 1.0. A copy of this license should have been distributed with this
@@ -109,6 +109,27 @@ class RbuildMain(mainhandler.MainHandler):
             print
             print 'Common Commands (use "rbuild help" for the full list)'
         return mainhandler.MainHandler.usage(self, rc, showAll=showAll)
+
+    def _getUsageByClass(self, commandClass, commandName=None):
+        # Copied in from conary's MainHandler class to add multiple argument
+        # possiblities
+        assert self.name, 'You must define the "name" attribute for class "%s"' % self.__class__.__name__
+        if not commandName:
+            if hasattr(commandClass, 'name'):
+                commandName = commandClass.name
+            else:
+                commandName = commandClass.commands[0]
+
+        # ---Begin modifications ---
+        if isinstance(commandClass.paramHelp, str):
+            params = [commandClass.paramHelp]
+        else:
+            params = commandClass.paramHelp
+        commandUsage = []
+        for param in params:
+            commandUsage.append('%s %s %s' % (self.name, commandName, param))
+        return '\n   or: '.join(commandUsage)
+
 
     def runCommand(self, thisCommand, _, argSet, args):
         """
