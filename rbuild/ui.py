@@ -73,9 +73,15 @@ class UserInterface(object):
         return getpass.getpass(prompt)
 
     def getPassword(self, prompt, default=None, validationFn=None):
-        return self.getResponse(prompt, default=default,
+        defaultvis = '<obscured>'
+        ret = self.getResponse(prompt, default=defaultvis,
                                 validationFn=validationFn,
                                 inputFn=self.inputPassword)
+        if ret == defaultvis:
+            return default
+        else:
+            return ret
+
 
     def getYn(self, prompt, default=True):
         '''
