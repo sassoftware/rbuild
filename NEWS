@@ -9,6 +9,7 @@ Changes in @NEW@:
     * The promote plugin now provides an initial progress indication.
 
   o Bug Fixes:
+    * The usage statement for rbuild init has been clarified.  (RBLD-161)
     * The publish and show images plugins were previously not installed
       during a "make install". (RBLD-159)
 
