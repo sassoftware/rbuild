@@ -310,7 +310,11 @@ class RbuilderClient(object):
     def getProductId(self, productName):
         error, productId = self.server.getProjectIdByHostname(productName)
         if error:
-            raise errors.RbuilderError(*productId)
+            if productId[0] == 'ItemNotFound':
+                raise errors.RbuildError('Product %s not found' % \
+                    productName)
+            else:
+                raise errors.RbuilderError(*productId)
         return productId            
 
     def createRelease(self, productName, buildIds):
