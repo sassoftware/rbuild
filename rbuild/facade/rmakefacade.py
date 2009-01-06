@@ -136,6 +136,10 @@ class RmakeFacade(object):
                         for x in self._handle.productStore.getGroupFlavors() ]
         contextNames = conaryFacade._getShortFlavorDescriptors(buildFlavors)
         for flavor, name in contextNames.items():
+            # Fix names to be rMake-safe
+            name = name.replace(',', '-')
+            contextNames[flavor] = name
+
             cfg.configLine('[%s]' % name)
             cfg.configLine('flavor %s' % flavor)
             cfg.configLine('buildFlavor %s' % str(flavor))

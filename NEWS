@@ -12,6 +12,9 @@ Changes in @NEW@:
     * The usage statement for rbuild init has been clarified.  (RBLD-161)
     * The publish and show images plugins were previously not installed
       during a "make install". (RBLD-159)
+    * Certain combinations of image types could result in fewer flavors
+      of a package or group being built than necessary. This has been
+      corrected. (RBLD-160)
 
 Changes in 0.13:
   o New Features:
