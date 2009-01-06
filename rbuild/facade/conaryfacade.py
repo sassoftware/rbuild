@@ -28,18 +28,22 @@ import urlparse
 
 from conary import conarycfg
 from conary import conaryclient
-from conary.conaryclient import cmdline
 from conary import checkin
-from conary.deps import deps
+from conary import errors as conaryerrors
 from conary import state
 from conary import trove
 from conary import updatecmd
 from conary import versions
-from conary.lib import util
 
 from conary.build import loadrecipe
 from conary.build import use
 from conary.build import errors as builderrors
+
+from conary.conaryclient import cmdline
+from conary.deps import deps
+from conary.lib import util
+
+from conary.conaryclient.cmdline import parseTroveSpec
 
 from rbuild import errors
 
@@ -197,9 +201,15 @@ class ConaryFacade(object):
         repos = self._getRepositoryClient()
         flavor = self._getFlavor(flavor)
         defaultFlavor = self._getFlavor(defaultFlavor)
-        results = repos.findTroves(labelPath, [(name, version, flavor)],
-                                   defaultFlavor=defaultFlavor,
-                                   allowMissing=allowMissing)
+        try:
+            results = repos.findTroves(labelPath, [(name, version, flavor)],
+                                       defaultFlavor=defaultFlavor,
+                                       allowMissing=allowMissing)
+        except conaryerrors.LabelPathNeeded, e:
+            errstr = "%s is not a label. Please specify a label where a " \
+                     "product definition can be found, or specify a product " \
+                     "short name and version." % str(version)
+            raise errors.RbuildError(errstr)
         if not results:
             return None
         troveTup, = results[name, version, flavor]

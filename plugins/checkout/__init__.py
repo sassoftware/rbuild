@@ -188,5 +188,4 @@ class Checkout(pluginapi.Plugin):
         troveList =  self.handle.facade.conary._findTrove(packageName + ':source',
                                                     label, 
                                                     allowMissing=True)
-        if troveList:
-            return troveList[0]
+        return troveList
