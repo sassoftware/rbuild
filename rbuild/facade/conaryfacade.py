@@ -41,8 +41,6 @@ from conary.build import loadrecipe
 from conary.build import use
 from conary.build import errors as builderrors
 
-from conary.conaryclient.cmdline import parseTroveSpec
-
 from rbuild import errors
 
 
@@ -736,7 +734,7 @@ class ConaryFacade(object):
 
     @staticmethod
     def parseTroveSpec(troveSpec):
-        return parseTroveSpec(troveSpec)
+        return cmdline.parseTroveSpec(troveSpec)
 
 #pylint: disable-msg=C0103,R0901,W0221,R0904
 # "The creature can't help its ancestry"
