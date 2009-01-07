@@ -1,4 +1,4 @@
-Changes in @NEW@:
+Changes in 0.14:
   o New Features:
     * The interview process during initial configuration now checks that the
       provided url is an rbuilder, and it tries to authorize the provided
