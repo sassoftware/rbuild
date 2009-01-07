@@ -144,7 +144,6 @@ Please answer the following questions to begin using rBuild:
         authorized = False
         reEnterUrl = True
         reEnterUserPasswd = True
-        useRbaRmake = False
         rmakeUrl = None
 
         while not authorized:
