@@ -1,4 +1,8 @@
 Changes in @NEW@:
+  o New Features:
+    * The interview process now asks the user if they want to set up rMakeUrl
+      automatically to connect to a running rMake server on an rBA if
+      possible. (RBLD-163)
 
 Changes in 0.14:
   o New Features:
@@ -8,9 +12,6 @@ Changes in 0.14:
       (RBLD-113)
     * The init command has improved error handling and messages when an
       invalid product name or label is given. (RBLD-111)
-    * The interview process now asks the user if they want to set up rMakeUrl
-      automatically to connect to a running rMake server on an rBA if
-      possible. (RBLD-163)
     * You can now create shadows of packages on arbitrary labels
       in your product, using a command line something like:
       "rbuild checkout --shadow package=foo.rpath.org@rpl:2"
