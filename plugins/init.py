@@ -53,7 +53,7 @@ class InitCommand(command.BaseCommand):
             label, = self.requireParameters(args, ['label'])[1:]
             self._initByLabelCommand(handle, label)
         else:
-            params = self.requireParameters(args, ['repository', 'version'])
+            params = self.requireParameters(args, ['product', 'version'])
             repository, version = params[1:]
             self._initCommand(handle, repository, version)
 
