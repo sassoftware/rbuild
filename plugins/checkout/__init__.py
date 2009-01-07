@@ -185,7 +185,7 @@ class Checkout(pluginapi.Plugin):
                                                     allowMissing=True)
 
     def _getRemotePackage(self, packageName, label):
-        troveList =  self.handle.facade.conary._findTrove(packageName + ':source',
-                                                    label, 
-                                                    allowMissing=True)
-        return troveList
+        troveTup = self.handle.facade.conary._findTrove(packageName + ':source',
+                                                        label, 
+                                                        allowMissing=True)
+        return troveTup
