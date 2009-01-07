@@ -6,6 +6,9 @@ Changes in @NEW@:
       (RBLD-113)
     * The init command has improved error handling and messages when an
       invalid product name or label is given. (RBLD-111)
+    * The interview process now asks the user if they want to set up rMakeUrl
+      automatically to connect to a running rMake server on an rBA if
+      possible. (RBLD-163)
 
   o User Interface Changes:
     * The promote plugin now provides an initial progress indication.

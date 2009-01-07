@@ -28,6 +28,7 @@ from conary.lib import log
 from conary.lib import util
 
 from rpath_common import proddef
+from rbuild import constants
 from rbuild import errors
 from rbuild import facade
 
@@ -70,6 +71,20 @@ class RbuilderFacade(object):
     def watchImages(self, buildIds, timeout=0, interval = 5, quiet = False):
         client = self._getRbuilderClient()
         client.watchImages(buildIds, timeout=timeout, interval=interval, quiet=quiet)
+
+    def checkForRmake(self, serverUrl):
+        try:
+            url = serverUrl.split('//')[1]
+        except IndexError, e:
+            return False
+
+        sock = socket.socket()
+        try:
+            sock.connect((url, constants.RMAKE_PORT))
+            sock.close()
+            return True
+        except socket.error, e:
+            return False
 
     def validateUrl(self, serverUrl):
         try:

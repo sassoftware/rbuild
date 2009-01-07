@@ -28,3 +28,6 @@ VERSION          = "@version@"        # rbuild version
 # remove any changeset IDs from VERSION
 VERSION_TUPLE    = tuple(int(x) for x in VERSION.split('.')
                          if len(x) < 8 and x.isdigit())
+
+# port to use to check for existance of a running rMake
+RMAKE_PORT      = 9999

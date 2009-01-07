@@ -13,6 +13,7 @@
 #
 import os
 
+from rbuild import constants
 from rbuild import pluginapi
 from rbuild.pluginapi import command
 
@@ -88,7 +89,25 @@ Please answer the following questions to begin using rBuild:
                                        validationFn=validateUrl,
                                        default=defaultUrl)
         ui.write('rBuilder contacted successfully.')
+
+        if serverUrl.endswith('/'):
+            serverUrl = serverUrl[:-1]
+
         return serverUrl
+
+    def getRmakeUrl(self, serverUrl):
+        ui = self.handle.ui
+        useRbaRmake = False
+        if not serverUrl.endswith('rpath.org'):
+            if self.handle.facade.rbuilder.checkForRmake(serverUrl):
+                useRbaRmake = ui.getYn("Do you want to use the rMake server "
+                    "running on the rBA?  Choose 'N' to use a local "
+                    "rMake server. (Y/N):", default=False)
+        if useRbaRmake:
+           rmakeUrl = serverUrl + ':' + str(constants.RMAKE_PORT)
+           return rmakeUrl
+        else:
+            return None
 
     def getUserPass(self, defaultUser, defaultPassword):
         ui = self.handle.ui
@@ -125,6 +144,8 @@ Please answer the following questions to begin using rBuild:
         authorized = False
         reEnterUrl = True
         reEnterUserPasswd = True
+        useRbaRmake = False
+        rmakeUrl = None
 
         while not authorized:
             if reEnterUrl:
@@ -160,6 +181,10 @@ Please answer the following questions to begin using rBuild:
             else:
                 ui.write('rBuilder authorized successfully.')
 
+        rmakeUrl = self.getRmakeUrl(serverUrl)
+        if rmakeUrl:
+            cfg.rmakeUrl = rmakeUrl
+            
         cfg.user = (user, passwd)
         cfg.serverUrl = serverUrl
         cfg.name = ui.getResponse('Name to display when committing',
