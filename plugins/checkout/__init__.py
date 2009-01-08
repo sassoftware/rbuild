@@ -158,7 +158,7 @@ class Checkout(pluginapi.Plugin):
                     return
                 self.handle.facade.conary.detachPackage(
                     existingPackage, '/' + currentLabel, message)
-                self.handle.ui.info('Divorced package %s from its shadow.' \
+                self.handle.ui.info('Detached package %s from its parent.' \
                     % packageName)
             else:                    
                 raise errors.PluginError('\n'.join((
