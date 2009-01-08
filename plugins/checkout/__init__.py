@@ -115,7 +115,8 @@ class Checkout(pluginapi.Plugin):
             raise errors.PluginError(
                         'cannot derive %s: no upstream binary' % packageName)
         derive.derive(self.handle, upstreamLatest)
-        self.handle.ui.info('Derived %s from %s=%s[%s].', packageName, *upstreamLatest)
+        self.handle.ui.info('Derived %s from %s=%s[%s].', 
+            packageName, *upstreamLatest)
         self.handle.ui.info(
                 'Edit recipe to add changes your changes to the binary package')
 
@@ -143,26 +144,40 @@ class Checkout(pluginapi.Plugin):
         self.checkoutPackage(origName)
         self.handle.ui.info('Shadowed package %r', packageName)
 
-    def newPackage(self, packageName):
-        existingPackage = self._getExistingPackage(packageName)
-        if existingPackage:
-            raise errors.PluginError('\n'.join((
-                'This package already exists in the product.',
-                'Use "rbuild checkout %s" to checkout the existing package, '
-                'or give the new package a different name.' % \
-                packageName)))
-
-        upstreamLatest = self._getUpstreamPackage(packageName)
-        if upstreamLatest:
-            self.handle.ui.warning('Replacing upstream package %s.' % \
-                packageName)
-
+    def newPackage(self, packageName, message=None):
         currentLabel = self.handle.productStore.getActiveStageLabel()
-        self.handle.facade.conary.createNewPackage(
-                                            packageName, currentLabel)
-        self.handle.ui.info('Created new package %r', packageName)
-        return
+        existingPackage = self._getExistingPackage(packageName)
 
+        if existingPackage:
+            if existingPackage[1].isShadow() and \
+               self.handle.ui.getYn(
+                '%s is shadowed on the current label.\n'
+                'Do you want to detach this package from its parent? (Y/N): ' \
+                % packageName ):
+                self.handle.facade.conary.detachPackage(
+                    existingPackage, '/' + currentLabel, message)
+                self.handle.ui.info('Divorced package %s from its shadow.' \
+                    % packageName)
+            else:                    
+                raise errors.PluginError('\n'.join((
+                    'This package already exists in the product.',
+                    'Use "rbuild checkout %s" to checkout the existing '
+                    'package to modify its files, or give the new package '
+                    'a different name.' % packageName)))
+        else:
+            upstreamLatest = self._getUpstreamPackage(packageName)
+            if upstreamLatest:
+                self.handle.ui.warning('Package %s exists upstream.' \
+                    % packageName)
+                confirmReplace = self.handle.ui.getYn(
+                    'Do you want to replace the upstream version? (Y/N):')
+                if not confirmReplace:
+                    return
+
+            self.handle.facade.conary.createNewPackage(
+                                                packageName, currentLabel)
+            self.handle.ui.info('Created new package %r', packageName)
+        return
 
     def _getUpstreamPackage(self, packageName):
         product = self.handle.product

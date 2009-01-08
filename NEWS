@@ -3,6 +3,9 @@ Changes in @NEW@:
     * The interview process now asks the user if they want to set up rMakeUrl
       automatically to connect to a running rMake server on an rBA if
       possible. (RBLD-163)
+    * The checkout command with --new argument will now detach a package from
+      its parent if run against a package that has been shadowed on to the
+      product's label. (RBLD-30)
 
   o Bug Fixes:
     * The rebase plugin is now much more conservative, and will bail

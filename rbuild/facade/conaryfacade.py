@@ -26,6 +26,7 @@ import stat
 import types
 import urlparse
 
+from conary import clone
 from conary import conarycfg
 from conary import conaryclient
 from conary import checkin
@@ -722,6 +723,14 @@ class ConaryFacade(object):
                             for x in packageList ]
             self._getRepositoryClient().commitChangeSet(cs)
             return packageList
+
+    def detachPackage(self, troveSpec, targetLabel, message=None):
+        cfg = self.getConaryConfig()
+        if not message:
+            message = 'Automatic promote by rBuild.'
+        return clone.CloneTrove(cfg, targetLabel,
+            [troveSpec[0]+'='+troveSpec[1].asString()],
+            message=message)
 
     def getLatestPackagesOnLabel(self, label, keepComponents=False,
       keepGroups=False):
