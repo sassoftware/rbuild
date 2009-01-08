@@ -149,11 +149,13 @@ class Checkout(pluginapi.Plugin):
         existingPackage = self._getExistingPackage(packageName)
 
         if existingPackage:
-            if existingPackage[1].isShadow() and \
-               self.handle.ui.getYn(
-                '%s is shadowed on the current label.\n'
-                'Do you want to detach this package from its parent? (Y/N): ' \
-                % packageName ):
+            if existingPackage[1].isShadow(): 
+                confirmDetach = self.handle.ui.getYn(
+                    '%s is shadowed on the current label.\n'
+                    'Do you want to detach this package from its '
+                    'parent? (Y/N): '  % packageName )
+                if not confirmDetach:
+                    return
                 self.handle.facade.conary.detachPackage(
                     existingPackage, '/' + currentLabel, message)
                 self.handle.ui.info('Divorced package %s from its shadow.' \
