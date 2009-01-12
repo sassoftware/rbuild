@@ -1,4 +1,4 @@
-Changes in @NEW@:
+Changes in 0.15:
   o API Changes:
     * The expectations for API backward compatibility have been
       modified, as documented in the README file. (RBLD-166)
