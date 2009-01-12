@@ -25,12 +25,13 @@ and take action following successful actions.
 DEVELOPMENT
 ===========
 
-Note that until version 1.0 is released, public APIs are subject to
-change.  All documentation regarding stable interfaces is relevant
-only to published stable releases; it is not in force for alpha
-and beta releases, including 0.x releases and any automated builds.
+Versions 1.x will be focused on the command line.  Public python
+APIs will be generally stable and will not be changed without
+specific reason, but strong API stability will not be maintained.
+API changes will be documented in the NEWS file for versions 1.x
 
-Public interfaces will be kept stable.  The general rule is that API
+It is currently intended that when version 2.0 is released, public
+interfaces will be kept stable.  The general rule is that API
 stability allows making changes that should be backward-compatible
 in well-formed Python code.  For rBuild, "stable" is defined as:
  o  Adding optional keyword parameters is acceptable.
@@ -48,11 +49,15 @@ cannot be fixed without an interface change, the interface may
 be changed (and the change noted in the NEWS file), and we will
 make our best effort to mitigate the effects of the change.
 
+All documentation regarding stable interfaces is relevant
+only to published stable releases; it is not in force for alpha
+and beta releases, including 0.x releases and any automated builds.
+
 When interfaces are deprecated, the deprecated interface will be
 supported for a major release cycle.  That is, if an interface is
-deprecated during 1.x releases after 1.0 is released, it will be
-available during 2.x releases, and may be removed starting with 3.0.
-During 2.x, it will be possible to request that that API will raise
+deprecated during 2.x releases after 2.0 is released, it will be
+available during 3.x releases, and may be removed starting with 4.0.
+During 3.x, it will be possible to request that that API will raise
 rbuild.errors.DeprecatedInterfaceError; otherwise, the APIs will
 provide a warning (printed to standard error in the command-line
 use case).

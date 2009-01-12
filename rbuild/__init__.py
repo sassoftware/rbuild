@@ -16,7 +16,8 @@ The rBuild Appliance Developer Process Toolkit
 
 The C{rbuild} modules provide public interfaces for rBuild.
 These interfaces will be backward-compatible within major
-versions of rBuild.
+versions of rBuild, for certain versions of rBuild.  See
+the README for more details on interface compatibility.
 
 Module functions, classes, and class methods that do not start
 with a C{_} character are public.

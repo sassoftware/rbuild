@@ -1,4 +1,8 @@
 Changes in @NEW@:
+  o API Changes:
+    * The expectations for API backward compatibility have been
+      modified, as documented in the README file. (RBLD-166)
+
   o New Features:
     * The interview process now asks the user if they want to set up rMakeUrl
       automatically to connect to a running rMake server on an rBA if
