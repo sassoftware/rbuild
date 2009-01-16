@@ -58,16 +58,39 @@ class Promote(pluginapi.Plugin):
         cny = self.handle.facade.conary
 
         activeStage = store.getActiveStageName()
-        nextStage = store.getNextStageName(activeStage)
         activeLabel = product.getLabelForStage(activeStage)
+        nextStage = store.getNextStageName(activeStage)
+        nextLabel = product.getLabelForStage(nextStage)
 
-        fromTo = product.getPromoteMapsForStages(activeStage, nextStage)
-
+        # Collect a list of groups to promote.
         groupSpecs = [ '%s[%s]' % x for x in store.getGroupFlavors() ]
         ui.progress('Preparing to promote %d troves', len(groupSpecs))
         allTroves = cny._findTrovesFlattened(groupSpecs, activeLabel)
-        promotedList = cny.promoteGroups(allTroves, fromTo)
 
+        # Get a list of all labels that are in the product's search
+        # path (including subtroves).
+        platformLabels = set()
+        platformTroves = []
+        for searchElement in product.getGroupSearchPaths():
+            if searchElement.troveName:
+                version = searchElement.label
+                if searchElement.version:
+                    version += '/' + searchElement.version
+                platformTroves.append((searchElement.troveName, version, None))
+            elif searchElement.label:
+                platformLabels.add(searchElement.label)
+        platformLabels.update(cny.getAllLabelsFromTroves(platformTroves))
+
+        # Now get a list of all labels that are referenced by the
+        # groups to be promoted but are not in the platform. These will
+        # be "flattened" to the target label.
+        flattenLabels = cny.getAllLabelsFromTroves(allTroves) - platformLabels
+
+        # Now promote.
+        fromTo = product.getPromoteMapsForStages(activeStage, nextStage,
+                flattenLabels=flattenLabels)
+        ui.progress('Promoting %d troves', len(groupSpecs))
+        promotedList = cny.promoteGroups(allTroves, fromTo)
         promotedList = [ x for x in promotedList
                          if (':' not in x[0]
                              or x[0].split(':')[-1] == 'source') ]

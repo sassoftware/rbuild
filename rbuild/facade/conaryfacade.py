@@ -688,6 +688,24 @@ class ConaryFacade(object):
     def isGroupName(packageName):
         return trove.troveIsGroup(packageName)
 
+    def getAllLabelsFromTroves(self, troveSpecs):
+        """
+        Return the set of labels referenced by a number of troves.
+
+        @param troveTups: List of trovespec tuples to inspect
+        @type  troveTups: C{[troveSpecTuple]}
+        @rtype: C{set}
+        """
+        repos = self._getRepositoryClient()
+        fetchTups = self._findTrovesFlattened(troveSpecs)
+        labels = set()
+        for trove in repos.getTroves(fetchTups, withFiles=False):
+            labels.add(trove.getVersion().trailingLabel())
+            for subTroveTup in trove.iterTroveList(strongRefs=True, weakRefs=True):
+                labels.add(subTroveTup[1].trailingLabel())
+
+        return set(x.asString() for x in labels)
+
     def promoteGroups(self, groupList, fromTo):
         """
         Promote the troves in C{groupList} using the promote map in

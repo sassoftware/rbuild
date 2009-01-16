@@ -1,5 +1,10 @@
 Changes in @NEW@:
-
+  o New Features:
+    * "rbuild promote" will now "flatten" all troves that are not in
+      the product's search path (e.g. those from contrib.rpath.org) onto
+      the target label. Additionally, troves that are on the product's
+      label will be re-rooted so they no longer reference upstream
+      packages. (RBLD-168)
 
 Changes in 0.15:
   o API Changes:
