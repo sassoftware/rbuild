@@ -1,4 +1,4 @@
-Changes in @NEW@:
+Changes in 0.16:
   o New Features:
     * "rbuild promote" will now "flatten" all troves that are not in
       the product's search path (e.g. those from contrib.rpath.org) onto
