@@ -1,4 +1,11 @@
 Changes in @NEW@:
+  o New Features:
+    * rBuild now tests to make sure that the product definition has
+      at least one image defined before certain critical operations
+      that require that at least one image is defined.  Previously,
+      it would give various cryptic error messages as the result of
+      failed operations due to lack of defined images. (RBLD-171)
+
   o Bug Fixes:
     * Early in rBuild development, a workaround for insufficient
       definition of flavors for images was added.  This workaround is

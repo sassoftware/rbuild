@@ -208,6 +208,11 @@ class MissingGroupSearchPathElementError(RbuildError):
             "%(name)s=%(version)s[%(flavor)s] was not found")
     params = ['name', 'version', 'flavor']
 
+class MissingImageDefinitionError(RbuildError):
+    template = '\n'.join((
+        'Product Definition %(name)s contains no image definitions',
+        'Please add at least one image to your product definition'))
+    params = ['name']
 
 class RbuilderError(RbuildError):
     template = "rBuilder error %(error)s: %(frozen)r"
@@ -215,6 +220,7 @@ class RbuilderError(RbuildError):
 
 class RbuilderUserError(RbuilderError):
     template = 'Error retrieving user details: %(error)s: %(frozen)r'
+
 
 ## END rBuild Errors
 

@@ -82,6 +82,7 @@ class ProductStore(object):
     def getGroupFlavors(self):
         product = self._handle.product
         buildDefs = product.getBuildDefinitions()
+        self._assertImages(buildDefs)
         groupFlavors = [ (str(self.getBuildDefinitionGroupToBuild(x)),
                           str(x.getBuildBaseFlavor()))
                          for x in buildDefs ]
@@ -161,6 +162,7 @@ class ProductStore(object):
         """
         product = self._handle.product
         builds = product.getBuildsForStage(stageName)
+        self._assertImages(builds)
         flavors = [ x.getBuildBaseFlavor() for x in builds ]
         fullFlavors = self._handle.facade.conary._overrideFlavors(
                                              str(product.getBaseFlavor()),
@@ -232,3 +234,7 @@ class ProductStore(object):
                 (alr.getTroveName(), alr.getLabel()))
         return autoLoadRecipes
 
+    def _assertImages(self, images):
+        if not images:
+            raise errors.MissingImageDefinitionError(
+                name=self._handle.product.getProductName())
