@@ -81,13 +81,13 @@ class ProductStore(object):
 
     def getGroupFlavors(self):
         product = self._handle.product
+        buildDefs = product.getBuildDefinitions()
         groupFlavors = [ (str(self.getBuildDefinitionGroupToBuild(x)),
                           str(x.getBuildBaseFlavor()))
-                         for x in product.getBuildDefinitions() ]
+                         for x in buildDefs ]
         fullFlavors = self._handle.facade.conary._overrideFlavors(
                                              str(product.getBaseFlavor()),
                                              [x[1] for x in groupFlavors])
-        fullFlavors = [ self._addInExtraFlavor(x) for x in fullFlavors ]
         return [(x[0][0], x[1]) for x in zip(groupFlavors, fullFlavors)]
 
     def getBuildDefinitionGroupToBuild(self, buildDefinition):
@@ -121,7 +121,7 @@ class ProductStore(object):
 
     def getSourceGroupMatch(self, buildDefinition):
         """
-        Find a source group defined on a different build defintion that has a
+        Find a source group defined on a different build definition that has a
         matching build flavor and image group as the given build definition.
 
         @param buildDefinition: build definition defining what flavor and
@@ -165,21 +165,7 @@ class ProductStore(object):
         fullFlavors = self._handle.facade.conary._overrideFlavors(
                                              str(product.getBaseFlavor()),
                                              flavors)
-        fullFlavors = [ self._addInExtraFlavor(x) for x in fullFlavors ]
         return zip(builds, fullFlavors)
-
-    # temporary hack until RPCL-13 is complete
-    def _addInExtraFlavor(self, flavor):
-        majorArch = self._handle.facade.conary._getFlavorArch(flavor)
-        if majorArch == 'x86':
-            extraFlavor = ('~!grub.static'
-                           ' is: x86(~i486,~i586,~i686,~cmov,~sse,~sse2)')
-        else:
-            extraFlavor = ('~grub.static is: x86_64'
-                           ' x86(~i486,~i586,~i686,~cmov,~sse,~sse2)')
-        return self._handle.facade.conary._overrideFlavors(flavor,
-                                                           [extraFlavor])[0]
-
 
     def getPackageJobId(self):
         return self.getStatus('packageJobId')

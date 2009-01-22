@@ -1,4 +1,9 @@
 Changes in @NEW@:
+  o Bug Fixes:
+    * Early in rBuild development, a workaround for insufficient
+      definition of flavors for images was added.  This workaround is
+      no longer necessary and may be harmful in some cases, so it
+      has been removed. (RBLD-172)
 
 Changes in 0.16:
   o New Features:
