@@ -1,4 +1,7 @@
-Changes in @NEW@:
+Changes in 0.17:
+  o Beta:
+    * rBuild is now in beta release status.
+
   o New Features:
     * rBuild now tests to make sure that the product definition has
       at least one image defined before certain critical operations
