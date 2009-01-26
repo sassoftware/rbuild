@@ -25,7 +25,7 @@ and take action following successful actions.
 DEVELOPMENT
 ===========
 
-Versions 1.x will be focused on the command line.  Public python
+Versions 1.x are focused on the command line.  Public python
 APIs will be generally stable and will not be changed without
 specific reason, but strong API stability will not be maintained.
 API changes will be documented in the NEWS file for versions 1.x
@@ -54,13 +54,13 @@ only to published stable releases; it is not in force for alpha
 and beta releases, including 0.x releases and any automated builds.
 
 When interfaces are deprecated, the deprecated interface will be
-supported for a major release cycle.  That is, if an interface is
-deprecated during 2.x releases after 2.0 is released, it will be
-available during 3.x releases, and may be removed starting with 4.0.
-During 3.x, it will be possible to request that that API will raise
-rbuild.errors.DeprecatedInterfaceError; otherwise, the APIs will
-provide a warning (printed to standard error in the command-line
-use case).
+supported for a major release cycle when feasible.  That is, if an
+interface is deprecated during 2.x releases after 2.0 is released,
+it will be available during 3.x releases, and may be removed starting
+with 4.0.  During 3.x, it will be possible to request that that
+API will raise rbuild.errors.DeprecatedInterfaceError; otherwise,
+the APIs will provide a warning (printed to standard error in the
+command-line use case).
 
 API documentation is available at http://cvs.rpath.com/rbuild-docs/
 or by running "make html" and viewing docs/developer/index.html (requires

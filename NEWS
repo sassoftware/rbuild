@@ -1,4 +1,8 @@
-Changes in @NEW@:
+Changes in 1.0:
+  o General Availability:
+    * rBuild is now generally available for use as a command-line tool.
+      See the README file for more information on using rBuild directly
+      from Python programs.
 
 Changes in 0.17:
   o Beta:
