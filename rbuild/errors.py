@@ -112,8 +112,8 @@ class RbuildError(RbuildBaseError):
     It may be raised directly but creating a new subclass for each
     specific case is recommended.
     """
-    template = "%(message)s"
-    params = ['message']
+    template = "%(msg)s"
+    params = ['msg']
 
 
 class PluginError(RbuildBaseError):
@@ -125,8 +125,8 @@ class PluginError(RbuildBaseError):
     by rBuild plugins. It may be raised directly but creating a new
     subclass for each specific case is recommended.
     """
-    template = "%(message)s"
-    params = ['message']
+    template = "%(msg)s"
+    params = ['msg']
 
 
 #Uncomment this, possibly modifying it, when we add deprecation
@@ -152,16 +152,16 @@ class IncompleteInterfaceError(RbuildBaseError):
     of filesystem operations might raise this error if called in
     the context of repository operations.
     """
-    template = "Unsupported interface: %(message)s"
-    params = ['message']
+    template = "Unsupported interface: %(msg)s"
+    params = ['msg']
 
 
 class BadParameterError(RbuildBaseError):
     """
     Raised when a command is given bad parameters at the command line.
     """
-    template = "%(message)s"
-    params = ['message']
+    template = "%(msg)s"
+    params = ['msg']
 
 
 ## BEGIN Internal Errors
@@ -191,8 +191,8 @@ class InternalRmakeFacadeError(RbuildError):
     Raised when rMake returns results that rBuild does not know how
     to interpret.
     """
-    template = "Unexpected results from rMake: %(message)r"
-    params = ['message']
+    template = "Unexpected results from rMake: %(msg)r"
+    params = ['msg']
 
 ## END Internal Errors
 
