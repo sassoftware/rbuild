@@ -104,8 +104,10 @@ Please answer the following questions to begin using rBuild:
                     "running on the rBA?  Choose 'N' to use a local "
                     "rMake server. (Y/N):", default=False)
         if useRbaRmake:
-           rmakeUrl = serverUrl + ':' + str(constants.RMAKE_PORT)
-           return rmakeUrl
+            rmakeUrl = '%s:%s' %(
+                serverUrl.replace('http:', 'https:'),
+                str(constants.RMAKE_PORT))
+            return rmakeUrl
         else:
             return None
 
