@@ -5,6 +5,12 @@ Changes in @NEW@:
     * The rMakeUrl set automatically during initial configuration setup
       when using rBuilder Appliance now defaults to https. (RBLD-182)
 
+  o Bug Fixes:
+    * The "rbuild status" command will no longer run in an infinite
+      loop when asked for the status of a directory that does not
+      exist.  There may be other ways that this condition would
+      be triggered that have also been fixed. (RBLD-188)
+
 Changes in 1.0:
   o General Availability:
     * rBuild is now generally available for use as a command-line tool.

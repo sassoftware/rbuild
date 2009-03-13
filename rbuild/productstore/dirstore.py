@@ -37,6 +37,8 @@ def getDefaultProductDirectory(dirName=None, error=False):
     """
     if not dirName:
         dirName = os.getcwd()
+    elif not os.path.exists(dirName):
+        raise errors.MissingProductStoreError(dirName)
     origDirName = dirName
 
     productPath = dirName \
