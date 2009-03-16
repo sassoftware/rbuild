@@ -1,7 +1,7 @@
 Changes in @NEW@:
   o New Features:
     * Several small changes were made for compatibility with Python
-      2.6. (RBLD-176)
+      2.6. (RBLD-176, RBLD-165)
     * The rMakeUrl set automatically during initial configuration setup
       when using rBuilder Appliance now defaults to https. (RBLD-182)
 
