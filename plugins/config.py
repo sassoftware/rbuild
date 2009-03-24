@@ -95,7 +95,7 @@ Please answer the following questions to begin using rBuild:
 
         return serverUrl
 
-    def getRmakeUrl(self, serverUrl):
+    def getRmakeUrl(self, serverUrl, rmakeUrl=None):
         ui = self.handle.ui
         useRbaRmake = False
         if not serverUrl.endswith('rpath.org'):
@@ -107,9 +107,7 @@ Please answer the following questions to begin using rBuild:
             rmakeUrl = '%s:%s' %(
                 serverUrl.replace('http:', 'https:'),
                 str(constants.RMAKE_PORT))
-            return rmakeUrl
-        else:
-            return None
+        return rmakeUrl
 
     def getUserPass(self, defaultUser, defaultPassword):
         ui = self.handle.ui
@@ -134,19 +132,47 @@ Please answer the following questions to begin using rBuild:
         return reEnterUserPasswd            
 
     def updateConfig(self, cfg=None):
+        ui = self.handle.ui
+        facade = self.handle.facade
+
         if cfg is None:
             cfg = self.handle.getConfig()
-        ui = self.handle.ui
+
+        rBuilderAuth = facade.rbuilder._getBaseServerUrlData()
+        rBuilderServerUrl, rBuilderUser, rBuilderPassword = rBuilderAuth
+
+        rMakeCfg = facade.rmake._getBaseRmakeConfig()
+
+        conaryCfg = facade.conary._getBaseConaryConfig()
+
+        if cfg.serverUrl is None:
+            cfg.serverUrl = rBuilderServerUrl
+
+        if cfg.name:
+            defaultName = cfg.name
+        else:
+            defaultName = conaryCfg.name
+
+        if cfg.contact:
+            defaultContact = cfg.contact
+        else:
+            defaultContact = conaryCfg.contact
+
         if cfg.user:
             defaultUser = cfg.user[0]
             defaultPassword = cfg.user[1]
         else:
-            defaultUser = defaultPassword = None
+            defaultUser = rBuilderUser
+            defaultPassword = rBuilderPassword
+
+        if cfg.rmakeUrl:
+            rmakeUrl = cfg.rmakeUrl
+        else:
+            rmakeUrl = rMakeCfg.rmakeUrl
 
         authorized = False
         reEnterUrl = True
         reEnterUserPasswd = True
-        rmakeUrl = None
 
         while not authorized:
             if reEnterUrl:
@@ -182,20 +208,26 @@ Please answer the following questions to begin using rBuild:
             else:
                 ui.write('rBuilder authorized successfully.')
 
-        rmakeUrl = self.getRmakeUrl(serverUrl)
+        rmakeUrl = self.getRmakeUrl(serverUrl, rmakeUrl)
         if rmakeUrl:
             cfg.rmakeUrl = rmakeUrl
+
+        # In a fresh setup, rmakeUser and user will be the same and
+        # so rmakeUser should not be specified; we preserve existing
+        # rmakeUser for backwards compatibility with existing setups
+        # only.  We do not prompt for an alternative rmakeUser setting.
+        if rMakeCfg.rmakeUser is not None:
+            cfg.rmakeUser = rMakeCfg.rmakeUser
             
         cfg.user = (user, passwd)
         cfg.serverUrl = serverUrl
         cfg.name = ui.getResponse('Name to display when committing',
-                                  default=cfg.name)
+                                  default=defaultName)
         cfg.contact = ui.getResponse('Contact - usually email or url',
-                                     default=cfg.contact)
+                                     default=defaultContact)
         if 'HOME' in os.environ:
             oldumask = os.umask(077)
             try:
                 cfg.writeToFile(os.environ['HOME'] + '/.rbuildrc')
             finally:
                 os.umask(oldumask)
-

@@ -288,6 +288,16 @@ class ConaryFacade(object):
             self._conaryCfg = cfg
         return self._conaryCfg
 
+    def _getBaseConaryConfig(self):
+        """
+        Fetches an B{opaque} conary config object with no rBuild
+        configuration data included.
+        @return: C{conarycfg.ConaryConfiguration} B{opaque} object
+        """
+        return conarycfg.ConaryConfiguration(readConfigFiles = True,
+                                             ignoreErrors = True,
+                                             readProxyValuesFirst = True)
+
     def checkout(self, package, label, targetDir=None):
         """
         Create a subdirectory containing a checkout of a conary

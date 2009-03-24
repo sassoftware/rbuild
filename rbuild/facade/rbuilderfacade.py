@@ -19,6 +19,8 @@ plugins.  It provides public methods which are only to be accessed
 via C{handle.facade.rbuilder} which is automatically available to
 all plugins through the C{handle} object.
 """
+import os
+import urllib
 import urllib2
 import socket
 
@@ -26,6 +28,7 @@ from conary.conaryclient import cmdline as conarycmdline
 from conary.deps import deps as conarydeps
 from conary.lib import log
 from conary.lib import util
+from conary.lib.cfg import ConfigFile
 
 from rpath_common import proddef
 from rbuild import constants
@@ -34,13 +37,23 @@ from rbuild import facade
 
 import time
 
+class _rBuilderConfig(ConfigFile):
+    serverUrl = None
+
+    def __init__(self):
+        ConfigFile.__init__(self)
+        if os.environ.has_key('HOME'):
+            fn = '/'.join((os.environ['HOME'], '.rbuilderrc'))
+            self.read(fn, exception=False)
+
+
 class RbuilderFacade(object):
     """
     The rBuild rBuilder facade.
 
     Note that the contents of objects marked as B{opaque} may vary
-    according to the version of rMake and conary in use, and the contents
-    of such objecst are not included in the stable rBuild API.
+    according to the version of rMake and Conary in use, and the contents
+    of such objects are not included in the stable rBuild API.
     """
 
     def __init__(self, handle):
@@ -53,6 +66,35 @@ class RbuilderFacade(object):
     def _getRbuilderClient(self):
         cfg = self._handle.getConfig()
         return RbuilderClient(cfg.serverUrl, cfg.user[0], cfg.user[1])
+
+    def _getBaseServerUrl(self):
+        """
+        Fetch serverUrl from ~/.rbuilderrc if it exists and is specified
+        """
+        rbcfg = _rBuilderConfig()
+        return rbcfg.serverUrl
+
+    def _getBaseServerUrlData(self):
+        """
+        Fetch serverUrl from ~/.rbuilderrc if it exists and is specified;
+        removes user and password from the URL and returns them separately.
+        @return serverUrl, user, password
+        """
+        serverUrl = self._getBaseServerUrl()
+        if not serverUrl:
+            return (None, None, None)
+        scheme, rest = serverUrl.split(':', 1)
+        host = urllib.splithost(rest)[0]
+        user = urllib.splituser(host)[0]
+        if user:
+            user, password = urllib.splitpasswd(user)
+        else:
+            password = None
+        if password:
+            serverUrl = serverUrl.replace(':%s' %password, '', 1)
+        if user:
+            serverUrl = serverUrl.replace('%s@' %user, '', 1)
+        return serverUrl, user, password
 
     def buildAllImagesForStage(self):
         client = self._getRbuilderClient()

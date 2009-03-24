@@ -4,12 +4,19 @@ Changes in @NEW@:
       2.6. (RBLD-176, RBLD-165)
     * The rMakeUrl set automatically during initial configuration setup
       when using rBuilder Appliance now defaults to https. (RBLD-182)
+    * During initial configuration, rBuild now looks at relevant
+      configuration items previously defined in .conaryrc, .rmakerc,
+      and .rbuilderrc and adds them to .rbuildrc. (RBLD-190)
 
   o Bug Fixes:
     * The "rbuild status" command will no longer run in an infinite
       loop when asked for the status of a directory that does not
       exist.  There may be other ways that this condition would
       be triggered that have also been fixed. (RBLD-188)
+
+  o API Changes:
+    * The plugins.Config.getRmakeUrl() method now takes an optional
+      rmakeUrl argument which provides a fallback value. (RBLD-190)
 
 Changes in 1.0:
   o General Availability:

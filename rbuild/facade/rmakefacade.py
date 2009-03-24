@@ -47,6 +47,15 @@ class RmakeFacade(object):
         self._rmakeConfigWithContexts = None
         self._plugins = None
 
+    def _getBaseRmakeConfig(self):
+        """
+        Fetches an B{opaque} rmake build config object with no rBuild
+        configuration data included.
+        @return: C{rmake.build.buildcfg.BuildConfiguration} B{opaque} object
+        """
+        return buildcfg.BuildConfiguration(readConfigFiles = True,
+                                           ignoreErrors = True)
+
     def _getRmakeConfig(self, useCache=True):
         """
         Returns an rmake configuration file that matches the product associated
