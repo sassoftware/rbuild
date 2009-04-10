@@ -307,6 +307,9 @@ class ConaryFacade(object):
         @param label: label to find package on
         @type label: string
         @param targetDir: subdirectory into which to check out the package,
+        This is the final directory into which the checked-out files
+        will be placed, not the parent directory in which a subdirectory
+        will be created.
         defaults to C{package}
         @type targetDir: string
         """
@@ -504,7 +507,7 @@ class ConaryFacade(object):
 
 
 
-    def createNewPackage(self, package, label):
+    def createNewPackage(self, package, label, targetDir=None):
         """
         Create a subdirectory containing files to initialize a new
         conary source package.  Similar to the C{cvc newpkg} command.
@@ -512,9 +515,12 @@ class ConaryFacade(object):
         @type package: string
         @param label: label to create package on
         @type label: string
+        @param targetDir: directory to create new package in (default
+        is current working directory)
+        @type targetDir: string
         """
         checkin.newTrove(self._getRepositoryClient(), self.getConaryConfig(),
-                         '%s=%s' % (package, label))
+                         '%s=%s' % (package, label), dir=targetDir)
 
     def shadowSource(self, name, version, targetLabel):
         """

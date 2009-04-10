@@ -27,19 +27,21 @@ def derive(handle, troveToDerive):
     @param handle: rbuild handle containing information about the
     active stage.
     @param troveToDerive: troveTuple of binary which we wish to derive
+    @return: directory in which checkout was created
     """
 
     ui = handle.ui
     targetLabel = handle.productStore.getActiveStageLabel()
+    targetDir = handle.productStore.getCheckoutDirectory(troveToDerive[0])
     troveName = troveToDerive[0]
     # displaying output along the screen allows there to be a record
     # of what operations were performed.  Since this command is
     # an aggregate of several commands I think that is appropriate,
     # rather than simply using a progress callback.
-    ui.info('Shadowing %s=%s[%s] onto %s' % (troveToDerive[0],
-                                             troveToDerive[1],
-                                             troveToDerive[2],
-                                             targetLabel))
+    ui.info('Shadowing %s=%s[%s] onto %s', troveToDerive[0],
+                                           troveToDerive[1],
+                                           troveToDerive[2],
+                                           targetLabel)
     conaryFacade = handle.facade.conary
 
     conaryFacade.shadowSourceForBinary(troveToDerive[0],
@@ -47,14 +49,18 @@ def derive(handle, troveToDerive):
                                        troveToDerive[2],
                                        targetLabel)
     troveName = troveName.split(':')[0]
-    conaryFacade.checkout(troveName, targetLabel)
+    conaryFacade.checkout(troveName, targetLabel, targetDir=targetDir)
     _writeDerivedRecipe(ui, conaryFacade, troveName, directory=troveName)
 
-    extractDir = '%s/%s/_ROOT_' % (os.getcwd(), troveName)
-    handle.ui.info('extracting files from %s=%s[%s]' % troveToDerive)
+    extractDir = '%s/_ROOT_' %targetDir
+    handle.ui.info('extracting files from %s=%s[%s] into %s',
+                   troveToDerive[0], troveToDerive[1], troveToDerive[2],
+                   extractDir)
     troveName, version, flavor = troveToDerive
     conaryFacade.checkoutBinaryPackage(troveName, version, flavor,
             extractDir, tagScript='/dev/null')
+
+    return targetDir
 
 def _writeDerivedRecipe(ui, conaryFacade, troveName, directory):
     recipeName = troveName + '.recipe'

@@ -105,23 +105,28 @@ class Checkout(pluginapi.Plugin):
 
 
     def checkoutPackage(self, packageName):
-        currentLabel = self.handle.productStore.getActiveStageLabel()
-        self.handle.facade.conary.checkout(packageName, currentLabel)
-        return True
+        productStore = self.handle.productStore
+        currentLabel = productStore.getActiveStageLabel()
+        targetDir = productStore.getCheckoutDirectory(packageName)
+        self.handle.facade.conary.checkout(
+            packageName, currentLabel, targetDir=targetDir)
+        return targetDir
 
     def derivePackage(self, packageName):
+        ui = self.handle.ui
         upstreamLatest = self._getUpstreamPackage(packageName)
         if not upstreamLatest:
             raise errors.PluginError(
                         'cannot derive %s: no upstream binary' % packageName)
-        derive.derive(self.handle, upstreamLatest)
-        self.handle.ui.info('Derived %s from %s=%s[%s].', 
-            packageName, *upstreamLatest)
-        self.handle.ui.info(
-                'Edit recipe to add changes your changes to the binary package')
+        targetDir = derive.derive(self.handle, upstreamLatest)
+        ui.info('Derived %s in %s from %s=%s[%s]',
+            packageName, targetDir, *upstreamLatest)
+        ui.info('Edit the recipe to add your changes to the binary package.')
 
     def shadowPackage(self, packageName):
-        origName, version, flavor = self.handle.facade.conary.parseTroveSpec(packageName)
+        conaryFacade = self.handle.facade.conary
+        productStore = self.handle.productStore
+        origName, version, flavor = conaryFacade.parseTroveSpec(packageName)
         package = None
 
         if version:
@@ -133,32 +138,38 @@ class Checkout(pluginapi.Plugin):
         else:
             package = self._getUpstreamPackage(packageName)
             if package is None:
+                # FIXME: since we shadow only source, why care about binary?
                 raise errors.PluginError(
                         'cannot shadow %s: no upstream binary' % packageName)
 
         name, version, flavor = package            
 
-        currentLabel = self.handle.productStore.getActiveStageLabel()
-        self.handle.facade.conary.shadowSourceForBinary(name, version, flavor,
+        currentLabel = productStore.getActiveStageLabel()
+        conaryFacade.shadowSourceForBinary(name, version, flavor,
                                                         currentLabel)
-        self.checkoutPackage(origName)
-        self.handle.ui.info('Shadowed package %r', packageName)
+        targetDir = self.checkoutPackage(origName)
+        self.handle.ui.info('Shadowed package %r in %s', packageName,
+                self._relPath(os.getcwd(), targetDir))
 
     def newPackage(self, packageName, message=None):
-        currentLabel = self.handle.productStore.getActiveStageLabel()
+        ui = self.handle.ui
+        conaryFacade = self.handle.facade.conary
+        productStore = self.handle.productStore
+        currentLabel = productStore.getActiveStageLabel()
+        targetDir = productStore.getCheckoutDirectory(packageName)
         existingPackage = self._getExistingPackage(packageName)
 
         if existingPackage:
             if existingPackage[1].isShadow(): 
-                confirmDetach = self.handle.ui.getYn(
+                confirmDetach = ui.getYn(
                     '%s is shadowed on the current label.\n'
                     'Do you want to detach this package from its '
                     'parent? (Y/N): '  % packageName )
                 if not confirmDetach:
                     return
-                self.handle.facade.conary.detachPackage(
+                conaryFacade.detachPackage(
                     existingPackage, '/' + currentLabel, message)
-                self.handle.ui.info('Detached package %s from its parent.' \
+                ui.info('Detached package %s from its parent.' \
                     % packageName)
             else:                    
                 raise errors.PluginError('\n'.join((
@@ -169,16 +180,16 @@ class Checkout(pluginapi.Plugin):
         else:
             upstreamLatest = self._getUpstreamPackage(packageName)
             if upstreamLatest:
-                self.handle.ui.warning('Package %s exists upstream.' \
-                    % packageName)
-                confirmReplace = self.handle.ui.getYn(
+                ui.warning('Package %s exists upstream.' %packageName)
+                confirmReplace = ui.getYn(
                     'Do you want to replace the upstream version? (Y/N):')
                 if not confirmReplace:
                     return
 
-            self.handle.facade.conary.createNewPackage(
-                                                packageName, currentLabel)
-            self.handle.ui.info('Created new package %r', packageName)
+            conaryFacade.createNewPackage(packageName, currentLabel,
+                                          targetDir=targetDir)
+            ui.info('Created new package %r in %s', packageName,
+                self._relPath(os.getcwd(), targetDir))
         return
 
     def _getUpstreamPackage(self, packageName):
@@ -206,3 +217,35 @@ class Checkout(pluginapi.Plugin):
                                                         label, 
                                                         allowMissing=True)
         return troveTup
+
+    @staticmethod
+    def _relPath(fromPath, toPath):
+        """
+        Print the relative path from directory fromPath to directory toPath
+        If C{fromPath} is from C{os.getcwd()} then the output of this
+        command should be a relative path that would be appropriate for
+        the cd command, because this function is used to display paths
+        to the user that would be used for this purpose.
+        @param fromPath: directory name from which to construct a
+        relative symlink
+        @param toPath: directory name to which to construct a relative
+        symlink
+        @return: relative symlink from fromPath to toPath
+        """
+        # Note that abspath also normalizes
+        absFromPath = os.path.abspath(fromPath)
+        absToPath = os.path.abspath(toPath)
+        if absFromPath == absToPath:
+            # identical paths
+            return '.'
+        fromPathList = absFromPath.split('/')
+        toPathList = absToPath.split('/')
+        while fromPathList and toPathList and fromPathList[0] == toPathList[0]:
+            fromPathList.pop(0)
+            toPathList.pop(0)
+
+        if not toPathList:
+            # toPath is a subdirectory of fromPath
+            return os.path.basename(toPath)
+
+        return (len(fromPathList) * "../") + '/'.join(toPathList)

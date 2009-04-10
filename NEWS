@@ -7,6 +7,9 @@ Changes in @NEW@:
     * During initial configuration, rBuild now looks at relevant
       configuration items previously defined in .conaryrc, .rmakerc,
       and .rbuilderrc and adds them to .rbuildrc. (RBLD-190)
+    * The "rbuild checkout" command now normalizes the checkout
+      directory, so that packages will not be checked out inside
+      other package checkout directories. (RBLD-88)
 
   o Bug Fixes:
     * The "rbuild status" command will no longer run in an infinite
@@ -17,6 +20,12 @@ Changes in @NEW@:
   o API Changes:
     * The plugins.Config.getRmakeUrl() method now takes an optional
       rmakeUrl argument which provides a fallback value. (RBLD-190)
+    * The CheckoutProductStore class now has a getCheckoutDirectory()
+      method to provide a canonical path for a source checkout. (RBLD-88)
+    * The createNewPackage() method in the conary facade now takes an
+      optional targetDir keyword argument. (RBLD-88)
+    * rbuild_plugins.Checkout.checkoutPackage() now returns the name
+      of the directory created or updated, instead of True. (RBLD-88)
 
 Changes in 1.0:
   o General Availability:

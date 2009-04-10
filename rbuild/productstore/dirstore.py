@@ -170,6 +170,20 @@ class CheckoutProductStore(ProductStore):
         else:
             return None
 
+    def getCheckoutDirectory(self, packageName):
+        """
+        Provides a canonical directory name relative to the current
+        active stage for a package checkout.  This directory may or
+        may not exist.
+        @param packageName: name of package
+        @return: string containing full directory name for checkout
+        """
+        # Note: may have an additional keyword paramater added later
+        # for handling the non-default label case, where the directory
+        # into which to check out would be different
+        return os.path.normpath('%s/%s'
+            %(self.getStageDirectory(), packageName))
+
     def getEditedRecipeDicts(self, stageName = None):
         """
         @param stageName: (None) Stage name to inspect relative to the
