@@ -14,6 +14,7 @@
 
 import datetime
 
+from rbuild import errors
 from rbuild import pluginapi
 from rbuild.pluginapi import command
 
@@ -64,6 +65,8 @@ class BuildImagesCommand(command.BaseCommand):
                 releaseId = handle.BuildImages.buildRelease(jobId,
                     name=name, version=version, description=description)
                 handle.productStore.setStageReleaseId(releaseId)
+            if not handle.facade.rmake.isJobBuilt(jobId):
+                raise errors.PluginError('Image build failed')
         elif release:
             handle.ui.writeError('Not grouping built images into a release'
                                  ' due to --no-watch option.')

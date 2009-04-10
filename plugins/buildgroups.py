@@ -12,6 +12,7 @@
 # full details.
 #
 
+from rbuild import errors
 from rbuild import pluginapi
 from rbuild.pluginapi import command
 
@@ -34,15 +35,19 @@ class BuildGroupsCommand(command.BaseCommand):
         watch = not argSet.pop('no-watch', False)
         commit = not argSet.pop('no-commit', False)
         message = argSet.pop('message', None)
+        success = True
         _, groupList, = self.requireParameters(args, allowExtra=True)
         if not groupList:
             jobId = handle.BuildGroups.buildAllGroups()
         else:
             jobId = handle.BuildGroups.buildGroups(groupList)
         if watch and commit:
-            handle.Build.watchAndCommitJob(jobId, message)
+            success = handle.Build.watchAndCommitJob(jobId, message)
         elif watch:
-            handle.Build.watchJob(jobId)
+            success = handle.Build.watchJob(jobId)
+
+        if not success:
+            raise errors.PluginError('Group build failed')
 
 
 class BuildGroups(pluginapi.Plugin):

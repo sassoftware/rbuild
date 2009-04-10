@@ -304,22 +304,24 @@ class RmakeFacade(object):
         """
         Waits for the job to commit and watches.
         @param jobId: id of the job to watch and commit.
+        @return: True if the watch and commit succeeds
         """
         if not message:
             message='Automatic commit by rbuild'
 
         client = self._getRmakeHelper()
-        client.watch(jobId, commit=True, showTroveLogs=True,
-                showBuildLogs=True, message=message)
+        return client.watch(jobId, commit=True, showTroveLogs=True,
+                            showBuildLogs=True, message=message)
 
     def watchJob(self, jobId):
         """
         Output progress of the job to stdout.
         @param jobId: id of the job to watch
+        @return: True if the watch succeeds
         """
         client = self._getRmakeHelper()
-        client.watch(jobId, showTroveLogs=True, showBuildLogs=True,
-                     exitOnFinish=True)
+        return client.watch(jobId, showTroveLogs=True, showBuildLogs=True,
+                            exitOnFinish=True)
 
     def displayJob(self, jobId, troveList=None, showLogs=False):
         client = self._getRmakeHelper()

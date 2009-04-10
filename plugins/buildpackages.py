@@ -12,6 +12,7 @@
 # full details.
 #
 
+from rbuild import errors
 from rbuild import pluginapi
 from rbuild.pluginapi import command
 
@@ -55,6 +56,7 @@ class BuildPackagesCommand(command.BaseCommand):
         recurse = not argSet.pop('no-recurse', False)
         refreshArg = argSet.pop('refresh', False)
         message = argSet.pop('message', None)
+        success = True
         _, packageList, = self.requireParameters(args, allowExtra=True)
         if not packageList:
             if refreshArg:
@@ -65,10 +67,12 @@ class BuildPackagesCommand(command.BaseCommand):
                 handle.BuildPackages.refreshPackages(packageList)
             jobId = handle.BuildPackages.buildPackages(packageList, recurse)
         if watch and commit:
-            handle.Build.watchAndCommitJob(jobId, message)
+            success = handle.Build.watchAndCommitJob(jobId, message)
         elif watch:
-            handle.Build.watchJob(jobId)
+            success = handle.Build.watchJob(jobId)
 
+        if not success:
+            raise errors.PluginError('Package build failed')
 
 class BuildPackages(pluginapi.Plugin):
 

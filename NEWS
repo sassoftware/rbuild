@@ -16,6 +16,8 @@ Changes in @NEW@:
       loop when asked for the status of a directory that does not
       exist.  There may be other ways that this condition would
       be triggered that have also been fixed. (RBLD-188)
+    * The "rbuild build" commands now exit with a non-zero exit
+      code if the underlying rMake job fails. (RBLD-181)
 
   o API Changes:
     * The plugins.Config.getRmakeUrl() method now takes an optional
@@ -26,6 +28,8 @@ Changes in @NEW@:
       optional targetDir keyword argument. (RBLD-88)
     * rbuild_plugins.Checkout.checkoutPackage() now returns the name
       of the directory created or updated, instead of True. (RBLD-88)
+    * The facade.rmake.watchAndCommitJob() and facade.rmake.watchJob()
+      methods now return a boolean indication of success. (RBLD-181)
 
 Changes in 1.0:
   o General Availability:
