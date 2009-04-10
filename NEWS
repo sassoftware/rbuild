@@ -18,6 +18,9 @@ Changes in @NEW@:
       be triggered that have also been fixed. (RBLD-188)
     * The "rbuild build" commands now exit with a non-zero exit
       code if the underlying rMake job fails. (RBLD-181)
+    * The "rbuild checkout" command no longer tracebacks when
+      called from outside a product checkout; instead, it suggests
+      "rbuild init" as the most likely alternative. (RBLD-122)
 
   o API Changes:
     * The plugins.Config.getRmakeUrl() method now takes an optional

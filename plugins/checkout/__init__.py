@@ -207,6 +207,11 @@ class Checkout(pluginapi.Plugin):
         return None
 
     def _getExistingPackage(self, packageName):
+        if not self.handle.productStore:
+            # Neither new nor checkout functions outside of a product store
+            raise errors.PluginError(
+                'Current directory is not part of a product.\n'
+                'To initialize a new product directory, use "rbuild init"')
         currentLabel = self.handle.productStore.getActiveStageLabel()
         return self.handle.facade.conary._findTrove(packageName + ':source',
                                                     currentLabel,
