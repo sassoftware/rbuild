@@ -53,7 +53,7 @@ def derive(handle, troveToDerive):
     _writeDerivedRecipe(ui, conaryFacade, troveName, directory=troveName)
 
     extractDir = '%s/_ROOT_' %targetDir
-    handle.ui.info('extracting files from %s=%s[%s] into %s',
+    handle.ui.info('Extracting files from %s=%s[%s] into %s',
                    troveToDerive[0], troveToDerive[1], troveToDerive[2],
                    extractDir)
     troveName, version, flavor = troveToDerive

@@ -119,7 +119,7 @@ class Checkout(pluginapi.Plugin):
             raise errors.PluginError(
                         'cannot derive %s: no upstream binary' % packageName)
         targetDir = derive.derive(self.handle, upstreamLatest)
-        ui.info('Derived %s in %s from %s=%s[%s]',
+        ui.info('Derived %r in %r from %s=%s[%s]',
             packageName, targetDir, *upstreamLatest)
         ui.info('Edit the recipe to add your changes to the binary package.')
 
@@ -148,7 +148,7 @@ class Checkout(pluginapi.Plugin):
         conaryFacade.shadowSourceForBinary(name, version, flavor,
                                                         currentLabel)
         targetDir = self.checkoutPackage(origName)
-        self.handle.ui.info('Shadowed package %r in %s', packageName,
+        self.handle.ui.info('Shadowed package %r in %r', packageName,
                 self._relPath(os.getcwd(), targetDir))
 
     def newPackage(self, packageName, message=None):
@@ -188,7 +188,7 @@ class Checkout(pluginapi.Plugin):
 
             conaryFacade.createNewPackage(packageName, currentLabel,
                                           targetDir=targetDir)
-            ui.info('Created new package %r in %s', packageName,
+            ui.info('Created new package %r in %r', packageName,
                 self._relPath(os.getcwd(), targetDir))
         return
 
@@ -249,8 +249,8 @@ class Checkout(pluginapi.Plugin):
             fromPathList.pop(0)
             toPathList.pop(0)
 
-        if not toPathList:
-            # toPath is a subdirectory of fromPath
-            return os.path.basename(toPath)
-
-        return (len(fromPathList) * "../") + '/'.join(toPathList)
+        upDots = '/'.join((len(fromPathList) * [".."]))
+        downDirs = '/'.join(toPathList)
+        if upDots and downDirs:
+            downDirs = '/' + downDirs
+        return upDots + downDirs
