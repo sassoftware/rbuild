@@ -90,9 +90,11 @@ class Checkout(pluginapi.Plugin):
     def checkoutPackageDefault(self, packageName):
         existingPackage = self._getExistingPackage(packageName)
         if existingPackage:
-            rc = self.checkoutPackage(packageName)
-            self.handle.ui.info('Checked out existing package %r', packageName)
-            return rc
+            targetDir = self.checkoutPackage(packageName)
+            self.handle.ui.info('Checked out existing package %r in %r',
+                packageName, self._relPath(os.getcwd(), targetDir))
+            return targetDir
+
         upstreamLatest = self._getUpstreamPackage(packageName)
         if upstreamLatest:
             raise errors.PluginError('\n'.join((
