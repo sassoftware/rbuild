@@ -251,8 +251,8 @@ class Checkout(pluginapi.Plugin):
             fromPathList.pop(0)
             toPathList.pop(0)
 
-        upDots = '/'.join((len(fromPathList) * [".."]))
+        upDots = '/'.join((len(fromPathList) * [".."])) or '.'
         downDirs = '/'.join(toPathList)
-        if upDots and downDirs:
+        if downDirs:
             downDirs = '/' + downDirs
         return upDots + downDirs
