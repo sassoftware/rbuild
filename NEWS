@@ -1,4 +1,4 @@
-Changes in @NEW@:
+Changes in 1.0.1:
   o New Features:
     * Several small changes were made for compatibility with Python
       2.6. (RBLD-176, RBLD-165)
