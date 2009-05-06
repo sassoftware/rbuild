@@ -1,7 +1,9 @@
 Changes in @NEW@:
   o Bug Fixes:
-    * The "rbuild checkout --shadow" now handles explicitly naming
-      the source component on the command line. (RBLD-191)
+    * The "rbuild checkout --shadow" command now handles explicitly
+      naming the source component on the command line. (RBLD-191)
+    * The "rbuild checkout --derive" command now removes factories
+      so that the derived package can be built. (RBLD-217)
 
 Changes in 1.0.1:
   o New Features:
