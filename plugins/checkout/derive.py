@@ -68,6 +68,7 @@ def _writeDerivedRecipe(ui, conaryFacade, troveName, directory):
 
     ui.info('Removing extra files from checkout')
     conaryFacade._removeNonRecipeFilesFromCheckout(recipePath)
+    conaryFacade.setFactoryFlag(None)
     ui.info('Rewriting recipe file')
     recipeClass = conaryFacade._loadRecipeClassFromCheckout(recipePath)
     derivedRecipe = """

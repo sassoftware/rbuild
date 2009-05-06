@@ -298,6 +298,18 @@ class ConaryFacade(object):
                                              ignoreErrors = True,
                                              readProxyValuesFirst = True)
 
+    @staticmethod
+    def setFactoryFlag(factoryName):
+        """
+        Sets the factory type for a checkout.
+        @param factoryName: name of factory or empty string to reset
+        @type factoryName: string
+        """
+        if not factoryName:
+            # convert from None to checkin's accepted ''
+            factoryName = ''
+        checkin.factory(factoryName)
+
     def checkout(self, package, label, targetDir=None):
         """
         Create a subdirectory containing a checkout of a conary
