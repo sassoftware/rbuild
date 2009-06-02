@@ -47,63 +47,82 @@ class RmakeFacade(object):
         self._rmakeConfigWithContexts = None
         self._plugins = None
 
-    def _getBaseRmakeConfig(self):
+    def _getBaseRmakeConfig(self, readConfigFiles=True):
         """
         Fetches an B{opaque} rmake build config object with no rBuild
         configuration data included.
+        @param readConfigFiles: initialize contents of config object
+        from normal configuration files (default: True)
+        @type readConfigFiles: bool
         @return: C{rmake.build.buildcfg.BuildConfiguration} B{opaque} object
         """
-        return buildcfg.BuildConfiguration(readConfigFiles = True,
+        return buildcfg.BuildConfiguration(readConfigFiles = readConfigFiles,
                                            ignoreErrors = True)
 
-    def _getRmakeConfig(self, useCache=True):
+    def _getRmakeConfig(self, useCache=True, includeContext=True):
         """
         Returns an rmake configuration file that matches the product associated
         with the current handle.
-        @param useCache: if True, uses a cached version of the rmake
-        configuration
-        file if available.
+        @param useCache: if True (default), uses a cached version of the
+        rmake configuration file if available, and caches the results
+        for future invocations.
+        @type useCache: bool
+        @param includeContext: include context-specific information, as
+        required when building an rmake configuration for use in a
+        specific rMake job (default: True).  Setting this to False
+        also disables caching.
+        @type includeContext: bool
         @return: rMake configuration file suitable for use with the current
         product.
         """
+        if not includeContext:
+            useCache = False
+
         if self._rmakeConfig and useCache:
             return self._rmakeConfig
+
         conaryFacade = self._handle.facade.conary
-        stageName = self._handle.productStore.getActiveStageName()
-        stageLabel = conaryFacade._getLabel(
-            self._handle.product.getLabelForStage(stageName))
-        baseFlavor = conaryFacade._getFlavor(
-            self._handle.product.getBaseFlavor())
         rmakeConfigPath = self._handle.productStore.getRmakeConfigPath()
-
         rbuildConfig = self._handle.getConfig()
-        if not self._plugins:
-            p = plugins.PluginManager(rbuildConfig.rmakePluginDirs, ['test'])
-            p.loadPlugins()
-            p.callLibraryHook('library_preInit')
-            self._plugins = p
-
-
         cfg = buildcfg.BuildConfiguration(False)
-        cfg.rbuilderUrl = self._handle.getConfig().serverUrl
-        cfg.rmakeUser = self._handle.getConfig().user
+
+        if includeContext:
+            stageName = self._handle.productStore.getActiveStageName()
+            stageLabel = conaryFacade._getLabel(
+                self._handle.product.getLabelForStage(stageName))
+            baseFlavor = conaryFacade._getFlavor(
+                self._handle.product.getBaseFlavor())
+
+            if not self._plugins:
+                p = plugins.PluginManager(rbuildConfig.rmakePluginDirs,
+                                          ['test'])
+                p.loadPlugins()
+                p.callLibraryHook('library_preInit')
+                self._plugins = p
+
+        cfg.rbuilderUrl = rbuildConfig.serverUrl
         cfg.resolveTrovesOnly = True
         cfg.shortenGroupFlavors = True
         cfg.ignoreExternalRebuildDeps = True
-        if self._handle.getConfig().rmakePluginDirs:
-            cfg.pluginDirs = self._handle.getConfig().rmakePluginDirs
+        if rbuildConfig.rmakePluginDirs:
+            cfg.pluginDirs = rbuildConfig.rmakePluginDirs
 
-        cfg.buildLabel = stageLabel
-        cfg.installLabelPath = [ stageLabel ]
-        cfg.flavor = [baseFlavor]
-        cfg.buildFlavor = baseFlavor
-        upstreamSources = self._handle.product.getResolveTroves()
-        cfg.resolveTroves = [[x.getTroveTup()] for x in upstreamSources]
+        if includeContext:
+            cfg.buildLabel = stageLabel
+            cfg.installLabelPath = [ stageLabel ]
+            cfg.flavor = [baseFlavor]
+            cfg.buildFlavor = baseFlavor
+            upstreamSources = self._handle.product.getResolveTroves()
+            cfg.resolveTroves = [[x.getTroveTup()] for x in upstreamSources]
+
+            cfg.autoLoadRecipes = \
+                self._handle.productStore.getPlatformAutoLoadRecipes()
+
+            #E1101: 'BuildConfiguration' has no 'user' member - untrue
+            #pylint: disable-msg=E1101
+            cfg.user.append((stageLabel.getHost(),) + rbuildConfig.user)
 
         cfg.repositoryMap = rbuildConfig.repositoryMap
-        #E1101: Instance of 'BuildConfiguration' has no 'user' member - untrue
-        #pylint: disable-msg=E1101
-        cfg.user.append((stageLabel.getHost(),) + rbuildConfig.user)
         if rbuildConfig.rmakeUrl:
             cfg.rmakeUrl = rbuildConfig.rmakeUrl
         if rbuildConfig.rmakeUser:
@@ -113,9 +132,6 @@ class RmakeFacade(object):
         cfg.name = rbuildConfig.name
         cfg.contact = rbuildConfig.contact
         self._handle.facade.conary._parseRBuilderConfigFile(cfg)
-
-        cfg.autoLoadRecipes = \
-            self._handle.productStore.getPlatformAutoLoadRecipes()
 
         if os.path.exists(rmakeConfigPath):
             cfg.includeConfigFile(rmakeConfigPath)

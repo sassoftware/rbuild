@@ -1,9 +1,30 @@
 Changes in @NEW@:
+  o New Features:
+    * The "rbuild config --ask" command now writes Conary and rMake
+      configuration files, making it easier to use Conary and rMake
+      when necessary for complex operations or workarounds for rBuild
+      bugs.  The "--conaryrc" and "--rmakerc" arguments write the
+      respective configuration files.  The "rbuild init" command
+      now creates "conaryrc" files in each stage directory to
+      further facilitate using Conary commands. (RBLD-54)
+
   o Bug Fixes:
     * The "rbuild checkout --shadow" command now handles explicitly
       naming the source component on the command line. (RBLD-191)
     * The "rbuild checkout --derive" command now removes factories
       so that the derived package can be built. (RBLD-217)
+
+  o API Changes:
+    * The Config plugin now exports the writeConaryConfiguration()
+      and writeRmakeConfiguration() methods. (RBLD-54)
+    * The facade.conary.getConaryConfig method now takes an
+      optional keyword argument useCache. (RBLD-54)
+    * The facade.conary._getBaseConaryConfig() method now takes an
+      optional keyword argument readConfigFiles. (RBLD-54)
+    * The facade.rmake._getBaseRmakeConfig() method now takes an
+      optional keyword argument readConfigFiles. (RBLD-54)
+    * The facade.rmake._getRmakeConfig() method now takes an
+      optional keyword argument includeContext. (RBLD-54)
 
 Changes in 1.0.1:
   o New Features:

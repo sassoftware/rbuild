@@ -11,27 +11,58 @@
 # or fitness for a particular purpose. See the Common Public License for
 # full details.
 #
+import copy
 import os
 
+from decorator import decorator
+
 from rbuild import constants
+from rbuild import errors
 from rbuild import pluginapi
 from rbuild.pluginapi import command
 
 class ConfigCommand(command.BaseCommand):
     commands = ['config']
     help = 'Print the rbuild configuration'
+    docs = {
+        'ask': '(Re)run interactive config questionaire;'
+               ' write all configuration files',
+        'conaryrc': 'Re-write ~/.conaryrc-rbuild',
+        'rmakerc': 'Re-write ~/.rmakerc-rbuild',
+    }
 
     # configuration setup is not required to run the help command
     requireConfig = False
 
     def addLocalParameters(self, argSet):
         argSet['ask'] = command.NO_PARAM
+        argSet['conaryrc'] = command.NO_PARAM
+        argSet['rmakerc'] = command.NO_PARAM
 
     def runCommand(self, handle, argSet, _):
+        writeConaryrc = argSet.pop('conaryrc', False)
+        writeRmakerc = argSet.pop('rmakerc', False)
         if argSet.pop('ask', False):
             handle.Config.updateConfig()
+        elif writeConaryrc or writeRmakerc:
+            # if --ask, then updateConfig already called these
+            if writeConaryrc:
+                handle.Config.writeConaryConfiguration()
+            if writeRmakerc:
+                handle.Config.writeRmakeConfiguration()
         else:
             handle.Config.displayConfig()
+
+
+@decorator
+def _requiresHome(method, *args, **kw):
+    'Decorator for methods that require HOME env variable to be set'
+    if 'HOME' in os.environ:
+        if not os.path.isdir(os.environ['HOME']):
+            raise errors.PluginError('The HOME environment variable references'
+                                     ' "%s" which does not exist')
+        return method(*args, **kw)
+    raise errors.PluginError('The HOME environment variable must be set')
 
 
 class Config(pluginapi.Plugin):
@@ -62,6 +93,7 @@ class Config(pluginapi.Plugin):
                 return False
         return True
 
+    @_requiresHome
     def initializeConfig(self, cfg=None):
         if cfg is None:
             cfg = self.handle.getConfig()
@@ -131,6 +163,7 @@ Please answer the following questions to begin using rBuild:
             'password? (Y/N)', default=False)
         return reEnterUserPasswd            
 
+    @_requiresHome
     def updateConfig(self, cfg=None):
         ui = self.handle.ui
         facade = self.handle.facade
@@ -225,9 +258,108 @@ Please answer the following questions to begin using rBuild:
                                   default=defaultName)
         cfg.contact = ui.getResponse('Contact - usually email or url',
                                      default=defaultContact)
-        if 'HOME' in os.environ:
-            oldumask = os.umask(077)
-            try:
-                cfg.writeToFile(os.environ['HOME'] + '/.rbuildrc')
-            finally:
-                os.umask(oldumask)
+
+        homeRbuildRc = os.sep.join((os.environ['HOME'], '.rbuildrc'))
+        self._writeConfiguration(homeRbuildRc, cfg=cfg,
+            header='# This file will be overwritten by the'
+                   ' "rbuild config --ask" command',
+            replaceExisting=True)
+
+        self.writeConaryConfiguration()
+        self.writeRmakeConfiguration()
+
+#{ Synchronizing Conary and rMake configuration
+    @_requiresHome
+    def writeConaryConfiguration(self):
+        '''
+        Write a ~/.conaryrc-rbuild file, and possibly a ~/.conaryrc
+        referencing it, based on the contents of the rMakeCfg.
+        '''
+        # 
+        homeConaryConfig = os.sep.join((os.environ['HOME'], '.conaryrc'))
+        cfg = self.handle.getConfig()
+        cf = self.handle.facade.conary
+
+        conaryCfg = cf.getConaryConfig(useCache=False)
+        conaryCfg.name = cfg.name
+        conaryCfg.contact = cfg.contact
+        self._writeConfiguration(homeConaryConfig + '-rbuild', cfg=conaryCfg,
+            header='\n'.join((
+            '# This file will be overwritten automatically by rBuild',
+            '# You can ignore it by removing the associated includeConfigFile',
+            '# line from ~/.conaryrc')),
+            keys=set(('contact', 'name', 'user', 'repositoryMap')),
+            replaceExisting=True)
+
+        self._writeConfiguration(homeConaryConfig, cfg=None,
+            header='\n'.join((
+                '# Include config file maintained by rBuild:',
+                'includeConfigFile ~/.conaryrc-rbuild')),
+            replaceExisting=False)
+
+
+    @_requiresHome
+    def writeRmakeConfiguration(self):
+        '''
+        Write a ~/.rmakerc-rbuild file, and possibly a ~/.rmakerc
+        referencing it, based on the contents of the rMakeCfg.
+        '''
+        homeRmakeConfig = os.sep.join((os.environ['HOME'], '.rmakerc'))
+        rf = self.handle.facade.rmake
+        rmakeCfg = rf._getRmakeConfig(includeContext=False)
+        self._writeConfiguration(homeRmakeConfig + '-rbuild', cfg=rmakeCfg,
+            header='\n'.join((
+            '# This file will be overwritten automatically by rBuild.',
+            '# You can ignore it by removing the associated includeConfigFile',
+            '# line from ~/.rmakerc')),
+            keys=set(('rmakeUser', 'rmakeUrl', 'rbuilderUrl')),
+            replaceExisting=True)
+
+        self._writeConfiguration(homeRmakeConfig, cfg=None,
+            header='\n'.join((
+                '# Include config file maintained by rBuild:',
+                'includeConfigFile ~/.rmakerc-rbuild')),
+            replaceExisting=False)
+
+    @staticmethod
+    def _writeConfiguration(pathName, cfg=None, header=None, keys=None,
+                            replaceExisting=False):
+        '''
+        Write a configuration file C{pathName}, optionally replacing an
+        existing configuration files, with C{contents} as provided.
+        @param pathName: Path to file to replace
+        @type pathName: string
+        @param cfg: Conary-style cfg object to write to C{pathName}
+        @type cfg: conary.lib.cfg._Config or None
+        @param header: Optional text to prepend to the file
+        @type header: string
+        @param keys: If not None (default), comprehensive list of keys to write
+        @type keys: iterable of strings
+        @param replaceExisting: Replace any existing C{pathName} (False)
+        @type replaceExisting: bool
+        '''
+        if not replaceExisting and os.path.exists(pathName):
+            return
+        # passwords may go in config files
+        oldUmask = os.umask(077)
+        try:
+            f = file(pathName, 'w')
+            if header is not None:
+                f.write(header)
+                if not header.endswith('\n'):
+                    f.write('\n')
+            if cfg is not None:
+                if keys is not None:
+                    # conary.lib.cfg._Config does not expose an interface
+                    # for limiting the keys written when writing a config
+                    options = {'prettyPrint': 'False'}
+                    for name, item in sorted(cfg._options.iteritems()):
+                        if name in keys:
+                            item.writeDoc(f, options)
+                            cfg._writeKey(f, item, cfg[name], options)
+                else:
+                    cfg.store(f)
+            f.close()
+        finally:
+            os.umask(oldUmask)
+#}

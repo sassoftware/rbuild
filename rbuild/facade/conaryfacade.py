@@ -268,33 +268,40 @@ class ConaryFacade(object):
 #}
 
 
-    def getConaryConfig(self):
+    def getConaryConfig(self, useCache=True):
         """
         Fetches a (possibly cached) B{opaque} conary config object with all
         appropriate data inherited from the associated rbuild config
         object.
+        @param useCache: if True (default), uses a cached version of the
+        conary configuration file if available.
+        @type useCache: bool
         @return: C{conarycfg.ConaryConfiguration} B{opaque} object
         """
-        if not self._conaryCfg:
-            cfg = conarycfg.ConaryConfiguration(False)
-            rbuildCfg = self._handle.getConfig()
-            self._parseRBuilderConfigFile(cfg)
-            #pylint: disable-msg=E1101
-            # pylint does not understand config objects very well
-            cfg.repositoryMap.update(rbuildCfg.repositoryMap)
-            cfg.user.append(('*',) + rbuildCfg.user)
-            cfg.name = rbuildCfg.name
-            cfg.contact = rbuildCfg.contact
-            self._conaryCfg = cfg
+        if self._conaryCfg and useCache:
+            return self._conaryCfg
+        cfg = conarycfg.ConaryConfiguration(False)
+        rbuildCfg = self._handle.getConfig()
+        self._parseRBuilderConfigFile(cfg)
+        #pylint: disable-msg=E1101
+        # pylint does not understand config objects very well
+        cfg.repositoryMap.update(rbuildCfg.repositoryMap)
+        cfg.user.append(('*',) + rbuildCfg.user)
+        cfg.name = rbuildCfg.name
+        cfg.contact = rbuildCfg.contact
+        self._conaryCfg = cfg
         return self._conaryCfg
 
-    def _getBaseConaryConfig(self):
+    def _getBaseConaryConfig(self, readConfigFiles=True):
         """
         Fetches an B{opaque} conary config object with no rBuild
         configuration data included.
+        @param readConfigFiles: initialize contents of config object
+        from normal configuration files (default: True)
+        @type readConfigFiles: bool
         @return: C{conarycfg.ConaryConfiguration} B{opaque} object
         """
-        return conarycfg.ConaryConfiguration(readConfigFiles = True,
+        return conarycfg.ConaryConfiguration(readConfigFiles = readConfigFiles,
                                              ignoreErrors = True,
                                              readProxyValuesFirst = True)
 
