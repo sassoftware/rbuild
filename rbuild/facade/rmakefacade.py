@@ -82,7 +82,6 @@ class RmakeFacade(object):
             return self._rmakeConfig
 
         conaryFacade = self._handle.facade.conary
-        rmakeConfigPath = self._handle.productStore.getRmakeConfigPath()
         rbuildConfig = self._handle.getConfig()
         cfg = buildcfg.BuildConfiguration(False)
 
@@ -133,8 +132,10 @@ class RmakeFacade(object):
         cfg.contact = rbuildConfig.contact
         self._handle.facade.conary._parseRBuilderConfigFile(cfg)
 
-        if os.path.exists(rmakeConfigPath):
-            cfg.includeConfigFile(rmakeConfigPath)
+        if self._handle.productStore:
+            rmakeConfigPath = self._handle.productStore.getRmakeConfigPath()
+            if os.path.exists(rmakeConfigPath):
+                cfg.includeConfigFile(rmakeConfigPath)
 
         if useCache:
             self._rmakeConfig = cfg
