@@ -142,7 +142,7 @@ class RbuilderFacade(object):
 
     def validateRbuilderUrl(self, serverUrl):
         try:
-            client = RbuilderClient(serverUrl, '', '')
+            client = RbuilderClient(serverUrl, '', '', self._handle)
             client.checkAuth()
         except Exception, err:
             return False, err
@@ -150,7 +150,7 @@ class RbuilderFacade(object):
         return True, ''
 
     def validateCredentials(self, username, password, serverUrl):
-        client = RbuilderClient(serverUrl, username, password)
+        client = RbuilderClient(serverUrl, username, password, self._handle)
         try:
             ret = client.checkAuth()
             return ret['authorized']
