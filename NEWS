@@ -7,6 +7,12 @@ Changes in @NEW@:
       respective configuration files.  The "rbuild init" command
       now creates "conaryrc" files in each stage directory to
       further facilitate using Conary commands. (RBLD-54)
+    * Unless the "--quiet" option is used, rBuild now prints several
+      URLs, including download URLs for built files, as well as
+      IDs that are used for scripting integration.  The output format
+      of this data is subject to change in order to improve integration;
+      such changes will be noted in this file. (RBLD-220)
+    * The "rbuild build release" command has been added. (RBLD-220)
 
   o Bug Fixes:
     * The "rbuild checkout --shadow" command now handles explicitly
@@ -25,6 +31,15 @@ Changes in @NEW@:
       optional keyword argument readConfigFiles. (RBLD-54)
     * The facade.rmake._getRmakeConfig() method now takes an
       optional keyword argument includeContext. (RBLD-54)
+    * The facade.rbuilder.getBuildFiles() method now returns
+      structured information instead of printing it. (RBLD-220)
+    * The facade.rbuilder.watchImages() method now uses the
+      ui object to print update status.
+    * The BuildRelease plugin has been added, and the buildRelease()
+      method has been moved from the BuildImages plugin to the
+      BuildRelease plugin.  The printImageUrlsForJob() and
+      printImageUrlsForBuild() methods have been added to the
+      BuildRelease plugin. (RBLD-220)
 
 Changes in 1.0.1:
   o New Features:

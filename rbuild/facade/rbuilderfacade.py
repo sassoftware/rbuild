@@ -65,7 +65,8 @@ class RbuilderFacade(object):
 
     def _getRbuilderClient(self):
         cfg = self._handle.getConfig()
-        return RbuilderClient(cfg.serverUrl, cfg.user[0], cfg.user[1])
+        return RbuilderClient(cfg.serverUrl, cfg.user[0], cfg.user[1],
+                              self._handle)
 
     def _getBaseServerUrl(self):
         """
@@ -134,7 +135,8 @@ class RbuilderFacade(object):
             #pylint: disable-msg=W0703
             # * catch Exception is safe: it displays error to user
         except Exception, err:
-            self._handle.ui.write('Error contacting \'%s\': %s', serverUrl, err)
+            self._handle.ui.writeError('Error contacting \'%s\': %s',
+                                       serverUrl, err)
             return False
         return True
 
@@ -154,6 +156,19 @@ class RbuilderFacade(object):
             return ret['authorized']
         except Exception, err:
             return False
+
+    def _getProjectUrl(self, type, id):
+        return '%s/project/%s/%s?id=%d' %(
+            self._getBaseServerUrlData()[0],
+            str(self._handle.product.getProductShortname()),
+            type,
+            int(id))
+
+    def getBuildUrl(self, buildId):
+        return self._getProjectUrl('build', buildId)
+
+    def getReleaseUrl(self, releaseId):
+        return self._getProjectUrl('release', releaseId)
 
     def getBuildFiles(self, buildId):
         return self._getRbuilderClient().getBuildFiles(buildId)
@@ -187,10 +202,11 @@ class RbuilderFacade(object):
         return client.publishRelease(releaseId, shouldMirror)
 
 class RbuilderClient(object):
-    def __init__(self, rbuilderUrl, user, pw):
+    def __init__(self, rbuilderUrl, user, pw, handle):
         self.rbuilderUrl = rbuilderUrl
         rpcUrl = rbuilderUrl + '/xmlrpc-private'
         self.server = facade.ServerProxy(rpcUrl, username=user, password=pw)
+        self._handle = handle
 
     def getProductLabelFromNameAndVersion(self, productName, versionName):
         #pylint: disable-msg=R0914
@@ -284,8 +300,10 @@ class RbuilderClient(object):
                 except socket.timeout:
                     dropped += 1
                     if dropped >= 3:
-                        raise errors.RbuildError("Connection timed out (3 attempts)")
-                    print 'Status request timed out, trying again'
+                        raise errors.RbuildError(
+                            'rBuilder connection timed out after 3 attempts')
+                    self._handle.ui.info(
+                        'Status request timed out, trying again')
                     time.sleep(interval)
                     continue
 
@@ -296,7 +314,9 @@ class RbuilderClient(object):
                     st = time.time() # reset timeout counter if status changes
                     activeBuilds[buildId] = buildStatus
                     if not quiet:
-                        print '%s: %s "%s"' % (buildId, self.statusNames.get(buildStatus['status'], self.statusNames[-1]), buildStatus['message'])
+                       self._handle.ui.write('%s: %s "%s"',
+                        buildId, self.statusNames.get(buildStatus['status'],
+                        self.statusNames[-1]), buildStatus['message'])
                     if activeBuilds[buildId]['status'] > 200:
                         finalStatus[buildId] = activeBuilds.pop(buildId)
             if activeBuilds:
@@ -306,15 +326,14 @@ class RbuilderClient(object):
                     break
 
         if timedOut:
-            print "Time out while waiting for build status to change (%d seconds)" % timeout
-            print
+            self._handle.ui.error('Timed out while waiting for build status'
+                ' to change (%d seconds)', timeout)
         else:
-            print "All jobs completed"
-            print
+            self._handle.ui.write('All jobs completed')
         if activeBuilds:
-            print "Unfinished builds:"
+            self._handle.ui.warning('Unfinished builds:')
             self._printStatus(activeBuilds, '    Last status: ')
-        print "Finished builds:"
+        self._handle.ui.write('Finished builds:')
         self._printStatus(finalStatus, '    ')
 
     statusNames = {
@@ -330,38 +349,71 @@ class RbuilderClient(object):
 
     def _printStatus(self, statusDict, prefix = ''):
         for buildId in statusDict.iterkeys():
-            print "%sBuild %d ended with '%s' status: %s" % (prefix, buildId,
-                self.statusNames.get(statusDict[buildId]['status'], self.statusNames[-1]), statusDict[buildId]['message'])
+            self._handle.ui.write("%sBuild %d ended with '%s' status: %s",
+                prefix, buildId,
+                self.statusNames.get(statusDict[buildId]['status'],
+                self.statusNames[-1]), statusDict[buildId]['message'])
+
+    def _getBaseDownloadUrl(self):
+        '''
+        Return the base URL relative to which to download images,
+        removing any user/password information, and using http
+        '''
+        # extract the downloadImage base url from the serverUrl configuration
+        parts = list(urllib2.urlparse.urlparse(self.rbuilderUrl))
+        parts[1] = urllib2.splituser(parts[1])[1]
+        # FIXME: is this whole ../ business a workaround for splitbrain rBO?
+        parts[2] = parts[2] and parts[2] or '/'
+        return 'http://%s%s' %(parts[1], util.normpath(parts[2] + '../')[1:])
 
     def getBuildFiles(self, buildId):
+        '''
+        Get a list of dicts describing files associated with a build.
+        Zero ore more of the following elements may be set in each dict:
+        - C{sha1}: (string) SHA1 of the described file
+        - C{size}: (int) Length in bytes
+        - C{title}: (string) Title describing file (not necessarily file name)
+        - C{downloadUrl}: (string) URL to use to download the file directly
+        - C{torrentUrl}: (string) URL to use to downlad the file via bittorrent
+        - C{baseFileName}: (string) basename of the file 
+        - C{fileId}: (int) unique identifier for this file
+        Additional items may be set as well.
+        @param buildId: unique identifier for a build
+        @type buildId: int
+        @return: list of dicts
+        '''
         error, filenames = self.server.getBuildFilenames(buildId)
         if error:
             raise errors.RbuilderError(*filenames)
-        for bf in filenames:
-            if 'size' in bf:
-                #Workaround for marshalling size over int32 based xml-rpc
-                bf['size'] = int(bf['size'])
 
-        # extract the downloadImage url from the serverUrl configuration
-        parts = list(urllib2.urlparse.urlparse(self.rbuilderUrl))
-        parts[1] = urllib2.splituser(parts[1])[1]
-        parts[2] = parts[2] and parts[2] or '/'
+        baseUrl = self._getBaseDownloadUrl()
 
         LOCAL                   = 0
         AMAZONS3                = 1
         AMAZONS3TORRENT         = 2
         GENERICMIRROR           = 999
 
+        buildFileList = []
         for filename in filenames:
-            for urlId, urlType, url in filename['fileUrls']:
+            b = dict((x, y) for x, y in filename.iteritems()
+                     if x in set(('sha1', 'title', 'fileId')))
+            if 'size' in filename:
+                # XML-RPC cannot marshal large ints, so size may be string
+                b['size'] = int(filename['size'])
+            fileId = b['fileId']
+            for _, urlType, url in filename['fileUrls']:
+                if 'baseFileName' not in b:
+                    b['baseFileName'] = os.path.basename(
+                        url.replace('%2F', '/'))
                 if urlType == AMAZONS3TORRENT:
-                    urlBase = "http://%s%s/downloadTorrent?fileId=%%d" % \
-                        (parts[1], util.normpath(parts[2] + "../")[1:])
+                    b['torrentUrl'] = '%s/downloadTorrent?fileId=%d' %(
+                        baseUrl, fileId)
                 else:
-                    urlBase = "http://%s%s/downloadImage?fileId=%%d" % \
-                        (parts[1], util.normpath(parts[2] + "../")[1:])
-                print urlBase % (filename['fileId'])
+                    b['downloadUrl'] = '%s/downloadImage?fileId=%d' %(
+                        baseUrl, fileId)
+            buildFileList.append(b)
 
+        return buildFileList
 
 
     def getProductId(self, productName):

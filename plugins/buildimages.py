@@ -12,8 +12,6 @@
 # full details.
 #
 
-import datetime
-
 from rbuild import errors
 from rbuild import pluginapi
 from rbuild.pluginapi import command
@@ -58,18 +56,24 @@ class BuildImagesCommand(command.BaseCommand):
         _, imageNames = self.requireParameters(args, allowExtra=True)
         if imageNames == []:
             imageNames = None
+        if release:
+            # reset any previous definition of the current complete releaseId
+            handle.productStore.setStageReleaseId(None)
         jobId = handle.BuildImages.buildImages(imageNames)
         if watch:
             handle.Build.watchJob(jobId)
-            if handle.facade.rmake.isJobBuilt(jobId) and release:
-                releaseId = handle.BuildImages.buildRelease(jobId,
-                    name=name, version=version, description=description)
-                handle.productStore.setStageReleaseId(releaseId)
             if not handle.facade.rmake.isJobBuilt(jobId):
                 raise errors.PluginError('Image build failed')
+            handle.BuildImages.printImageUrlsForJob(jobId)
+            if release:
+                releaseId = handle.BuildRelease.buildRelease(jobId,
+                    name=name, version=version, description=description)
+                handle.productStore.setStageReleaseId(releaseId)
+                # do not try to compose two releases from one image job
+                handle.productStore.setImageJobId(None)
         elif release:
             handle.ui.writeError('Not grouping built images into a release'
-                                 ' due to --no-watch option.')
+                ' due to --no-watch option; use "rbuild build release" later.')
 
 
 class BuildImages(pluginapi.Plugin):
@@ -94,49 +98,28 @@ class BuildImages(pluginapi.Plugin):
         self.handle.productStore.setImageJobId(jobId)
         return jobId
 
-    def buildRelease(self, jobId, name=None, version=None, description=None):
-        """
-        Create a release in rBuilder from the build ids referenced by the
-        given job id.  Keyword arguments will be given default values.
-        The default values chosen are not part of the API and may change
-        from release to release.
-
-        @param jobId: Create a release from this job
-        @type jobId: int
-        @param name: Name of the release
-        @type name: string
-        @param version: Version of the release
-        @type version: string
-        @param description: Description of the release
-        @type description: string
-        """
-        if not jobId:
-            return None
+    def printImageUrlsForJob(self, jobId):
+        '''
+        Print image URLs for all builds associated with an image job
+        '''
         buildIds = self.handle.facade.rmake.getBuildIdsFromJobId(jobId)
-        releaseId = self.handle.facade.rbuilder.createRelease(buildIds)
-        ui = self.handle.ui
-        productStore = self.handle.productStore
-        product = self.handle.product
+        for buildId in buildIds:
+            self.printImageUrlsForBuild(buildId)
 
-        # Update the created release with some relevant data.
-        if name is None:
-            stageName = productStore.getActiveStageName()
-            name = '%s images' % stageName
-        if version is None:
-            version = product.getProductVersion()
-        if description is None:
-            description = product.getProductDescription()
-        if not description:
-            # empty productDescription, say something possibly useful
-            description = 'Release built by %s on %s' % (
-                self.handle.getConfig().user[0],
-                self._getTimeString())
-
-        self.handle.facade.rbuilder.updateRelease(releaseId, name=name,
-            version=version, description=description)
-        ui.write('Created release "%s", release id %s' %(name, releaseId))
-        return releaseId
-
-    @staticmethod
-    def _getTimeString():
-        return datetime.datetime.now().ctime()
+    def printImageUrlsForBuild(self, buildId):
+        '''
+        Print (at info level) tab-separated data for a build:
+        - buildId
+        - base file name
+        - fileId
+        - download URL
+        '''
+        for build in self.handle.facade.rbuilder.getBuildFiles(buildId):
+            build.setdefault('downloadUrl', 'NoURL')
+            build.setdefault('fileId', 0)
+            build.setdefault('baseFileName', 'NoFileName')
+            self.handle.ui.info('Build %d\t%s\t%d\t%s',
+                buildId,
+                build['baseFileName'],
+                build['fileId'],
+                build['downloadUrl'])
