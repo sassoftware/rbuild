@@ -122,9 +122,11 @@ class Init(pluginapi.Plugin):
             stageDir = productDir + '/' + stage.name
             os.mkdir(stageDir)
             open(stageDir + '/.stage', 'w').write(stage.name + '\n')
+            stageLabel = product.getLabelForStage(stage.name)
             open(stageDir + '/conaryrc', 'w').write(
                 '# This file may be automatically overwritten by rbuild\n'
-                'buildLabel %s\n' %product.getLabelForStage(stage.name))
+                'buildLabel %s\n'
+                'installLabelPath %s\n' %(stageLabel, stageLabel))
         oldumask = os.umask(077)
         try:
             self.handle.getConfig().writeCheckoutFile(
