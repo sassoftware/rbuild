@@ -76,6 +76,7 @@ class RmakeFacade(object):
         product.
         """
         if not includeContext:
+            # context-free config must not be cached
             useCache = False
 
         if self._rmakeConfig and useCache:
@@ -83,7 +84,12 @@ class RmakeFacade(object):
 
         conaryFacade = self._handle.facade.conary
         rbuildConfig = self._handle.getConfig()
-        cfg = buildcfg.BuildConfiguration(False)
+        if not self._plugins:
+            p = plugins.PluginManager(rbuildConfig.rmakePluginDirs,
+                                      ['test'])
+            p.loadPlugins()
+            p.callLibraryHook('library_preInit')
+            self._plugins = p
 
         if includeContext:
             stageName = self._handle.productStore.getActiveStageName()
@@ -92,14 +98,10 @@ class RmakeFacade(object):
             baseFlavor = conaryFacade._getFlavor(
                 self._handle.product.getBaseFlavor())
 
-            if not self._plugins:
-                p = plugins.PluginManager(rbuildConfig.rmakePluginDirs,
-                                          ['test'])
-                p.loadPlugins()
-                p.callLibraryHook('library_preInit')
-                self._plugins = p
-
+        # BuildConfiguration must be created after loading rMake plugins
+        cfg = buildcfg.BuildConfiguration(False)
         cfg.rbuilderUrl = rbuildConfig.serverUrl
+        cfg.rmakeUser = rbuildConfig.user
         cfg.resolveTrovesOnly = True
         cfg.shortenGroupFlavors = True
         cfg.ignoreExternalRebuildDeps = True
@@ -126,8 +128,6 @@ class RmakeFacade(object):
             cfg.rmakeUrl = rbuildConfig.rmakeUrl
         if rbuildConfig.rmakeUser:
             cfg.rmakeUser = rbuildConfig.rmakeUser
-        else:
-            cfg.rmakeUser = rbuildConfig.user
         cfg.name = rbuildConfig.name
         cfg.contact = rbuildConfig.contact
         self._handle.facade.conary._parseRBuilderConfigFile(cfg)

@@ -6,7 +6,7 @@ Changes in @NEW@:
       bugs.  The "--conaryrc" and "--rmakerc" arguments write the
       respective configuration files.  The "rbuild init" command
       now creates "conaryrc" files in each stage directory to
-      further facilitate using Conary commands. (RBLD-54)
+      further facilitate using Conary commands. (RBLD-54, RBLD-223)
     * Unless the "--quiet" option is used, rBuild now prints several
       URLs, including download URLs for built files, as well as
       IDs that are used for scripting integration.  The output format
