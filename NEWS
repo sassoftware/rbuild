@@ -11,7 +11,7 @@ Changes in @NEW@:
       URLs, including download URLs for built files, as well as
       IDs that are used for scripting integration.  The output format
       of this data is subject to change in order to improve integration;
-      such changes will be noted in this file. (RBLD-220)
+      such changes will be noted in this NEWS file. (RBLD-220)
     * The "rbuild build release" command has been added. (RBLD-220)
 
   o Bug Fixes:
@@ -39,7 +39,7 @@ Changes in @NEW@:
       method has been moved from the BuildImages plugin to the
       BuildRelease plugin.  The printImageUrlsForJob() and
       printImageUrlsForBuild() methods have been added to the
-      BuildRelease plugin. (RBLD-220)
+      BuildImages plugin. (RBLD-220)
 
 Changes in 1.0.1:
   o New Features:

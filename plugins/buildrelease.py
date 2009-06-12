@@ -108,10 +108,11 @@ class BuildRelease(pluginapi.Plugin):
         handle.facade.rbuilder.updateRelease(releaseId, name=name,
             version=version, description=description)
         # script-friendly output
-        ui.info('Release %d\t%s\t%s',
-            releaseId,
-            name,
-            handle.facade.rbuilder.getReleaseUrl(releaseId))
+        # RBLD-226
+        #ui.info('Release %d\t%s\t%s',
+        #    releaseId,
+        #    name,
+        #    handle.facade.rbuilder.getReleaseUrl(releaseId))
         # human-friendly output
         ui.info('Created release "%s", release id %s' %(name, releaseId))
         return releaseId
