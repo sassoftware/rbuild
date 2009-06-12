@@ -49,12 +49,11 @@ class BuildReleaseCommand(command.BaseCommand):
         handle.Build.watchJob(jobId) # build may still be going
         if not handle.facade.rmake.isJobBuilt(jobId):
             raise errors.PluginError('Image build failed')
-        handle.productStore.setStageReleaseId(None)
+        handle.productStore.setStageReleaseId(0)
         releaseId = handle.BuildRelease.buildRelease(jobId,
             name=name, version=version, description=description)
-        handle.productStore.setStageReleaseId(releaseId)
         # do not try to compose two releases from one image job
-        handle.productStore.setImageJobId(None)
+        handle.productStore.setImageJobId(0)
 
 
 class BuildRelease(pluginapi.Plugin):
@@ -107,6 +106,7 @@ class BuildRelease(pluginapi.Plugin):
 
         handle.facade.rbuilder.updateRelease(releaseId, name=name,
             version=version, description=description)
+        handle.productStore.setStageReleaseId(releaseId)
         # script-friendly output
         # RBLD-226
         #ui.info('Release %d\t%s\t%s',

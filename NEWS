@@ -12,7 +12,7 @@ Changes in @NEW@:
       IDs that are used for scripting integration.  The output format
       of this data is subject to change in order to improve integration;
       such changes will be noted in this NEWS file. (RBLD-220)
-    * The "rbuild build release" command has been added. (RBLD-220)
+    * The "rbuild build release" command has been added. (RBLD-220, RBLD-227)
 
   o Bug Fixes:
     * The "rbuild checkout --shadow" command now handles explicitly

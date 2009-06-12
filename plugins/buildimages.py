@@ -58,7 +58,7 @@ class BuildImagesCommand(command.BaseCommand):
             imageNames = None
         if release:
             # reset any previous definition of the current complete releaseId
-            handle.productStore.setStageReleaseId(None)
+            handle.productStore.setStageReleaseId(0)
         jobId = handle.BuildImages.buildImages(imageNames)
         if watch:
             handle.Build.watchJob(jobId)
@@ -68,9 +68,8 @@ class BuildImagesCommand(command.BaseCommand):
             if release:
                 releaseId = handle.BuildRelease.buildRelease(jobId,
                     name=name, version=version, description=description)
-                handle.productStore.setStageReleaseId(releaseId)
                 # do not try to compose two releases from one image job
-                handle.productStore.setImageJobId(None)
+                handle.productStore.setImageJobId(0)
         elif release:
             handle.ui.writeError('Not grouping built images into a release'
                 ' due to --no-watch option; use "rbuild build release" later.')
