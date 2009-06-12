@@ -12,6 +12,7 @@
 # full details.
 #
 
+from rbuild import errors
 from rbuild import pluginapi
 from rbuild.pluginapi import command
 
@@ -19,8 +20,8 @@ class PublishCommand(command.BaseCommand):
     '''
     Publishes a release of images built from the current stage.
     '''
-    help = 'Publish image release.'
-    paramHelp = ''
+    help = 'Publish image release'
+    paramHelp = '[release ID]'
     docs = { 'no-mirror' : 'do not mirror the published release',
            }
 
@@ -31,13 +32,18 @@ class PublishCommand(command.BaseCommand):
 
     #pylint: disable-msg=R0201,R0903
     # could be a function, and too few public methods
-    def runCommand(self, handle, argSet, _):
+    def runCommand(self, handle, argSet, args):
         mirror = not argSet.pop('no-mirror', False)
-        releaseId = handle.Publish.getReleaseId()
-        if not releaseId:
-            handle.ui.writeError(
-                'No release Id found to publish for current stage')
+        _, releaseIds = self.requireParameters(args, allowExtra=True)
+        if releaseIds:
+            releaseIds = [int(x) for x in releaseIds]
         else:
+            releaseId = handle.Publish.getReleaseId()
+            if not releaseId:
+                raise errors.PluginError(
+                    'No release Id found to publish for current stage')
+            releaseIds = [releaseId]
+        for releaseId in releaseIds:
             handle.Publish.publishRelease(releaseId, mirror)
 
 class Publish(pluginapi.Plugin):
