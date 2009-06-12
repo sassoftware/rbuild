@@ -21,7 +21,7 @@ class PublishCommand(command.BaseCommand):
     Publishes a release of images built from the current stage.
     '''
     help = 'Publish image release'
-    paramHelp = '[release ID]'
+    paramHelp = '[release ID]*'
     docs = { 'no-mirror' : 'do not mirror the published release',
            }
 
