@@ -314,9 +314,9 @@ class RbuilderClient(object):
                     st = time.time() # reset timeout counter if status changes
                     activeBuilds[buildId] = buildStatus
                     if not quiet:
-                       self._handle.ui.write('%s: %s "%s"',
-                        buildId, self.statusNames.get(buildStatus['status'],
-                        self.statusNames[-1]), buildStatus['message'])
+                        self._handle.ui.write('%s: %s "%s"',
+                            buildId, self.statusNames.get(buildStatus['status'],
+                            self.statusNames[-1]), buildStatus['message'])
                     if activeBuilds[buildId]['status'] > 200:
                         finalStatus[buildId] = activeBuilds.pop(buildId)
             if activeBuilds:
