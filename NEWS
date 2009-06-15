@@ -1,4 +1,4 @@
-Changes in @NEW@:
+Changes in 1.1:
   o New Features:
     * The "rbuild config --ask" command now writes Conary and rMake
       configuration files, making it easier to use Conary and rMake
