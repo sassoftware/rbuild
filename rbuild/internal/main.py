@@ -54,6 +54,7 @@ class RbuildMain(mainhandler.MainHandler):
     commandList = [helpcommand.HelpCommand]
 
     useConaryOptions = False
+    setSysExcepthook = False
 
     def __init__(self, *args, **kw):
         mainhandler.MainHandler.__init__(self, *args, **kw)
