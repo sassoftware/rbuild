@@ -46,7 +46,7 @@ class InitCommand(command.BaseCommand):
 
     commands = ['init']
     paramHelp = ['<project shortname> <version>', '<label>']
-    help = 'Create a directory for for working with a product'
+    help = 'Create a directory for working with a product'
 
     def runCommand(self, handle, _, args):
         if len(args) == 3:
