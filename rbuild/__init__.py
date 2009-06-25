@@ -22,6 +22,11 @@ the README for more details on interface compatibility.
 Module functions, classes, and class methods that do not start
 with a C{_} character are public.
 
+See the documentation for API versions that are imported into
+this namespace for use of those APIs.
+
 @group Plugin API: pluginapi
 @group Internal Interfaces: internal
 """
+
+from rbuild.api1 import *

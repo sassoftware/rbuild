@@ -1,3 +1,9 @@
+Changes in @NEW@:
+  o API Changes:
+    * A new experimental API, rbuild.api1, enables external consumption
+      of rBuild by easily initializing an rBuild handle.  This API is
+      subject to change, including removal or entire replacement. (RBLD-238)
+
 Changes in 1.1:
   o New Features:
     * The "rbuild config --ask" command now writes Conary and rMake
