@@ -13,6 +13,7 @@
 #
 
 python_files =  __init__.py	\
+                api1.py \
                 errors.py \
                 handle.py \
                 rbuildcfg.py \
