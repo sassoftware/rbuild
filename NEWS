@@ -1,8 +1,14 @@
 Changes in @NEW@:
+  o New Features:
+    * The "rbuild rebase" command now prevents users from rebasing a
+      product-definition to a schema version that is not supported by the
+      project's rBuilder. (RBLD-249)
+
   o API Changes:
     * A new experimental API, rbuild.api1, enables external consumption
       of rBuild by easily initializing an rBuild handle.  This API is
       subject to change, including removal or entire replacement. (RBLD-238)
+    * Added support for rBuilder REST interface to rBuilder facade. (RBLD-249)
 
 Changes in 1.1:
   o New Features:

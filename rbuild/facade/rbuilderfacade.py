@@ -20,9 +20,12 @@ via C{handle.facade.rbuilder} which is automatically available to
 all plugins through the C{handle} object.
 """
 import os
+import socket
 import urllib
 import urllib2
-import socket
+import urlparse
+
+from lxml import etree
 
 from conary.conaryclient import cmdline as conarycmdline
 from conary.deps import deps as conarydeps
@@ -61,12 +64,17 @@ class RbuilderFacade(object):
         @param handle: The handle with which this instance is associated.
         """
         self._handle = handle
-        self._rbuilderClient = None
 
-    def _getRbuilderClient(self):
+    def _getRbuilderClient(self, clientcls):
         cfg = self._handle.getConfig()
-        return RbuilderClient(cfg.serverUrl, cfg.user[0], cfg.user[1],
-                              self._handle)
+        return clientcls(cfg.serverUrl, cfg.user[0], cfg.user[1],
+                                 self._handle)
+
+    def _getRbuilderRPCClient(self):
+        return self._getRbuilderClient(RbuilderRPCClient)
+
+    def _getRbuilderRESTClient(self):
+        return self._getRbuilderClient(RbuilderRESTClient)
 
     def _getBaseServerUrl(self):
         """
@@ -98,7 +106,7 @@ class RbuilderFacade(object):
         return serverUrl, user, password
 
     def buildAllImagesForStage(self):
-        client = self._getRbuilderClient()
+        client = self._getRbuilderRPCClient()
         stageName = self._handle.productStore.getActiveStageName()
         productName = str(self._handle.product.getProductShortname())
         versionName = str(self._handle.product.getProductVersion())
@@ -107,12 +115,12 @@ class RbuilderFacade(object):
         return buildIds
 
     def getProductLabelFromNameAndVersion(self, productName, versionName):
-        client = self._getRbuilderClient()
+        client = self._getRbuilderRPCClient()
         return client.getProductLabelFromNameAndVersion(productName,
                                                         versionName)
 
     def watchImages(self, buildIds, timeout=0, interval = 5, quiet = False):
-        client = self._getRbuilderClient()
+        client = self._getRbuilderRPCClient()
         client.watchImages(buildIds, timeout=timeout, interval=interval, quiet=quiet)
 
     def checkForRmake(self, serverUrl):
@@ -142,7 +150,7 @@ class RbuilderFacade(object):
 
     def validateRbuilderUrl(self, serverUrl):
         try:
-            client = RbuilderClient(serverUrl, '', '', self._handle)
+            client = RbuilderRPCClient(serverUrl, '', '', self._handle)
             client.checkAuth()
         except Exception, err:
             return False, err
@@ -150,7 +158,7 @@ class RbuilderFacade(object):
         return True, ''
 
     def validateCredentials(self, username, password, serverUrl):
-        client = RbuilderClient(serverUrl, username, password, self._handle)
+        client = RbuilderRPCClient(serverUrl, username, password, self._handle)
         try:
             ret = client.checkAuth()
             return ret['authorized']
@@ -171,10 +179,10 @@ class RbuilderFacade(object):
         return self._getProjectUrl('release', releaseId)
 
     def getBuildFiles(self, buildId):
-        return self._getRbuilderClient().getBuildFiles(buildId)
+        return self._getRbuilderRPCClient().getBuildFiles(buildId)
 
     def createRelease(self, buildIds):
-        client = self._getRbuilderClient()
+        client = self._getRbuilderRPCClient()
         product = self._handle.product
         productName = str(product.getProductShortname())
         return client.createRelease(productName, buildIds) 
@@ -194,19 +202,39 @@ class RbuilderFacade(object):
         @type kwargs: dict
         @raise errors.RbuilderError
         '''
-        client = self._getRbuilderClient()
+        client = self._getRbuilderRPCClient()
         return client.updateRelease(releaseId, kwargs)
 
     def publishRelease(self, releaseId, shouldMirror):
-        client = self._getRbuilderClient()
+        client = self._getRbuilderRPCClient()
         return client.publishRelease(releaseId, shouldMirror)
 
-class RbuilderClient(object):
+    def getProductDefinitionSchemaVersion(self):
+        client = self._getRbuilderRESTClient()
+        return client.getProductDefinitionSchemaVersion()
+
+
+class _AbstractRbuilderClient(object):
+    """
+    Abstract class for both the XMLRPC and REST rBuilder client to
+    inherit from.
+    """
+
     def __init__(self, rbuilderUrl, user, pw, handle):
         self.rbuilderUrl = rbuilderUrl
+        self._handle = handle
+
+
+class RbuilderRPCClient(_AbstractRbuilderClient):
+    """
+    XMLRPC rBuilder Client. As rBuilder moves functionality to the REST
+    interface this client will become deprecated.
+    """
+
+    def __init__(self, rbuilderUrl, user, pw, handle):
+        _AbstractRbuilderClient.__init__(self, rbuilderUrl, user, pw, handle)
         rpcUrl = rbuilderUrl + '/xmlrpc-private'
         self.server = facade.ServerProxy(rpcUrl, username=user, password=pw)
-        self._handle = handle
 
     def getProductLabelFromNameAndVersion(self, productName, versionName):
         #pylint: disable-msg=R0914
@@ -280,7 +308,8 @@ class RbuilderClient(object):
         if error:
             if buildIds[0] == 'TroveNotFoundForBuildDefinition':
                 errFlavors = '\n'.join(buildIds[1][0])
-                raise errors.RbuildError('%s\n\nTo submit the partial set of builds, re-run this command with --force' % errFlavors)
+                raise errors.RbuildError('%s\n\nTo submit the partial set of '
+                    'builds, re-run this command with --force' % errFlavors)
             else:
                 raise errors.RbuilderError(*buildIds)
         return buildIds
@@ -455,3 +484,55 @@ class RbuilderClient(object):
         if error:
             raise errors.RbuilderError(*result)
         return result
+
+
+class RbuilderRESTClient(_AbstractRbuilderClient):
+    """
+    REST rBuilder Client. This will replace the RPC client as more
+    functionality is moved into the REST interface.
+    """
+
+    def __init__(self, rbuilderUrl, user, pw, handle):
+        _AbstractRbuilderClient.__init__(self, rbuilderUrl, user, pw, handle)
+        scheme, netloc, path, query, fragment = urlparse.urlsplit(rbuilderUrl)
+        netloc = ('%(user)s:%(pw)s@%(host)s'
+                  % dict(user=user, pw=pw, host=netloc))
+        self._url = urlparse.urlunsplit((scheme, netloc, path, query, fragment))
+        self._basePath = '/api'
+
+    def _request(self, path='', basePath=None):
+        """
+        Make a request to the rBuilder REST API. This should probably be
+        replaced by an interface that supports more than just querying.
+        """
+
+        if basePath is None:
+            basePath = self._basePath
+        rebased = util.joinPaths(basePath, path)
+        requestUrl = urlparse.urljoin(self._url, rebased)
+
+        urlh = urllib.urlopen(requestUrl)
+        if urlh.code != 200:
+            self._handle.ui.writeError('Error (%s) accessing %s'
+                % (urlh.code, requestUrl))
+            return None
+
+        doc = etree.parse(urlh)
+
+        return doc
+
+    def getProductDefinitionSchemaVersion(self):
+        xml = self._request()
+
+        # Return default schema if rbuilder doesn't support rest api
+        if xml is None:
+            return '2.0'
+
+        # proddefSchemaVersion was added in rBuilder 5.2.3, prior to that the
+        # schema version was 2.0.
+        elements = xml.xpath('proddefSchemaVersion')
+        if len(elements) == 0:
+            return '2.0'
+        else:
+            version = elements[0].text
+            return version

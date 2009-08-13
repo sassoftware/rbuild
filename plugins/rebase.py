@@ -16,6 +16,8 @@ rebase command and related utilities.
 """
 import os
 
+from rpath_common.proddef import api1 as proddef
+
 from rbuild.pluginapi import command
 from rbuild import pluginapi
 
@@ -31,6 +33,21 @@ class FileConflictsError(errors.PluginError):
                 ' directory %(dirname)r')
     params = ['filenames', 'dirname']
 
+class IncompatibleProductDefinitionError(errors.PluginError):
+    template = ('Can not rebase because the rBuilder where this product resides'
+                ' does not support the same product definition schema version '
+                'as the local install.')
+    params = []
+
+class NewerProductDefinitionError(IncompatibleProductDefinitionError):
+    template = (IncompatibleProductDefinitionError.template + ' To resolve this'
+                ' error please update your rBuilder to the latest version or '
+                'downgrade rpath-product-definition.')
+
+class OlderProductDefinitionError(IncompatibleProductDefinitionError):
+    template = (IncompatibleProductDefinitionError.template + ' To Resolve this'
+                ' error please update rpath-product-definition. You may also '
+                'rebase through the rBuilder user interface.')
 
 class RebaseCommand(command.BaseCommand):
     help = 'Update product to most recent platform version'
@@ -56,6 +73,7 @@ class Rebase(pluginapi.Plugin):
         handle = self.handle
         ui = handle.ui
 
+        self._raiseErrorIfProddefSchemaDiffer()
         proddir = handle.productStore.getProductDefinitionDirectory()
         conaryClient = handle.facade.conary._getConaryClient()
         self._raiseErrorIfModified(proddir)
@@ -81,6 +99,21 @@ class Rebase(pluginapi.Plugin):
                     trailingVersionDifference(oldPlatformSource,
                                               platformSource,)))
 
+    def _raiseErrorIfProddefSchemaDiffer(self):
+        '''
+        Only allow users to rebase when the product definition schema version
+        on the client matches the rBuilder where the project resides.
+        '''
+        rbuilder = self.handle.facade.rbuilder
+        currentSchemaVersion = proddef.BaseDefinition.version
+        rbuilderSchemaVersion = rbuilder.getProductDefinitionSchemaVersion()
+
+        # schema versions should always be integers separated by dots
+        if currentSchemaVersion > rbuilderSchemaVersion:
+            raise NewerProductDefinitionError
+        elif rbuilderSchemaVersion > currentSchemaVersion:
+            raise OlderProductDefinitionError
+
     def _raiseErrorIfModified(self, proddir):
         '''
         Enforce preconditions for safe rebasing: no files in checkout modified
@@ -90,6 +123,7 @@ class Rebase(pluginapi.Plugin):
         if modifiedFiles:
             raise ModifiedFilesError(filenames=', '.join(modifiedFiles),
                                      dirname=proddir)
+
     def _raiseErrorIfConflicts(self, proddir):
         '''
         Enforce preconditions for safe rebasing: no .conflicts files exist
