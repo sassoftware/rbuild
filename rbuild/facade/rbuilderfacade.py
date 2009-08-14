@@ -494,10 +494,8 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
 
     def __init__(self, rbuilderUrl, user, pw, handle):
         _AbstractRbuilderClient.__init__(self, rbuilderUrl, user, pw, handle)
-        scheme, netloc, path, query, fragment = urlparse.urlsplit(rbuilderUrl)
-        netloc = ('%(user)s:%(pw)s@%(host)s'
-                  % dict(user=user, pw=pw, host=netloc))
-        self._url = urlparse.urlunsplit((scheme, netloc, path, query, fragment))
+        scheme, _, _, host, port, path, query, fragment = util.urlSplit(rbuilderUrl)
+        self._url = util.urlUnsplit(scheme, user, pw, host, port, path, query, fragment)
         self._basePath = '/api'
 
     def _request(self, path='', basePath=None):
