@@ -10,6 +10,13 @@ Changes in @NEW@:
       subject to change, including removal or entire replacement. (RBLD-238)
     * Added support for rBuilder REST interface to rBuilder facade. (RBLD-249)
 
+  o Bug Fixes:
+    * Conary 2.0.40 introduced a fix for another bug that caused
+      rBuild to no longer honor the "--debug-all" argument and not
+      write tracebacks to the .rbuild/tracebacks/ directory; rBuild
+      has been modified so that these features will be restored with
+      Conary version 2.0.44 and later. (RBLD-230, RBLD-234)
+
 Changes in 1.1:
   o New Features:
     * The "rbuild config --ask" command now writes Conary and rMake
@@ -33,11 +40,6 @@ Changes in 1.1:
       naming the source component on the command line. (RBLD-191)
     * The "rbuild checkout --derive" command now removes factories
       so that the derived package can be built. (RBLD-217)
-    * Conary 2.0.40 introduced a fix for another bug that caused
-      rBuild to no longer honor the "--debug-all" argument and not
-      write tracebacks to the .rbuild/tracebacks/ directory; rBuild
-      has been modified so that these features will be restored with
-      Conary version 2.0.44 and later. (RBLD-230, RBLD-234)
 
   o API Changes:
     * The Config plugin now exports the writeConaryConfiguration()
