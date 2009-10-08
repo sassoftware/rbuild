@@ -16,7 +16,7 @@ import os
 from conary.lib import cfg
 from conary.lib import cfgtypes
 
-from rpath_proddef import api1 as proddef
+from rpath_common.proddef import api1 as proddef
 
 from rbuild import errors
 from rbuild.productstore.abstract import ProductStore
