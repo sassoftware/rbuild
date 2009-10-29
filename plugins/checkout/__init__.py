@@ -52,28 +52,35 @@ class CheckoutCommand(command.BaseCommand):
     docs = {'derive' : "Create derived package (based on upstream binary)",
             'shadow' : "Create shadowed package (based on upstream source)",
             'new' : ("Create a new version of the package even if"
-                     " an upstream version exists") }
+                     " an upstream version exists"), 
+            'template' : ("If creating a new package, specify a template."
+                          " Must be used in conjunction with --new"}
 
     def addLocalParameters(self, argDef):
         argDef['derive'] = command.NO_PARAM
         argDef['shadow'] = command.NO_PARAM
         argDef['new']    = command.NO_PARAM
+        argDef['template']    = command.ONE_PARAM
 
     def runCommand(self, handle, argSet, args):
         packageName, = self.requireParameters(args, ['packageName'])[1:]
         derive = argSet.pop('derive', False)
         new = argSet.pop('new', False)
         shadow = argSet.pop('shadow', False)
+        template = argSet.pop('template', False)
         self.runCheckoutCommand(handle, packageName, new=new, shadow=shadow,
-                            derive=derive)
+                            derive=derive, template=template)
 
     def runCheckoutCommand(self, handle, packageName, new=False, shadow=False, 
-                       derive=False):
+                       derive=False, template=False):
         if [new, shadow, derive].count(True) > 1:
             raise errors.ParseError(
                 'Only one of --new, --derive, or --shadow may be specified')
         if new:
-            return handle.Checkout.newPackage(packageName)
+            if template:
+                return handle.Checkout.newPackage(packageName,template=template)
+            else:
+                return handle.Checkout.newPackage(packageName)
         elif shadow:
             return handle.Checkout.shadowPackage(packageName)
         elif derive:
@@ -153,7 +160,7 @@ class Checkout(pluginapi.Plugin):
         self.handle.ui.info('Shadowed package %r in %r', packageName,
                 self._relPath(os.getcwd(), targetDir))
 
-    def newPackage(self, packageName, message=None):
+    def newPackage(self, packageName, message=None, template=None):
         ui = self.handle.ui
         conaryFacade = self.handle.facade.conary
         productStore = self.handle.productStore
@@ -189,7 +196,8 @@ class Checkout(pluginapi.Plugin):
                     return
 
             conaryFacade.createNewPackage(packageName, currentLabel,
-                                          targetDir=targetDir)
+                                          targetDir=targetDir,
+                                          template=template)
             ui.info('Created new package %r in %r', packageName,
                 self._relPath(os.getcwd(), targetDir))
         return
