@@ -529,7 +529,7 @@ class ConaryFacade(object):
 
 
 
-    def createNewPackage(self, package, label, targetDir=None):
+    def createNewPackage(self, package, label, targetDir=None, template=None):
         """
         Create a subdirectory containing files to initialize a new
         conary source package.  Similar to the C{cvc newpkg} command.
@@ -542,7 +542,8 @@ class ConaryFacade(object):
         @type targetDir: string
         """
         checkin.newTrove(self._getRepositoryClient(), self.getConaryConfig(),
-                         '%s=%s' % (package, label), dir=targetDir)
+                         '%s=%s' % (package, label), dir=targetDir,
+                         template=template)
 
     def shadowSource(self, name, version, targetLabel):
         """

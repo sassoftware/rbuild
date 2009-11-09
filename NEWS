@@ -3,6 +3,9 @@ Changes in @NEW@:
     * The "rbuild rebase" command now prevents users from rebasing a
       product-definition to a schema version that is not supported by the
       project's rBuilder. (RBLD-249)
+    * The "rbuild checkout" command now takes a --template option which
+      is ignored unless the --new option is also provided or implied
+      because the package does not yet exist. (RBLD-118)
 
   o API Changes:
     * A new experimental API, rbuild.api1, enables external consumption
