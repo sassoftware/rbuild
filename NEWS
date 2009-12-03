@@ -1,4 +1,4 @@
-Changes in @NEW@:
+Changes in 1.2:
   o New Features:
     * The "rbuild rebase" command now prevents users from rebasing a
       product-definition to a schema version that is not supported by the
