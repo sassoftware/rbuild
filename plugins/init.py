@@ -19,7 +19,7 @@ import tempfile
 
 from conary.lib import util
 
-from rpath_proddef import api1 as proddef
+from rpath_common.proddef import api1 as proddef
 
 from rbuild import errors
 from rbuild import pluginapi

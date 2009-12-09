@@ -16,7 +16,7 @@ rebase command and related utilities.
 """
 import os
 
-from rpath_proddef import api1 as proddef
+from rpath_common.proddef import api1 as proddef
 
 from rbuild.pluginapi import command
 from rbuild import pluginapi

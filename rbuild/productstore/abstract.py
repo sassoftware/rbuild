@@ -12,7 +12,7 @@
 # full details.
 #
 
-from rpath_proddef import api1 as proddef
+from rpath_common.proddef import api1 as proddef
 
 from rbuild import errors
 from rbuild.internal.internal_types import WeakReference
