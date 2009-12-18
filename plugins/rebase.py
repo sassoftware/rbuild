@@ -105,7 +105,7 @@ class Rebase(pluginapi.Plugin):
         on the client matches the rBuilder where the project resides.
         '''
         rbuilder = self.handle.facade.rbuilder
-        currentSchemaVersion = proddef.BaseDefinition.version
+        currentSchemaVersion = proddef.ProductDefinition.version
         rbuilderSchemaVersion = rbuilder.getProductDefinitionSchemaVersion()
 
         # schema versions should always be integers separated by dots
