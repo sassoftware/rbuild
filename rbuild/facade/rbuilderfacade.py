@@ -389,7 +389,9 @@ class RbuilderFacade(object):
         """
         self._handle = handle
 
-    def _getRbuilderClient(self, clientcls=RbuilderRPCClient):
+    def _getRbuilderClient(self, clientcls=None):
+        if clientcls is None:
+            clientcls=RbuilderRPCClient
         cfg = self._handle.getConfig()
         return clientcls(cfg.serverUrl, cfg.user[0], cfg.user[1],
                                  self._handle)
