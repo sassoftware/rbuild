@@ -3,7 +3,9 @@ Changes in @NEW@:
     * The product definition facade no longer uses the internal
       BaseDefinition class. (RBLD-289)
     * The RbuilderClient class is kept around for backwards
-      compatibility. (RBLD-290)
+      compatibility, and the _getRbuilderClient internal method
+      has been made backward compatible with the earlier
+      interface. (RBLD-290)
 
 Changes in 1.2:
   o New Features:

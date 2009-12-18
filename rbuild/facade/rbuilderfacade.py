@@ -50,170 +50,6 @@ class _rBuilderConfig(ConfigFile):
             self.read(fn, exception=False)
 
 
-class RbuilderFacade(object):
-    """
-    The rBuild rBuilder facade.
-
-    Note that the contents of objects marked as B{opaque} may vary
-    according to the version of rMake and Conary in use, and the contents
-    of such objects are not included in the stable rBuild API.
-    """
-
-    def __init__(self, handle):
-        """
-        @param handle: The handle with which this instance is associated.
-        """
-        self._handle = handle
-
-    def _getRbuilderClient(self, clientcls):
-        cfg = self._handle.getConfig()
-        return clientcls(cfg.serverUrl, cfg.user[0], cfg.user[1],
-                                 self._handle)
-
-    def _getRbuilderRPCClient(self):
-        return self._getRbuilderClient(RbuilderRPCClient)
-
-    def _getRbuilderRESTClient(self):
-        return self._getRbuilderClient(RbuilderRESTClient)
-
-    def _getBaseServerUrl(self):
-        """
-        Fetch serverUrl from ~/.rbuilderrc if it exists and is specified
-        """
-        rbcfg = _rBuilderConfig()
-        return rbcfg.serverUrl
-
-    def _getBaseServerUrlData(self):
-        """
-        Fetch serverUrl from ~/.rbuilderrc if it exists and is specified;
-        removes user and password from the URL and returns them separately.
-        @return serverUrl, user, password
-        """
-        serverUrl = self._getBaseServerUrl()
-        if not serverUrl:
-            return (None, None, None)
-        scheme, rest = serverUrl.split(':', 1)
-        host = urllib.splithost(rest)[0]
-        user = urllib.splituser(host)[0]
-        if user:
-            user, password = urllib.splitpasswd(user)
-        else:
-            password = None
-        if password:
-            serverUrl = serverUrl.replace(':%s' %password, '', 1)
-        if user:
-            serverUrl = serverUrl.replace('%s@' %user, '', 1)
-        return serverUrl, user, password
-
-    def buildAllImagesForStage(self):
-        client = self._getRbuilderRPCClient()
-        stageName = self._handle.productStore.getActiveStageName()
-        productName = str(self._handle.product.getProductShortname())
-        versionName = str(self._handle.product.getProductVersion())
-        buildIds = client.startProductBuilds(productName, versionName,
-                                             stageName)
-        return buildIds
-
-    def getProductLabelFromNameAndVersion(self, productName, versionName):
-        client = self._getRbuilderRPCClient()
-        return client.getProductLabelFromNameAndVersion(productName,
-                                                        versionName)
-
-    def watchImages(self, buildIds, timeout=0, interval = 5, quiet = False):
-        client = self._getRbuilderRPCClient()
-        client.watchImages(buildIds, timeout=timeout, interval=interval, quiet=quiet)
-
-    def checkForRmake(self, serverUrl):
-        try:
-            url = serverUrl.split('//')[1]
-        except IndexError, e:
-            return False
-
-        sock = socket.socket()
-        try:
-            sock.connect((url, constants.RMAKE_PORT))
-            sock.close()
-            return True
-        except socket.error, e:
-            return False
-
-    def validateUrl(self, serverUrl):
-        try:
-            urllib2.urlopen(serverUrl).read(1024)
-            #pylint: disable-msg=W0703
-            # * catch Exception is safe: it displays error to user
-        except Exception, err:
-            self._handle.ui.writeError('Error contacting \'%s\': %s',
-                                       serverUrl, err)
-            return False
-        return True
-
-    def validateRbuilderUrl(self, serverUrl):
-        try:
-            client = RbuilderRPCClient(serverUrl, '', '', self._handle)
-            client.checkAuth()
-        except Exception, err:
-            return False, err
-
-        return True, ''
-
-    def validateCredentials(self, username, password, serverUrl):
-        client = RbuilderRPCClient(serverUrl, username, password, self._handle)
-        try:
-            ret = client.checkAuth()
-            return ret['authorized']
-        except Exception, err:
-            return False
-
-    def _getProjectUrl(self, type, id):
-        return '%s/project/%s/%s?id=%d' %(
-            self._getBaseServerUrlData()[0],
-            str(self._handle.product.getProductShortname()),
-            type,
-            int(id))
-
-    def getBuildUrl(self, buildId):
-        return self._getProjectUrl('build', buildId)
-
-    def getReleaseUrl(self, releaseId):
-        return self._getProjectUrl('release', releaseId)
-
-    def getBuildFiles(self, buildId):
-        return self._getRbuilderRPCClient().getBuildFiles(buildId)
-
-    def createRelease(self, buildIds):
-        client = self._getRbuilderRPCClient()
-        product = self._handle.product
-        productName = str(product.getProductShortname())
-        return client.createRelease(productName, buildIds) 
-
-    def updateRelease(self, releaseId, **kwargs):
-        '''
-        Update release C{releaseId} with rBuilder release information
-        dictionary elements passed as keyword arguments.
-        Raises C{errors.RbuilderError} particularly if arguments
-        have been passed that are not understood by the version of
-        rBuilder being contacted.  At least C{name}, C{version},
-        and C{description} will be accepted.
-
-        @param releaseId: rBuilder identifier for a release (see C{createRelease})
-        @type releaseId: int
-        @param kwargs: rBuilder release information dictionary elements
-        @type kwargs: dict
-        @raise errors.RbuilderError
-        '''
-        client = self._getRbuilderRPCClient()
-        return client.updateRelease(releaseId, kwargs)
-
-    def publishRelease(self, releaseId, shouldMirror):
-        client = self._getRbuilderRPCClient()
-        return client.publishRelease(releaseId, shouldMirror)
-
-    def getProductDefinitionSchemaVersion(self):
-        client = self._getRbuilderRESTClient()
-        return client.getProductDefinitionSchemaVersion()
-
-
 class _AbstractRbuilderClient(object):
     """
     Abstract class for both the XMLRPC and REST rBuilder client to
@@ -536,3 +372,167 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
         else:
             version = elements[0].text
             return version
+
+
+class RbuilderFacade(object):
+    """
+    The rBuild rBuilder facade.
+
+    Note that the contents of objects marked as B{opaque} may vary
+    according to the version of rMake and Conary in use, and the contents
+    of such objects are not included in the stable rBuild API.
+    """
+
+    def __init__(self, handle):
+        """
+        @param handle: The handle with which this instance is associated.
+        """
+        self._handle = handle
+
+    def _getRbuilderClient(self, clientcls=RbuilderRPCClient):
+        cfg = self._handle.getConfig()
+        return clientcls(cfg.serverUrl, cfg.user[0], cfg.user[1],
+                                 self._handle)
+
+    def _getRbuilderRPCClient(self):
+        return self._getRbuilderClient(RbuilderRPCClient)
+
+    def _getRbuilderRESTClient(self):
+        return self._getRbuilderClient(RbuilderRESTClient)
+
+    def _getBaseServerUrl(self):
+        """
+        Fetch serverUrl from ~/.rbuilderrc if it exists and is specified
+        """
+        rbcfg = _rBuilderConfig()
+        return rbcfg.serverUrl
+
+    def _getBaseServerUrlData(self):
+        """
+        Fetch serverUrl from ~/.rbuilderrc if it exists and is specified;
+        removes user and password from the URL and returns them separately.
+        @return serverUrl, user, password
+        """
+        serverUrl = self._getBaseServerUrl()
+        if not serverUrl:
+            return (None, None, None)
+        scheme, rest = serverUrl.split(':', 1)
+        host = urllib.splithost(rest)[0]
+        user = urllib.splituser(host)[0]
+        if user:
+            user, password = urllib.splitpasswd(user)
+        else:
+            password = None
+        if password:
+            serverUrl = serverUrl.replace(':%s' %password, '', 1)
+        if user:
+            serverUrl = serverUrl.replace('%s@' %user, '', 1)
+        return serverUrl, user, password
+
+    def buildAllImagesForStage(self):
+        client = self._getRbuilderRPCClient()
+        stageName = self._handle.productStore.getActiveStageName()
+        productName = str(self._handle.product.getProductShortname())
+        versionName = str(self._handle.product.getProductVersion())
+        buildIds = client.startProductBuilds(productName, versionName,
+                                             stageName)
+        return buildIds
+
+    def getProductLabelFromNameAndVersion(self, productName, versionName):
+        client = self._getRbuilderRPCClient()
+        return client.getProductLabelFromNameAndVersion(productName,
+                                                        versionName)
+
+    def watchImages(self, buildIds, timeout=0, interval = 5, quiet = False):
+        client = self._getRbuilderRPCClient()
+        client.watchImages(buildIds, timeout=timeout, interval=interval, quiet=quiet)
+
+    def checkForRmake(self, serverUrl):
+        try:
+            url = serverUrl.split('//')[1]
+        except IndexError, e:
+            return False
+
+        sock = socket.socket()
+        try:
+            sock.connect((url, constants.RMAKE_PORT))
+            sock.close()
+            return True
+        except socket.error, e:
+            return False
+
+    def validateUrl(self, serverUrl):
+        try:
+            urllib2.urlopen(serverUrl).read(1024)
+            #pylint: disable-msg=W0703
+            # * catch Exception is safe: it displays error to user
+        except Exception, err:
+            self._handle.ui.writeError('Error contacting \'%s\': %s',
+                                       serverUrl, err)
+            return False
+        return True
+
+    def validateRbuilderUrl(self, serverUrl):
+        try:
+            client = RbuilderRPCClient(serverUrl, '', '', self._handle)
+            client.checkAuth()
+        except Exception, err:
+            return False, err
+
+        return True, ''
+
+    def validateCredentials(self, username, password, serverUrl):
+        client = RbuilderRPCClient(serverUrl, username, password, self._handle)
+        try:
+            ret = client.checkAuth()
+            return ret['authorized']
+        except Exception, err:
+            return False
+
+    def _getProjectUrl(self, type, id):
+        return '%s/project/%s/%s?id=%d' %(
+            self._getBaseServerUrlData()[0],
+            str(self._handle.product.getProductShortname()),
+            type,
+            int(id))
+
+    def getBuildUrl(self, buildId):
+        return self._getProjectUrl('build', buildId)
+
+    def getReleaseUrl(self, releaseId):
+        return self._getProjectUrl('release', releaseId)
+
+    def getBuildFiles(self, buildId):
+        return self._getRbuilderRPCClient().getBuildFiles(buildId)
+
+    def createRelease(self, buildIds):
+        client = self._getRbuilderRPCClient()
+        product = self._handle.product
+        productName = str(product.getProductShortname())
+        return client.createRelease(productName, buildIds) 
+
+    def updateRelease(self, releaseId, **kwargs):
+        '''
+        Update release C{releaseId} with rBuilder release information
+        dictionary elements passed as keyword arguments.
+        Raises C{errors.RbuilderError} particularly if arguments
+        have been passed that are not understood by the version of
+        rBuilder being contacted.  At least C{name}, C{version},
+        and C{description} will be accepted.
+
+        @param releaseId: rBuilder identifier for a release (see C{createRelease})
+        @type releaseId: int
+        @param kwargs: rBuilder release information dictionary elements
+        @type kwargs: dict
+        @raise errors.RbuilderError
+        '''
+        client = self._getRbuilderRPCClient()
+        return client.updateRelease(releaseId, kwargs)
+
+    def publishRelease(self, releaseId, shouldMirror):
+        client = self._getRbuilderRPCClient()
+        return client.publishRelease(releaseId, shouldMirror)
+
+    def getProductDefinitionSchemaVersion(self):
+        client = self._getRbuilderRESTClient()
+        return client.getProductDefinitionSchemaVersion()
