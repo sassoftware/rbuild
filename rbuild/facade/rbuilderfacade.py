@@ -485,6 +485,8 @@ class RbuilderRPCClient(_AbstractRbuilderClient):
             raise errors.RbuilderError(*result)
         return result
 
+# For backwards compatibility, rbuilder-client used it (SUP-2356)
+RbuilderClient = RbuilderRPCClient
 
 class RbuilderRESTClient(_AbstractRbuilderClient):
     """
