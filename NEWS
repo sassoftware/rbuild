@@ -6,6 +6,12 @@ Changes in @NEW@:
       compatibility, and the _getRbuilderClient internal method
       has been made backward compatible with the earlier
       interface. (RBLD-290)
+    * searchPath entries without a troveName specification in the
+      product definition are considered label search paths, and
+      properly handled, both by the conary and the rmake facade.
+      conaryfacade's internal _findPackageInGroups method was renamed
+      to _findPackageInSearchPaths, to clearly indicate that packages
+      are looked up on labels too. (RBLD-294)
 
 Changes in 1.2:
   o New Features:

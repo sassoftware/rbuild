@@ -113,8 +113,14 @@ class RmakeFacade(object):
             cfg.installLabelPath = [ stageLabel ]
             cfg.flavor = [baseFlavor]
             cfg.buildFlavor = baseFlavor
-            upstreamSources = self._handle.product.getResolveTroves()
-            cfg.resolveTroves = [[x.getTroveTup()] for x in upstreamSources]
+            searchPaths = self._handle.product.getResolveTroves()
+            searchPaths = [ x.getTroveTup() for x in searchPaths ]
+            # Search paths with no trove name go at the end of installLabelPath
+            # Everything else becomes a resolveTrove
+            cfg.resolveTroves = [
+                [x] for x in searchPaths if x[0] is not None ]
+            cfg.installLabelPath.extend(conaryFacade._getLabel(x[1])
+                for x in searchPaths if x[0] is None)
 
             cfg.autoLoadRecipes = \
                 self._handle.productStore.getPlatformAutoLoadRecipes()

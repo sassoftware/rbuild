@@ -204,7 +204,7 @@ class Checkout(pluginapi.Plugin):
         upstreamSources = product.getSearchPaths()
         upstreamSources = [(x.troveName, x.label, None)
                             for x in upstreamSources]
-        troveList =  self.handle.facade.conary._findPackageInGroups(
+        troveList =  self.handle.facade.conary._findPackageInSearchPaths(
                          upstreamSources,
                          packageName)
         if troveList:
