@@ -347,10 +347,12 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
         rebased = util.joinPaths(basePath, path)
         requestUrl = urlparse.urljoin(self._url, rebased)
 
-        urlh = urllib.urlopen(requestUrl)
-        if urlh.code != 200:
+        try:
+            urlo = urllib.URLopener()
+            urlh =urlo.open(requestUrl)
+        except IOError,e:
             self._handle.ui.writeError('Error (%s) accessing %s'
-                % (urlh.code, requestUrl))
+                                       % (e[1], requestUrl))
             return None
 
         doc = etree.parse(urlh)
