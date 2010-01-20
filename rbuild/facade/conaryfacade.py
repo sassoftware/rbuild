@@ -644,7 +644,7 @@ class ConaryFacade(object):
         repos = self._getRepositoryClient()
         troveSpecs = [ self._buildTroveSpec(x, packageName)
             for x in searchPaths ]
-        results = repos.findTroves(None, troveSpecs, None)
+        results = repos.findTroves(None, troveSpecs, allowMissing = True)
 
         troveSpecResults = [ [] for x in troveSpecs ]
         groupTroveList = []
