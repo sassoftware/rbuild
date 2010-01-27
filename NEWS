@@ -12,6 +12,9 @@ Changes in @NEW@:
       conaryfacade's internal _findPackageInGroups method was renamed
       to _findPackageInSearchPaths, to clearly indicate that packages
       are looked up on labels too. (RBLD-294)
+    * A dependency on urllib internals that is not consistent between
+      Python versions has been resolved; previously, some successful
+      calls to rBuilder resulted in errors. (RBLD-295)
 
 Changes in 1.2:
   o New Features:
