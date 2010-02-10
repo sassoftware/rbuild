@@ -75,7 +75,6 @@ class Rebase(pluginapi.Plugin):
         # can be removed, simplifying this code
         schemaVer = '2.0'
         versionKw = {}
-        import epdb;epdb.st('f')
         if hasattr(handle.product, 'preMigrateVersion'):
             schemaVer = handle.product.preMigrateVersion
             versionKw['version'] = None
