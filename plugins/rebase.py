@@ -39,11 +39,6 @@ class IncompatibleProductDefinitionError(errors.PluginError):
                 'as the local install.')
     params = []
 
-class NewerProductDefinitionError(IncompatibleProductDefinitionError):
-    template = (IncompatibleProductDefinitionError.template + ' To resolve this'
-                ' error please update your rBuilder to the latest version or '
-                'downgrade rpath-product-definition.')
-
 class OlderProductDefinitionError(IncompatibleProductDefinitionError):
     template = (IncompatibleProductDefinitionError.template + ' To Resolve this'
                 ' error please update rpath-product-definition. You may also '
@@ -73,7 +68,22 @@ class Rebase(pluginapi.Plugin):
         handle = self.handle
         ui = handle.ui
 
-        self._raiseErrorIfProddefSchemaDiffer()
+        # default to 2.0 if using rpath-product-definition 4.0 or earlier;
+        # the last schema version that is widely compatible at this time.
+        # After rpath-product-definition 4.0 is fully retired, the check
+        # for preMigrateVersion and not passing version= to saveToRepository
+        # can be removed, simplifying this code
+        schemaVer = '2.0'
+        versionKw = {}
+        import epdb;epdb.st('f')
+        if hasattr(handle.product, 'preMigrateVersion'):
+            schemaVer = handle.product.preMigrateVersion
+            versionKw['version'] = None
+
+        rbSchemaVer = self._getrBuilderProductDefinitionSchemaVersion(schemaVer)
+        if 'version' in versionKw:
+            versionKw['version'] = rbSchemaVer
+
         proddir = handle.productStore.getProductDefinitionDirectory()
         conaryClient = handle.facade.conary._getConaryClient()
         self._raiseErrorIfModified(proddir)
@@ -84,7 +94,7 @@ class Rebase(pluginapi.Plugin):
         oldPlatformSource = handle.product.getPlatformSourceTrove()
         handle.product.rebase(conaryClient, label=label)
         self._raiseErrorIfConflicts(proddir)
-        handle.product.saveToRepository(conaryClient)
+        handle.product.saveToRepository(conaryClient, **versionKw)
         handle.productStore.update()
         platformSource = handle.product.getPlatformSourceTrove()
         def trailingVersionDifference(a, b):
@@ -99,20 +109,26 @@ class Rebase(pluginapi.Plugin):
                     trailingVersionDifference(oldPlatformSource,
                                               platformSource,)))
 
-    def _raiseErrorIfProddefSchemaDiffer(self):
+    def _getrBuilderProductDefinitionSchemaVersion(self, schemaVer):
         '''
-        Only allow users to rebase when the product definition schema version
-        on the client matches the rBuilder where the project resides.
+        Get the rBuilder product definition schema versions, raising
+        an error if the schema version is incompatible with the
+        existing schema version.
         '''
         rbuilder = self.handle.facade.rbuilder
-        currentSchemaVersion = proddef.ProductDefinition.version
+        currentMaxSchemaVersion = proddef.ProductDefinition.version
         rbuilderSchemaVersion = rbuilder.getProductDefinitionSchemaVersion()
 
-        # schema versions should always be integers separated by dots
-        if currentSchemaVersion > rbuilderSchemaVersion:
-            raise NewerProductDefinitionError
-        elif rbuilderSchemaVersion > currentSchemaVersion:
-            raise OlderProductDefinitionError
+        # schema versions should always be integers separated by dots,
+        # which compare correctly with < and >
+
+        # we do not need to test if we aren't changing the schema version
+        # because presumably the decision was already made (RBLD-297)
+        if schemaVer < '2.0' or schemaVer != rbuilderSchemaVersion:
+            if rbuilderSchemaVersion > currentMaxSchemaVersion:
+                raise OlderProductDefinitionError
+
+        return rbuilderSchemaVersion
 
     def _raiseErrorIfModified(self, proddir):
         '''

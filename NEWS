@@ -1,4 +1,15 @@
 Changes in @NEW@:
+  o New Features:
+    * The "rbuild rebase" command now saves product definition files
+      in the latest version supported by the associated rBuilder,
+      rather than the latest version supported by the installed
+      rpath-product-definition. (RBLD-298)
+
+  o Bug Fixes:
+    * The "rbuild rebase" command now fails when the rBuilder
+      does not support the product definition schema version
+      only if the schema version is being changed. (RBLD-297)
+
 
 Changes in 1.2.1:
   o Bug Fixes:
