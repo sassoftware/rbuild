@@ -19,7 +19,7 @@ import os
 
 from conary.lib import cfg
 from conary.lib.cfgtypes import CfgString, CfgPathList, CfgBool
-from conary.conarycfg import CfgRepoMap
+from conary.conarycfg import CfgRepoMap, CfgFingerPrint, CfgFingerPrintMap
 
 from rmake.build.buildcfg import CfgUser
 
@@ -42,6 +42,9 @@ class RbuildConfiguration(cfg.ConfigFile):
                                           '~/.rmake/plugins.d'])
     repositoryMap        = CfgRepoMap
     quiet                = (CfgBool, False)
+    signatureKey         = CfgFingerPrint
+    signatureKeyMap      = CfgFingerPrintMap
+
 
     def __init__(self, readConfigFiles=False, ignoreErrors=False, root=''):
         cfg.ConfigFile.__init__(self)

@@ -1,4 +1,9 @@
 Changes in @NEW@:
+  o New Features:
+    * rBuild now enables the signatureKey and signatureKeyMap
+      configuration items, which exactly correspond to the same
+      conary configuration items, and which are used for Conary
+      and rMake operations. (RBLD-305)
 
 Changes in 1.2.2:
   o New Features:

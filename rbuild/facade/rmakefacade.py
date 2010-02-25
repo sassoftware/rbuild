@@ -134,6 +134,8 @@ class RmakeFacade(object):
             cfg.rmakeUrl = rbuildConfig.rmakeUrl
         if rbuildConfig.rmakeUser:
             cfg.rmakeUser = rbuildConfig.rmakeUser
+        cfg.signatureKey = rbuildConfig.signatureKey
+        cfg.signatureKeyMap = rbuildConfig.signatureKeyMap
         cfg.name = rbuildConfig.name
         cfg.contact = rbuildConfig.contact
         self._handle.facade.conary._parseRBuilderConfigFile(cfg)

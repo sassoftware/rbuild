@@ -289,6 +289,8 @@ class ConaryFacade(object):
         cfg.user.append(('*',) + rbuildCfg.user)
         cfg.name = rbuildCfg.name
         cfg.contact = rbuildCfg.contact
+        cfg.signatureKey = rbuildCfg.signatureKey
+        cfg.signatureKeyMap = rbuildCfg.signatureKeyMap
         self._conaryCfg = cfg
         return self._conaryCfg
 
