@@ -172,7 +172,7 @@ class RbuildHandle(_PluginProxy):
         is called.
         @param apiMethod: api call to add the hook to.  This should be
         a reference to the api object accessible from this handle.
-        @param hookFunction: a function that will be called before apiMethod.
+        @param hookFunction: a function that will be called after apiMethod.
         The function must take the same parameters as apiMethod, except that
         it must take a leading argument of the current return value, and
         must return the new return value.

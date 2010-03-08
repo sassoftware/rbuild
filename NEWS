@@ -5,6 +5,10 @@ Changes in @NEW@:
       conary configuration items, and which are used for Conary
       and rMake operations. (RBLD-305)
 
+  o Bug Fixes:
+    * The documentation for installPosthook was changed to correctly
+      say that the hook is run after, not before, the hooked function.
+
 Changes in 1.2.2:
   o New Features:
     * The "rbuild rebase" command now saves product definition files
