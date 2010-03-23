@@ -120,6 +120,14 @@ class ConaryFacade(object):
         @rtype: conary.versions.Label
         """
         if isinstance(label, types.StringTypes):
+            if label.startswith('/'):
+                version = versions.VersionFromString(label)
+                if isinstance(version, versions.Branch):
+                    return version.label()
+                else:
+                    return version.trailingLabel()
+            if label.count('/') == 1 and '/' in label:
+                label = label.split('/', 1)[0]
             return versions.Label(str(label))
         return label
 

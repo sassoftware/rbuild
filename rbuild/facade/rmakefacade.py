@@ -120,7 +120,7 @@ class RmakeFacade(object):
             cfg.resolveTroves = [
                 [x] for x in searchPaths if x[0] is not None ]
             cfg.installLabelPath.extend(conaryFacade._getLabel(x[1])
-                for x in searchPaths if x[0] is None)
+                for x in searchPaths if x[1])
 
             cfg.autoLoadRecipes = \
                 self._handle.productStore.getPlatformAutoLoadRecipes()

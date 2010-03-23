@@ -8,6 +8,8 @@ Changes in @NEW@:
   o Bug Fixes:
     * The documentation for installPosthook was changed to correctly
       say that the hook is run after, not before, the hooked function.
+    * Changed the installLabelPath used in the rMake facade to include
+      the labels of each element of the search path. (RBLD-308)
 
 Changes in 1.2.2:
   o New Features:
