@@ -1,4 +1,8 @@
 Changes in @NEW@:
+  o New Features:
+    * The "rbuild checkout" command now takes a "--factory=" option.
+      Also, when checking out a package with a name that starts with
+      "factory-" it is automatically set to be a factory. (RBLD-125)
 
 Changes in 1.2.3:
   o New Features:
