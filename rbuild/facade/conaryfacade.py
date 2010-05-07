@@ -39,12 +39,11 @@ from conary import versions
 from conary.build import loadrecipe
 from conary.build import use
 from conary.build import errors as builderrors
+from conary.build import derive
 
 from conary.conaryclient import cmdline
 from conary.deps import deps
 from conary.lib import util
-
-from conary.conaryclient.cmdline import parseTroveSpec
 
 from rbuild import errors
 
@@ -214,7 +213,7 @@ class ConaryFacade(object):
             results = repos.findTroves(labelPath, [(name, version, flavor)],
                                        defaultFlavor=defaultFlavor,
                                        allowMissing=allowMissing)
-        except conaryerrors.LabelPathNeeded, e:
+        except conaryerrors.LabelPathNeeded:
             errstr = "%s is not a label. Please specify a label where a " \
                      "product definition can be found, or specify a product " \
                      "short name and version." % str(version)
@@ -602,6 +601,12 @@ class ConaryFacade(object):
         if not results:
             return False
         return self._commitShadowChangeSet(results[0], results[1])[0]
+
+    def derive(self, troveToDerive, targetLabel, targetDir):
+        repos = self._getRepositoryClient()
+        cfg = self.getConaryConfig()
+        derive.derive(repos,cfg, targetLabel, troveToDerive, targetDir,
+                      extract = True)
 
     def _commitShadowChangeSet(self, existingShadow, cs):
         if cs and not cs.isEmpty():
