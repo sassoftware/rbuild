@@ -3,6 +3,14 @@ Changes in @NEW@:
     * The "rbuild checkout" command now takes a "--factory=" option.
       Also, when checking out a package with a name that starts with
       "factory-" it is automatically set to be a factory. (RBLD-125)
+    * rBuild now logs all its actions and outputs to a .rbuild/log
+      file either in the checkout (where possible) or under $HOME
+      (otherwise). (RBLD-225)
+
+  o API Changes:
+    * The "rbuild checkout --derive" command has been changed to
+      match Conary changes, and will now work only with Conary 2.1.16
+      or later. (CNY-3348)
 
 Changes in 1.2.3:
   o New Features:

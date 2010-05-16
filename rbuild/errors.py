@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2006-2009 rPath, Inc.
+# Copyright (c) 2006-2010 rPath, Inc.
 #
 # This program is distributed under the terms of the Common Public License,
 # version 1.0. A copy of this license should have been distributed with this
@@ -260,7 +260,9 @@ def _findCheckoutRoot():
         if os.path.isdir(os.path.join(dirName, '.rbuild')):
             return dirName
         dirName = os.path.dirname(dirName)
-    return None
+    # if not in a checkout, default to $HOME if it exists
+    # depends on getenv returning None for keys that do not exist
+    return os.getenv('HOME')
 
 
 def genExcepthook(*args, **kw):

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2008 rPath, Inc.
+# Copyright (c) 2008-2010 rPath, Inc.
 #
 # This program is distributed under the terms of the Common Public License,
 # version 1.0. A copy of this license should have been distributed with this
@@ -32,8 +32,6 @@ class PromoteCommand(pluginapi.command.BaseCommand):
         """
         _ = self.requireParameters(args)
         promotedList, nextStage = handle.Promote.promoteAll()
-        promotedList = '\n   '.join(promotedList)
-        print 'Promoted to %s:\n   %s' % (nextStage, promotedList)
 
 
 class Promote(pluginapi.Plugin):
@@ -97,4 +95,6 @@ class Promote(pluginapi.Plugin):
         promotedList = [ '%s=%s[%s]' % (x[0], x[1].split('/')[-1], x[2])
                          for x in promotedList ]
         promotedList.sort()
+        promotedTroveList = '\n   '.join(promotedList)
+        ui.write('Promoted to %s:\n   %s', nextStage, promotedTroveList)
         return promotedList, nextStage

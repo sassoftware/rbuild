@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2008 rPath, Inc.
+# Copyright (c) 2008-2010 rPath, Inc.
 #
 # This program is distributed under the terms of the Common Public License,
 # version 1.0. A copy of this license should have been distributed with this
@@ -62,13 +62,23 @@ class RbuildHandle(_PluginProxy):
     @type product: C{proddef}
     @ivar productStore: persistent context for interacting with a product
     @type productStore: C{rbuild.productstore.abstract.ProductStore}
+    @ivar: userInterface: C{None} to default to standard UI, or any
+    other object which implements the UserInterface methods
+    @type userInterface: None, ui.UserInterface
+    @ivar logRoot: base directory for logging if using default user
+    interface: C{None} (default) to search for a checkout from the
+    current directory or $HOME, False to not log, or a specifico
+    directory name in which to store a file named C{log}.
+    Used only if C{userInterface} is C{None}.
+    @type logRoot: None, Bool, str
     """
 
     # Hook the assignment of productStore so that its parent handle
     # is automatically set (to the current instance).
     productStore = AttributeHook('setHandle')
 
-    def __init__(self, cfg=None, pluginManager=None, productStore=None):
+    def __init__(self, cfg=None, pluginManager=None, productStore=None,
+                 userInterface=None, logRoot=None):
         super(RbuildHandle, self).__init__()
 
         self.product = None
@@ -91,9 +101,17 @@ class RbuildHandle(_PluginProxy):
         # Provide the command manager as if it were a plugin
         self['Commands'] = CommandManager()
 
-        #pylint: disable-msg=C0103
-        # this name is intentional
-        self.ui = ui.UserInterface(self._cfg)
+        if userInterface is not None:
+            self.ui = userInterface
+        else:
+            if logRoot is not False:
+                if not logRoot:
+                    logRoot = errors._findCheckoutRoot()
+                    if logRoot:
+                        logRoot += '/.rbuild'
+            #pylint: disable-msg=C0103
+            # this name is intentional
+            self.ui = ui.UserInterface(self._cfg, logRoot=logRoot)
 
         if productStore is None:
             # default product store is directory-based

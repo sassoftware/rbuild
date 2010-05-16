@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2008-2009 rPath, Inc.
+# Copyright (c) 2008-2010 rPath, Inc.
 #
 # This program is distributed under the terms of the Common Public License,
 # version 1.0. A copy of this license should have been distributed with this
@@ -72,9 +72,13 @@ class RbuildMain(mainhandler.MainHandler):
         """
         self.plugins = pluginloader.getPlugins(argv, cfg.pluginDirs)
         self.handle = handle.RbuildHandle(cfg, self.plugins)
+        self.handle.ui.pushContext('rBuild %s: %s',
+                                   self.version, ' '.join(argv))
         self.plugins.registerCommands(self, self.handle)
         self.plugins.initialize()
-        return mainhandler.MainHandler.getCommand(self, argv, cfg)
+        result = mainhandler.MainHandler.getCommand(self, argv, cfg)
+        self.handle.ui.popContext()
+        return result
 
     def _getPreCommandOptions(self, argv, cfg):
         #pylint: disable-msg=C0999

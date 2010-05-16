@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2008-2009 rPath, Inc.
+# Copyright (c) 2008-2010 rPath, Inc.
 #
 # This program is distributed under the terms of the Common Public License,
 # version 1.0. A copy of this license should have been distributed with this
@@ -25,6 +25,8 @@ from rbuild import errors
 from rbuild import pluginapi
 from rbuild.pluginapi import command
 from rbuild.productstore import dirstore
+
+import rbuild.constants
 
 class InitCommand(command.BaseCommand):
     """
@@ -88,6 +90,7 @@ class Init(pluginapi.Plugin):
         return str(version)
 
     def createProductDirectory(self, version, productDir=None):
+        handle = self.handle
         if productDir is None:
             productDir = tempfile.mkdtemp(dir=os.getcwd())
             tempDir = productDir
@@ -99,9 +102,8 @@ class Init(pluginapi.Plugin):
             os.mkdir(productDir + '/.rbuild/tracebacks', 0700)
 
             targetDir = productDir + '/.rbuild/product-definition'
-            self.handle.facade.conary.checkout('product-definition', version,
-                                               targetDir=targetDir)
-            handle = self.handle
+            handle.facade.conary.checkout('product-definition', version,
+                                          targetDir=targetDir)
             productStore = dirstore.CheckoutProductStore(handle, productDir)
             product = productStore.getProduct()
             if tempDir:
@@ -117,6 +119,16 @@ class Init(pluginapi.Plugin):
             if tempDir:
                 util.rmtree(tempDir)
 
+        logRoot = productDir + '/.rbuild'
+        handle.ui.resetLogFile(logRoot)
+        # This redundant log entry is the first entry in the new log,
+        # corresponding to a similar entry in the toplevel log
+        handle.ui._log('rBuild %s initialized %s-%s in %s',
+            rbuild.constants.VERSION,
+            product.getProductShortname(),
+            product.getProductVersion(),
+            productDir)
+
         stages = product.getStages()
         for stage in stages:
             stageDir = productDir + '/' + stage.name
@@ -129,13 +141,13 @@ class Init(pluginapi.Plugin):
                 'installLabelPath %s\n' %(stageLabel, stageLabel))
         oldumask = os.umask(077)
         try:
-            self.handle.getConfig().writeCheckoutFile(
+            handle.getConfig().writeCheckoutFile(
                 productDir + '/.rbuild/rbuildrc')
         finally:
             os.umask(oldumask)
-        self.handle.ui.info('Created checkout for %s at %s', 
-                             product.getProductDefinitionLabel(),
-                             productDir)
+        handle.ui.info('Created checkout for %s at %s', 
+                        product.getProductDefinitionLabel(),
+                        productDir)
         # get the versions that point to the real checkout now
         handle.productStore = dirstore.CheckoutProductStore(None, productDir)
         handle.product = handle.productStore.getProduct()
