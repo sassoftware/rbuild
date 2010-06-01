@@ -1,4 +1,4 @@
-Changes in @NEW@:
+Changes in 1.2.4:
   o New Features:
     * The "rbuild checkout" command now takes a "--factory=" option.
       Also, when checking out a package with a name that starts with
