@@ -76,9 +76,7 @@ class RbuildMain(mainhandler.MainHandler):
                                    self.version, ' '.join(argv))
         self.plugins.registerCommands(self, self.handle)
         self.plugins.initialize()
-        result = mainhandler.MainHandler.getCommand(self, argv, cfg)
-        self.handle.ui.popContext()
-        return result
+        return mainhandler.MainHandler.getCommand(self, argv, cfg)
 
     def _getPreCommandOptions(self, argv, cfg):
         #pylint: disable-msg=C0999
@@ -163,7 +161,20 @@ class RbuildMain(mainhandler.MainHandler):
             lsprof = True
             del argSet['lsprof']
 
-        rv = thisCommand.runCommand(self.handle, argSet, args)
+        try:
+            rv = thisCommand.runCommand(self.handle, argSet, args)
+            self.handle.ui.popContext('Command returned %r', rv)
+        except Exception, e:
+            # Save this exception to re-raise
+            exc_info = sys.exc_info()
+            # Try to log the exception, but do not blow up if the UI has
+            # failed in an unexpected way
+            try:
+                self.handle.ui.popContext('Command failed with exception %r', e)
+            except:
+                pass
+            raise e, None, exc_info[2]
+
 
         if lsprof:
             prof.disable()

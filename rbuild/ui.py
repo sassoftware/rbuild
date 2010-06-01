@@ -82,9 +82,9 @@ class UserInterface(object):
         if self._log:
             self._log.pushContext(msg, *args)
 
-    def popContext(self):
+    def popContext(self, *args):
         if self._log:
-            self._log.popContext()
+            self._log.popContext(*args)
 
     def writeError(self, errorMsg, *args):
         self.errorStream.write('warning: %s\n' % (errorMsg % args, ))
@@ -96,7 +96,8 @@ class UserInterface(object):
     def info(self, msg, *args):
         if not self.cfg.quiet:
             self.write(msg, *args)
-        if self._log:
+        elif self._log:
+            # self.write() already logs, so do this only in quiet mode
             self._log(msg, *args)
 
     def warning(self, msg, *args):

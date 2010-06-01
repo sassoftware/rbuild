@@ -42,8 +42,10 @@ class Logger(object):
         self._write(msg, '', *args)
         self.indent += '  '
 
-    def popContext(self):
+    def popContext(self, *args):
         self.indent = self.indent[:-2]
+        if args:
+            self.info(*args)
 
     def __call__(self, msg, *args):
         self.info(msg, *args)
