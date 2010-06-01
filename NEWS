@@ -1,3 +1,8 @@
+Changes in @NEW@:
+  o New Features:
+
+  o Bug Fixes:
+
 Changes in 1.2.4:
   o New Features:
     * The "rbuild checkout" command now takes a "--factory=" option.
