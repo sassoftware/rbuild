@@ -374,7 +374,7 @@ class ConaryFacade(object):
         try:
             return checkin.nologUpdateSrc(self._getRepositoryClient(),
                                           [targetDir])
-        except builderrors.UpToDate:
+        except (builderrors.UpToDate, builderrors.NotCheckedInError):
             # The end result is an up to date checkout, so ignore the exception
             return True
         except builderrors.CheckinError, e:

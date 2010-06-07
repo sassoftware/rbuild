@@ -2,6 +2,8 @@ Changes in @NEW@:
   o New Features:
 
   o Bug Fixes:
+    * The "rbuild update" commands no longer fail if you have checkouts
+      that have never been committed. (RBLD-317)
 
 Changes in 1.2.4:
   o New Features:
