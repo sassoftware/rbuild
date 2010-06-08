@@ -52,13 +52,13 @@ class ConfigCommand(command.BaseCommand):
 
 
 def _requiresHome(func):
-    def wrapper(method, *args, **kw):
+    def wrapper(*args, **kw):
         'Decorator for methods that require HOME env variable to be set'
         if 'HOME' in os.environ:
             if not os.path.isdir(os.environ['HOME']):
                 raise errors.PluginError('The HOME environment variable references'
                                          ' "%s" which does not exist')
-            return method(*args, **kw)
+            return func(*args, **kw)
         raise errors.PluginError('The HOME environment variable must be set')
     wrapper.__name__ = func.__name__
     wrapper.__doc__ = func.__doc__

@@ -23,6 +23,7 @@ Module functions, classes, and class methods that do not start
 with a C{_} character are public.
 """
 import inspect
+import new
 
 
 # Note that if rmake.lib.pluginlib diverges, we may have to
@@ -138,7 +139,9 @@ def _apiWrapper(method, prehooks, posthooks):
     @param prehooks: functions to call before calling actual function
     @param posthooks: functions to call after calling actual function
     """
-    def wrapper(*args, **kw):
+    func = method.im_func
+    self = method.im_self
+    def wrapper(xself, *args, **kw):
         #pylint: disable-msg=C0999
         # internal wrapper function that merely preserves signature
         """
@@ -156,6 +159,7 @@ def _apiWrapper(method, prehooks, posthooks):
         for posthook in posthooks:
             rv = posthook(rv, *args, **kw)
         return rv
-    wrapper.func_name = method.__name__
+    wrapper.__name__ = method.__name__
     wrapper.__doc__ = method.__doc__
-    return wrapper
+    wrapped = new.instancemethod(wrapper, self, self.__class__)
+    return wrapped
