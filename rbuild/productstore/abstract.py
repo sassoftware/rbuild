@@ -238,3 +238,36 @@ class ProductStore(object):
         if not images:
             raise errors.MissingImageDefinitionError(
                 name=self._handle.product.getProductName())
+
+    def getBootstrapTroves(self):
+        """
+        @return: List of troves that should be installed first in a chroot.
+        @rtype: list of trovespec strings
+        """
+        try:
+            info = self._handle.product.getPlatformInformation()
+        except AttributeError:
+            # Not supported in this version of proddef
+            return []
+        if info:
+            return info.bootstrapTroves
+        else:
+            return []
+
+    def getRPMRequirements(self):
+        """
+        @return: Zero or more Conary dependencies that are provided by the RPM
+                    on the build system that should be used to install the
+                    chroot.  If more than one is returned, pick exactly one
+                    trove that satisfies any of the dependencies.
+        @rtype: list of conary dependency strings
+        """
+        try:
+            info = self._handle.product.getPlatformInformation()
+        except AttributeError:
+            # Not supported in this version of proddef
+            return []
+        if info:
+            return info.rpmRequirements
+        else:
+            return []

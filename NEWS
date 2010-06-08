@@ -1,5 +1,7 @@
 Changes in @NEW@:
   o New Features:
+    * rBuild will now configure rMake correctly to build packages and
+      groups for encapsulated SLES platforms. (RPCL-72)
 
   o Bug Fixes:
     * The "rbuild update" commands no longer fail if you have checkouts

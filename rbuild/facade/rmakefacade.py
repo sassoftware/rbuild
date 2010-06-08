@@ -124,6 +124,10 @@ class RmakeFacade(object):
 
             cfg.autoLoadRecipes = \
                 self._handle.productStore.getPlatformAutoLoadRecipes()
+            cfg.bootstrapTroves = \
+                    self._handle.productStore.getBootstrapTroves()
+            cfg.rpmRequirements = \
+                    self._handle.productStore.getRPMRequirements()
 
             #E1101: 'BuildConfiguration' has no 'user' member - untrue
             #pylint: disable-msg=E1101
