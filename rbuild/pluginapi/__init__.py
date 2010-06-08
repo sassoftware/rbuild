@@ -23,9 +23,7 @@ Module functions, classes, and class methods that do not start
 with a C{_} character are public.
 """
 import inspect
-import new
 
-from decorator import decorator
 
 # Note that if rmake.lib.pluginlib diverges, we may have to
 # override or include a replacement here in order to maintain
@@ -60,7 +58,7 @@ class Plugin(pluginlib.Plugin):
                 continue
             self._prehooks[methodName] = []
             self._posthooks[methodName] = []
-            newMethod = _apiWrapper(self, method,
+            newMethod = _apiWrapper(method,
                 self._prehooks[methodName],
                 self._posthooks[methodName])
             setattr(self, methodName, newMethod)
@@ -132,17 +130,15 @@ class Plugin(pluginlib.Plugin):
         except KeyError:
             raise errors.InvalidAPIMethodError(apiName)
 
-def _apiWrapper(self, function, prehooks, posthooks):
+def _apiWrapper(method, prehooks, posthooks):
     """
     Internal function that adds support for calling pre- and post-hooks
     before calling api methods.
-    @param self: this is a function used as a method
     @param function: actual function to wrap
     @param prehooks: functions to call before calling actual function
     @param posthooks: functions to call after calling actual function
     """
-    @decorator
-    def wrapper(apiMethod, _, *args, **kw):
+    def wrapper(*args, **kw):
         #pylint: disable-msg=C0999
         # internal wrapper function that merely preserves signature
         """
@@ -155,12 +151,11 @@ def _apiWrapper(self, function, prehooks, posthooks):
                     args, kw = rv
                 else:
                     raise errors.InvalidHookReturnError(hook=prehook,
-                            method=function.im_func.__name__)
-        rv = apiMethod(*args, **kw)
+                            method=method.__name__)
+        rv = method(*args, **kw)
         for posthook in posthooks:
             rv = posthook(rv, *args, **kw)
         return rv
-    newFunction = wrapper(function)
-    newMethod = new.instancemethod(newFunction, self, self.__class__)
-    return newMethod
-
+    wrapper.func_name = method.__name__
+    wrapper.__doc__ = method.__doc__
+    return wrapper

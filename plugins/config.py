@@ -11,10 +11,7 @@
 # or fitness for a particular purpose. See the Common Public License for
 # full details.
 #
-import copy
 import os
-
-from decorator import decorator
 
 from rbuild import constants
 from rbuild import errors
@@ -54,15 +51,18 @@ class ConfigCommand(command.BaseCommand):
             handle.Config.displayConfig()
 
 
-@decorator
-def _requiresHome(method, *args, **kw):
-    'Decorator for methods that require HOME env variable to be set'
-    if 'HOME' in os.environ:
-        if not os.path.isdir(os.environ['HOME']):
-            raise errors.PluginError('The HOME environment variable references'
-                                     ' "%s" which does not exist')
-        return method(*args, **kw)
-    raise errors.PluginError('The HOME environment variable must be set')
+def _requiresHome(func):
+    def wrapper(method, *args, **kw):
+        'Decorator for methods that require HOME env variable to be set'
+        if 'HOME' in os.environ:
+            if not os.path.isdir(os.environ['HOME']):
+                raise errors.PluginError('The HOME environment variable references'
+                                         ' "%s" which does not exist')
+            return method(*args, **kw)
+        raise errors.PluginError('The HOME environment variable must be set')
+    wrapper.__name__ = func.__name__
+    wrapper.__doc__ = func.__doc__
+    return wrapper
 
 
 class Config(pluginapi.Plugin):
