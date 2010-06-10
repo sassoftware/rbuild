@@ -54,6 +54,8 @@ dist:
 	fi
 	$(MAKE) forcedist
 
+show-version:
+	@echo $(VERSION)
 
 archive:
 	hg archive  --exclude .hgignore -t tbz2 rbuild-$(VERSION).tar.bz2
