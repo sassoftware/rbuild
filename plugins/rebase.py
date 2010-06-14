@@ -44,19 +44,53 @@ class OlderProductDefinitionError(IncompatibleProductDefinitionError):
                 ' error please update rpath-product-definition. You may also '
                 'rebase through the rBuilder user interface.')
 
+def _trailingVersionDifference(a, b):
+    a = a.split('/')
+    b = b.split('/')
+    for i in range(len(b)):
+        if a[i] != b[i]:
+            return '/'.join(b[i:])
+
+def _formatSearchPath(searchPath):
+    return [str('%s=%s/%s' %(x.troveName, x.label, x.version))
+            for x in searchPath]
+
+
 class RebaseCommand(command.BaseCommand):
+    """
+    Modifies the version of the upstream platform and platform
+    definition currently in use.  In normal use, updates to the
+    latest version of the platform definition and the latest
+    version of each of the search path elements specified in
+    the platform definition.  Alternatively, can be used to
+    change the upstream platform used by providing the label
+    for the platform definition for the new upstream platform.
+    After such a change all packages normally must be rebuilt.
+    """
+
     help = 'Update product to most recent platform version'
+    docs = {
+        'interactive' : 'Allow user to choose whether to apply changes',
+        'test' : 'Show what changes would be applied, but do not apply them',
+    }
 
     commands = ['rebase']
 
-    def runCommand(self, handle, _, args):
+    def addLocalParameters(self, argDef):
+        argDef['interactive'] = command.NO_PARAM
+        argDef['test'] = command.NO_PARAM
+
+    def runCommand(self, handle, argSet, args):
+        interactive = argSet.pop('interactive', False)
+        test = argSet.pop('test', False)
         #disallow extra parameters
         _, extra = self.requireParameters(args, allowExtra=True, maxExtra=1)
         if extra:
             label = extra[0]
         else:
             label = None
-        handle.Rebase.rebaseProduct(label)
+        handle.Rebase.rebaseProduct(label=label,
+            interactive=interactive, test=test)
 
 class Rebase(pluginapi.Plugin):
     name = 'rebase'
@@ -64,7 +98,7 @@ class Rebase(pluginapi.Plugin):
     def registerCommands(self):
         self.handle.Commands.registerCommand(RebaseCommand)
 
-    def rebaseProduct(self, label=None):
+    def rebaseProduct(self, label=None, interactive=False, test=False):
         handle = self.handle
         ui = handle.ui
 
@@ -90,23 +124,32 @@ class Rebase(pluginapi.Plugin):
         # update to latest upstream to avoid regressions (RBLD-155)
         handle.productStore.update()
         self._raiseErrorIfConflicts(proddir)
+
         oldPlatformSource = handle.product.getPlatformSourceTrove()
+        oldSearchPaths = handle.product.getSearchPaths()
         handle.product.rebase(conaryClient, label=label)
-        self._raiseErrorIfConflicts(proddir)
+        platformSource = handle.product.getPlatformSourceTrove()
+        searchPaths = handle.product.getSearchPaths()
+        oldFormattedSP = _formatSearchPath(oldSearchPaths)
+        formattedSP = _formatSearchPath(searchPaths)
+        if oldFormattedSP != formattedSP:
+            ui.info('Update search path from:\n%s\nto:\n%s',
+                '\n'.join(['    %s' %x for x in oldFormattedSP]),
+                '\n'.join(['    %s' %x for x in formattedSP]))
+        if oldPlatformSource != platformSource:
+            ui.info('Update %s -> %s',
+                    oldPlatformSource,
+                    _trailingVersionDifference(oldPlatformSource,
+                                               platformSource,))
+        if test:
+            return
+
+        if interactive:
+            if not ui.getYn('Commit these changes? (Y/n)', default=True):
+                return
+
         handle.product.saveToRepository(conaryClient, **versionKw)
         handle.productStore.update()
-        platformSource = handle.product.getPlatformSourceTrove()
-        def trailingVersionDifference(a, b):
-            a = a.split('/')
-            b = b.split('/')
-            for i in range(len(b)):
-                if a[i] != b[i]:
-                    return '/'.join(b[i:])
-        if oldPlatformSource != platformSource:
-            ui.info(
-                'Updated from %s to latest %s' % (oldPlatformSource,
-                    trailingVersionDifference(oldPlatformSource,
-                                              platformSource,)))
 
     def _getrBuilderProductDefinitionSchemaVersion(self, schemaVer):
         '''
