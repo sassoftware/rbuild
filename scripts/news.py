@@ -21,7 +21,7 @@ import time
 from mercurial import hg, ui
 
 
-PRODUCT_NAME = "rBuilder"
+PRODUCT_NAME = "rBuild"
 HEADINGS = [
         ('feature', 'New Features'),
         ('bugfix', 'Bug Fixes'),
