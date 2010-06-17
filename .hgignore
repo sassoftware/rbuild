@@ -10,3 +10,4 @@
 ^docs/developer/.*
 rpath_common
 tags
+NEWS.html
