@@ -1,2 +1,0 @@
-The "rbuild update" commands no longer fail if you have checkouts
-that have never been committed.

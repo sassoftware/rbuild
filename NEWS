@@ -1,3 +1,22 @@
+Changes in 1.2.5:
+  o New Features:
+    * rBuild will now configure rMake correctly to build packages and
+      groups for encapsulated SLES platforms. (RPCL-72)
+    * The rbuild rebase command now takes --interactive and --test
+      arguments, and tells not only about changes to the version of the
+      product definition, but also (and more importantly) changes to the
+      versions of the elements of the search path. (RBLD-316)
+
+  o Bug Fixes:
+    * The "rbuild update" commands no longer fail if you have checkouts
+      that have never been committed. (RBLD-317)
+
+  o Internal Changes:
+    * The python "decorator" package is no longer used, to enable
+      running rBuild on a wider variety of platforms, because the
+      decorator package has not maintained compatibility in newer
+      versions.
+
 Changes in 1.2.4:
   o New Features:
     * The "rbuild checkout" command now takes a "--factory=" option.

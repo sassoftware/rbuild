@@ -1,3 +1,0 @@
-The python "decorator" package is no longer used, to enable running
-rBuild on a wider variety of platforms, because the decorator package
-has not maintained compatibility in newer versions.
