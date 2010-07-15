@@ -1,0 +1,1 @@
+building packages now defaults to no-recurse.  Recursion can still be enabled using the --recurse option.
