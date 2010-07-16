@@ -127,6 +127,7 @@ class Checkout(pluginapi.Plugin):
         return targetDir
 
     def derivePackage(self, packageName):
+        self._checkProductStore()
         ui = self.handle.ui
         upstreamLatest = self._getUpstreamPackage(packageName)
         if not upstreamLatest:
@@ -219,7 +220,7 @@ class Checkout(pluginapi.Plugin):
         upstreamSources = product.getSearchPaths()
         upstreamSources = [(x.troveName, x.label, None)
                             for x in upstreamSources]
-        troveList =  self.handle.facade.conary._findPackageInSearchPaths(
+        troveList = self.handle.facade.conary._findPackageInSearchPaths(
                          upstreamSources,
                          packageName)
         if troveList:
@@ -228,12 +229,15 @@ class Checkout(pluginapi.Plugin):
             return troveList[0]
         return None
 
-    def _getExistingPackage(self, packageName):
+    def _checkProductStore(self):
         if not self.handle.productStore:
             # Neither new nor checkout functions outside of a product store
             raise errors.PluginError(
                 'Current directory is not part of a product.\n'
                 'To initialize a new product directory, use "rbuild init"')
+
+    def _getExistingPackage(self, packageName):
+        self._checkProductStore()
         currentLabel = self.handle.productStore.getActiveStageLabel()
         return self.handle.facade.conary._findTrove(packageName + ':source',
                                                     currentLabel,
