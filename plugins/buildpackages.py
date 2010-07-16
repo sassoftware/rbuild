@@ -35,8 +35,7 @@ class BuildPackagesCommand(command.BaseCommand):
             'message' : 'message describing why the commit was performed',
             'no-watch' : 'do not watch the job after starting the build',
             'no-commit' : 'do not automatically commit successful builds',
-            'no-recurse' : 'this is now the default behavior and so this '
-                'option is no longer necessary',
+            'no-recurse' : 'default behavior left for backwards compatibility',
             'recurse' : 'build every package listed on the '
                 'command line plus all of its dependencies',
       }
