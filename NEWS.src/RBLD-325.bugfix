@@ -1,1 +1,0 @@
-rbuild checkout --derive no longer throws an unhandled exception when called outside a product directory
