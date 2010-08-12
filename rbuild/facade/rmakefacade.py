@@ -105,7 +105,12 @@ class RmakeFacade(object):
         cfg.resolveTrovesOnly = True
         cfg.shortenGroupFlavors = True
         cfg.ignoreExternalRebuildDeps = True
+        # strictMode settings
         cfg.strictMode = True
+        cfg.enforceManagedPolicy = True
+        cfg.copyInConary = False
+        cfg.copyInConfig = False
+
         if rbuildConfig.rmakePluginDirs:
             cfg.pluginDirs = rbuildConfig.rmakePluginDirs
 
