@@ -150,6 +150,11 @@ class RmakeFacade(object):
         cfg.contact = rbuildConfig.contact
         self._handle.facade.conary._parseRBuilderConfigFile(cfg)
 
+        platformInformation = self._handle.product.getPlatformInformation()
+        if 'windows' in platformInformation.platformClassifier.get_tags():
+            rbuilder = self._handle.facade.rbuilder
+            cfg.windowsBuildService = rbuilder.getWindowsBuildService()
+
         if self._handle.productStore:
             rmakeConfigPath = self._handle.productStore.getRmakeConfigPath()
             if os.path.exists(rmakeConfigPath):
@@ -184,9 +189,11 @@ class RmakeFacade(object):
             name = name.replace(',', '-')
             contextNames[flavor] = name
 
+            buildFlavor = conaryFacade._getBuildFlavor(flavor)
+
             cfg.configLine('[%s]' % name)
             cfg.configLine('flavor %s' % flavor)
-            cfg.configLine('buildFlavor %s' % str(flavor))
+            cfg.configLine('buildFlavor %s' % str(buildFlavor))
         # TODO: add cfg interface for resetting the section to default
         cfg._sectionName = None
         self._rmakeConfigWithContexts = (cfg, contextNames)
@@ -289,6 +296,10 @@ class RmakeFacade(object):
 
             troveCfg.macros['productDefinitionSearchPath'] = '\n'.join(
                     groupSearchPath)
+
+            platformInformation = handle.product.getPlatformInformation()
+            if 'windows' in platformInformation.platformClassifier.get_tags():
+                troveCfg.macros['targetos'] = 'windows'
 
         return job
 

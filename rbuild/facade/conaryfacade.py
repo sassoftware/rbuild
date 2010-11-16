@@ -152,6 +152,30 @@ class ConaryFacade(object):
             return deps.parseFlavor(str(flavor), raiseError=True)
         return flavor
 
+    @classmethod
+    def _getBuildFlavor(cls, flavor=None):
+        """
+        Converts a B{opaque} flavor object into an B{opaque} build
+        flavor object, striping any biarch flavor to just x86_64.
+        @param flavor: conary flavor
+        @type flavor: string or B{opaque} conary.deps.deps.Flavor
+        @return: B{opaque} Conary flavor object
+        @rtype: conary.deps.deps.Flavor
+        """
+
+        flavor = cls._getFlavor(flavor=flavor)
+
+        # Remove any x86 dependencies that part of the flavor.
+        biarch = deps.parseFlavor('is: x86 x86_64')
+        if flavor.stronglySatisfies(biarch):
+            # Get a new flavor before modifying it.
+            flavor = flavor.copy()
+            # Remove the x86 deps.
+            flavor.removeDeps(deps.InstructionSetDependency,
+                [deps.Dependency('x86'), ])
+
+        return flavor
+
     def _findTrovesFlattened(self, specList, labelPath=None,
                              defaultFlavor=None, allowMissing=False):
         results = self._findTroves(specList, labelPath=labelPath, 

@@ -20,10 +20,14 @@ via C{handle.facade.rbuilder} which is automatically available to
 all plugins through the C{handle} object.
 """
 import os
+import time
 import socket
+import random
 import urllib
 import urllib2
 import urlparse
+
+import robj
 
 from lxml import etree
 
@@ -37,8 +41,6 @@ from rpath_common.proddef import api1 as proddef
 from rbuild import constants
 from rbuild import errors
 from rbuild import facade
-
-import time
 
 class _rBuilderConfig(ConfigFile):
     serverUrl = None
@@ -336,44 +338,46 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
         self._url = util.urlUnsplit((scheme, user, pw, host, port, path, query, fragment))
         self._basePath = '/api'
 
-    def _request(self, path='', basePath=None):
-        """
-        Make a request to the rBuilder REST API. This should probably be
-        replaced by an interface that supports more than just querying.
-        """
+        self._api = None
 
-        if basePath is None:
-            basePath = self._basePath
-        rebased = util.joinPaths(basePath, path)
-        requestUrl = urlparse.urljoin(self._url, rebased)
-
-        try:
-            urlo = urllib.URLopener()
-            urlh =urlo.open(requestUrl)
-        except IOError,e:
-            self._handle.ui.writeError('Error (%s) accessing %s'
-                                       % (e[1], requestUrl))
-            return None
-
-        doc = etree.parse(urlh)
-
-        return doc
+    @property
+    def api(self):
+        if self._api is None:
+            uri = urlparse.urljoin(self._url, self._basePath)
+            self._api = robj.connect(uri)
+        return self._api
 
     def getProductDefinitionSchemaVersion(self):
-        xml = self._request()
-
         # Return default schema if rbuilder doesn't support rest api
-        if xml is None:
+        proddefSchemaVersion = getattr(self.api, 'proddefSchemaVersion', None)
+        if proddefSchemaVersion is None:
             return '2.0'
 
         # proddefSchemaVersion was added in rBuilder 5.2.3, prior to that the
         # schema version was 2.0.
-        elements = xml.xpath('proddefSchemaVersion')
-        if len(elements) == 0:
-            return '2.0'
         else:
-            version = elements[0].text
-            return version
+            return str(proddefSchemaVersion)
+
+    def getWindowsBuildService(self):
+        systems = self.api.inventory.infrastructure_systems
+
+        wbsSystems = [ x for x in systems
+            if x.system_type.name == 'infrastructure-windows-build-node' ]
+
+        if len(wbsSystems) == 0:
+            raise errors.RbuildError('Could not find any available Windows '
+                'Build Service systems on your rBuilder. A Windows Build '
+                'Service is required for building Windows related packages.')
+
+        wbs = random.choice(wbsSystems)
+
+        if len(wbs.networks) == 0:
+            raise errors.RbuildError('Could not find any usable networks on '
+                'the Windows Build Service.')
+
+        network = wbs.networks[0]
+        address = str(network.ip_address) or str(network.dns_name)
+        return address
 
 
 class RbuilderFacade(object):
@@ -540,3 +544,7 @@ class RbuilderFacade(object):
     def getProductDefinitionSchemaVersion(self):
         client = self._getRbuilderRESTClient()
         return client.getProductDefinitionSchemaVersion()
+
+    def getWindowsBuildService(self):
+        client = self._getRbuilderRESTClient()
+        return client.getWindowsBuildService()
