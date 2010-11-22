@@ -250,7 +250,7 @@ class ProductStore(object):
             # Not supported in this version of proddef
             return []
         if info:
-            return info.bootstrapTroves
+            return info.bootstrapTrove
         else:
             return []
 
