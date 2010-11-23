@@ -151,7 +151,9 @@ class RmakeFacade(object):
         self._handle.facade.conary._parseRBuilderConfigFile(cfg)
 
         platformInformation = self._handle.product.getPlatformInformation()
-        if 'windows' in platformInformation.platformClassifier.get_tags():
+        if (platformInformation and
+            'windows' in platformInformation.platformClassifier.get_tags()):
+
             rbuilder = self._handle.facade.rbuilder
             cfg.windowsBuildService = rbuilder.getWindowsBuildService()
 
