@@ -300,7 +300,8 @@ class RmakeFacade(object):
                     groupSearchPath)
 
             platformInformation = handle.product.getPlatformInformation()
-            if 'windows' in platformInformation.platformClassifier.get_tags():
+            if (platformInformation and
+                'windows' in platformInformation.platformClassifier.get_tags()):
                 troveCfg.macros['targetos'] = 'windows'
 
         return job
