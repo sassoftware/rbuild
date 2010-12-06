@@ -45,6 +45,7 @@ class RmakeFacade(object):
         self._handle = handle
         self._rmakeConfig = None
         self._rmakeConfigWithContexts = None
+        self._rmakeConfigWithGroupContexts = None
         self._plugins = None
 
     def _getBaseRmakeConfig(self, readConfigFiles=True):
@@ -167,20 +168,27 @@ class RmakeFacade(object):
 
         return cfg
 
-    def _getRmakeConfigWithContexts(self):
+    def _getRmakeConfigWithContexts(self, hasGroups=False):
         """
         Returns an rmake configuration file that matches the product associated
         with the current handle.  Beyond the settings provided in 
         _getRmakeConfig, this rmake configuration will have contexts set up 
         that match the flavors required by the product's build definitions 
         for building packages for those build definitions.
+        @param hasGroups: If False (default), separate out flavor and
+        buildFlavor, such that buildFlavor only contains a single arch,
+        otherwise use the same flavor for both flavor and buildFlavor.
+        @type hasGroup: bool
         @return: rMake configuration object suitable for use with the current
         product, and a dictionary of {flavor : contextName} lists that match 
         the flavors in the current product's build definitions.
         """
 
-        if self._rmakeConfigWithContexts:
+        if hasGroups and self._rmakeConfigWithGroupContexts:
+            return self._rmakeConfigWithGroupContexts
+        elif not hasGroups and self._rmakeConfigWithContexts:
             return self._rmakeConfigWithContexts
+
         cfg = self._getRmakeConfig(useCache=False)
         conaryFacade = self._handle.facade.conary
         buildFlavors = [x[1] 
@@ -195,10 +203,20 @@ class RmakeFacade(object):
 
             cfg.configLine('[%s]' % name)
             cfg.configLine('flavor %s' % flavor)
-            cfg.configLine('buildFlavor %s' % str(buildFlavor))
+
+            if hasGroups:
+                cfg.configLine('buildFlavor %s' % flavor)
+            else:
+                cfg.configLine('buildFlavor %s' % str(buildFlavor))
+
         # TODO: add cfg interface for resetting the section to default
         cfg._sectionName = None
-        self._rmakeConfigWithContexts = (cfg, contextNames)
+
+        if hasGroups:
+            self._rmakeConfigWithGroupContexts = (cfg, contextNames)
+        else:
+            self._rmakeConfigWithContexts = (cfg, contextNames)
+
         return cfg, contextNames
 
     def _getRmakeHelperWithContexts(self):
@@ -251,7 +269,11 @@ class RmakeFacade(object):
         if recurse:
             recurse = rmakeClient.BUILD_RECURSE_GROUPS_SOURCE
 
-        cfg = self._getRmakeConfigWithContexts()[0]
+        # When building groups, use the same flavor and buildFlavor (RBLD-350).
+        hasGroups = bool([ x for x in itemList
+            if os.path.basename(x).startswith('group-') ])
+        cfg = self._getRmakeConfigWithContexts(hasGroups=hasGroups)[0]
+
         if useLocal:
             # Insert troves from the build label into resolveTroves
             # to emulate a recursive job's affinity for built troves.
