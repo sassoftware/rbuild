@@ -471,7 +471,7 @@ class RbuilderFacade(object):
 
     def validateUrl(self, serverUrl):
         try:
-            urllib2.urlopen(serverUrl).read(1024)
+            urllib2.urlopen(serverUrl + '/conaryrc').read(1024)
             #pylint: disable-msg=W0703
             # * catch Exception is safe: it displays error to user
         except Exception, err:
