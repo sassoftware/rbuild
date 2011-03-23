@@ -69,6 +69,7 @@ class RebaseCommand(command.BaseCommand):
     """
 
     help = 'Update product to most recent platform version'
+    paramHelp = '[label]'
     docs = {
         'interactive' : 'Allow user to choose whether to apply changes',
         'test' : 'Show what changes would be applied, but do not apply them',
