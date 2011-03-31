@@ -1,0 +1,23 @@
+#
+# Copyright (c) 2008-2010 rPath, Inc.
+# This file is distributed under the terms of the MIT License.
+# A copy is available at http://www.rpath.com/permanent/mit-license.html
+#
+
+class rBuild(BuildPackageRecipe):
+    name = 'rbuild'
+    version = '1.2.x'
+
+    buildRequires = [
+        'rpath-product-definition:python',
+        'rpath-common:python',
+        'python:devel',
+        'rmake:python',
+        'util-linux:runtime',
+        'mercurial:runtime',
+    ]
+
+    def setup(r):
+        r.addMercurialSnapshot('http://hg.rpath.com/rbuild/')
+        r.Make()
+        r.MakeInstall('lib=%(lib)s')
