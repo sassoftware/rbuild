@@ -15,6 +15,7 @@ class rBuild(BuildPackageRecipe):
         'rmake:python',
         'util-linux:runtime',
         'mercurial:runtime',
+        'robj:python',
     ]
 
     def setup(r):
