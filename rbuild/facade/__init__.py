@@ -105,10 +105,13 @@ class ServerProxy(util.ServerProxy):
     def __init__(self, uri, username=None, password=None, *args, **kwargs):
         util.ServerProxy.__init__(self, uri, *args, **kwargs)
 
-        if username is not None:
+        if username is not None and isinstance(self, xmlrpclib.ServerProxy):
             password = util.ProtectedString(password)
             self.__host = ProtectedTemplate('${user}:${password}@${host}',
                 user=username, password=password, host=self.__host)
+        elif username is not None:
+            self._url = self._url._replace(
+                userpass=(username, util.ProtectedString(password)))
 
     def __repr__(self):
         """
@@ -116,8 +119,14 @@ class ServerProxy(util.ServerProxy):
 
         @return: str
         """
-        return '<ServerProxy for %s%s>' % (self.__host.__safe_str__(),
-            self.__handler)
+        if isinstance(self, xmlrpclib.ServerProxy):
+            host = self.__host.__safe_str__()
+            handler = self.__handler
+        else:
+            host = str(self._url)
+            handler = ''
+
+        return '<ServerProxy for %s%s>' % (host, handler)
 
     def _createMethod(self, name):
         """
@@ -127,4 +136,8 @@ class ServerProxy(util.ServerProxy):
         @param name: XMLRPC method name
         @return: L{_Method}
         """
-        return _Method(self._request, name)
+
+        if isinstance(self, xmlrpclib.ServerProxy):
+            return _Method(self._request, name)
+        else:
+            return util.ServerProxy._createMethod(self, name)
