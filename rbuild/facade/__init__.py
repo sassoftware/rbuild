@@ -28,6 +28,7 @@ with a C{_} character are public.
 """
 
 import sys
+import urllib
 import xmlrpclib
 from conary.lib import util
 
@@ -93,25 +94,32 @@ class _Method(xmlrpclib._Method):
                 del eType, eValue, eTraceback
 
 
-class ServerProxy(util.ServerProxy):
+class ServerProxy(xmlrpclib.ServerProxy):
     """
     Generic ServerProxy that supports injecting username/password into
     a URI without revealing the password in tracebacks or error
     messages.
     """
 
+    # This is a modified copy of the ServerProxy from conary.lib.util in
+    # conary 2.2.x. It was coppied for compatibility with conary 2.3 which
+    # changed the conary server proxy to not be based on ServerProxy from
+    # xmlrpclib.
+
     #pylint: disable-msg=R0913
     # we really need all those arguments
     def __init__(self, uri, username=None, password=None, *args, **kwargs):
-        util.ServerProxy.__init__(self, uri, *args, **kwargs)
+        xmlrpclib.ServerProxy.__init__(self, uri, *args, **kwargs)
+        # Hide password
+        userpass, hostport = urllib.splituser(self.__host)
+        if userpass and not username:
+            self.__host = hostport
+            username, password = urllib.splitpasswd(userpass)
 
-        if username is not None and isinstance(self, xmlrpclib.ServerProxy):
-            password = util.ProtectedString(password)
+        if username:
+            password = util.ProtectedString(urllib.quote(password))
             self.__host = ProtectedTemplate('${user}:${password}@${host}',
                 user=username, password=password, host=self.__host)
-        elif username is not None:
-            self._url = self._url._replace(
-                userpass=(username, util.ProtectedString(password)))
 
     def __repr__(self):
         """
@@ -119,14 +127,10 @@ class ServerProxy(util.ServerProxy):
 
         @return: str
         """
-        if isinstance(self, xmlrpclib.ServerProxy):
-            host = self.__host.__safe_str__()
-            handler = self.__handler
-        else:
-            host = str(self._url)
-            handler = ''
 
-        return '<ServerProxy for %s%s>' % (host, handler)
+        return "<ServerProxy for %s%s>" % (repr(self.__host), self.__handler)
+
+    __str__ = __repr__
 
     def _createMethod(self, name):
         """
@@ -137,7 +141,28 @@ class ServerProxy(util.ServerProxy):
         @return: L{_Method}
         """
 
-        if isinstance(self, xmlrpclib.ServerProxy):
-            return _Method(self._request, name)
-        else:
-            return util.ServerProxy._createMethod(self, name)
+        return _Method(self._request, name)
+
+    def _request(self, methodname, params):
+        # Call a method on the remote server
+        request = util.xmlrpcDump(params, methodname,
+            encoding = self.__encoding, allow_none=self.__allow_none)
+
+        response = self.__transport.request(
+            self.__host,
+            self.__handler,
+            request,
+            verbose=self.__verbose)
+
+        if len(response) == 1:
+            response = response[0]
+
+        return response
+
+    def __getattr__(self, name):
+        # magic method dispatcher
+        if name.startswith('__'):
+            raise AttributeError(name)
+        #from conary.lib import log
+        #log.debug('Calling %s:%s' % (self.__host.split('@')[-1], name)
+        return self._createMethod(name)
