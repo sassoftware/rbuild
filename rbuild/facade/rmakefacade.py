@@ -157,6 +157,7 @@ class RmakeFacade(object):
             platformInformation = self._handle.product.getPlatformInformation()
             if (platformInformation and
                 hasattr(platformInformation, 'platformClassifier') and
+                platformInformation.platformClassifier and
                 'windows' in platformInformation.platformClassifier.get_tags()):
 
                 rbuilder = self._handle.facade.rbuilder
