@@ -328,6 +328,8 @@ class RmakeFacade(object):
 
             platformInformation = handle.product.getPlatformInformation()
             if (platformInformation and
+                hasattr(platformInformation, 'platformClassifier') and
+                platformInformation.platformClassifier and
                 'windows' in platformInformation.platformClassifier.get_tags()):
                 troveCfg.macros['targetos'] = 'windows'
 
