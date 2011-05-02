@@ -133,8 +133,9 @@ Please answer the following questions to begin using rBuild:
         if not serverUrl.endswith('rpath.org'):
             if self.handle.facade.rbuilder.checkForRmake(serverUrl):
                 useRbaRmake = ui.getYn("Do you want to use the rMake server "
-                    "running on the rBA?  Choose 'N' to use a local "
-                    "rMake server. (Y/N):", default=False)
+                    "running on the rBuilder Appliance?  'N' will use the "
+                    "rMake server on this local machine. (Y/N):",
+                    default=True)
         if useRbaRmake:
             rmakeUrl = '%s:%s' %(
                 serverUrl.replace('http:', 'https:'),
