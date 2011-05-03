@@ -1,3 +1,14 @@
+Changes in 1.2.7:
+  o New Features:
+    * Added support for configuring a Windows Build Service from the
+      rBuilder and setting the targetos macro appropriately to support
+      Windows. (RBLD-343)
+    * Usage information for the "rbuild rebase" command has been
+      corrected. (RBLD-354)
+
+  o Bug Fixes:
+    * The XMLRPC facade is now compatible with conary 2.3. (RBLD-360)
+
 Changes in 1.2.6:
   o Bug Fixes:
     * building packages now defaults to no-recurse.  Recursion can still
