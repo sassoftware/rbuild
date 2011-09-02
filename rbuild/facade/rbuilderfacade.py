@@ -37,10 +37,11 @@ from conary.lib import log
 from conary.lib import util
 from conary.lib.cfg import ConfigFile
 
-from rpath_common.proddef import api1 as proddef
+from rpath_proddef import api1 as proddef
 from rbuild import constants
 from rbuild import errors
 from rbuild import facade
+from apifinder import ApiFinder
 
 class _rBuilderConfig(ConfigFile):
     serverUrl = None
@@ -336,8 +337,12 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
         _AbstractRbuilderClient.__init__(self, rbuilderUrl, user, pw, handle)
         scheme, _, _, host, port, path, query, fragment = util.urlSplit(rbuilderUrl)
         self._url = util.urlUnsplit((scheme, user, pw, host, port, path, query, fragment))
-        self._basePath = '/api'
 
+        server_port = host
+        if port is not None:
+            server_port = "%s:%s" % (host, port)
+        results = ApiFinder(server_port).url('')
+        self._basePath = results.url
         self._api = None
 
     @property

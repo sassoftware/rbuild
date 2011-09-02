@@ -86,7 +86,7 @@ class _Method(xmlrpclib._Method):
             return xmlrpclib._Method.__call__(self, *args)
         except xmlrpclib.ProtocolError:
             eType, eValue, eTraceback = sys.exc_info()
-            eValue.url = eValue.url.__safe_str__()
+            # eValue.url = eValue.url.__safe_str__()
             try:
                 raise eType, eValue, eTraceback
             finally:
