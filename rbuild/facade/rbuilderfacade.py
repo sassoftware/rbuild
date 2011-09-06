@@ -341,8 +341,9 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
         server_port = host
         if port is not None:
             server_port = "%s:%s" % (host, port)
-        results = ApiFinder(server_port).url('')
-        self._basePath = results.url
+        found = ApiFinder(server_port).url('')
+        scheme, _, _, host, port, path, query, fragment = util.urlSplit(found.url)
+        self._basePath = path
         self._api = None
 
     @property

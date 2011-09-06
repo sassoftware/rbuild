@@ -84,12 +84,9 @@ class ApiFinder(object):
         found = doc.find(purpose)
         if found is None:
             raise Exception("element not found: %s" % found)
-        result = None
-        if versioned:
-            result = found.attrib['id']
-        else:
-            result = found.attrib['href']
-        return ApiFinderResult(version=number, url=self._secureUrl(result))
+        result = found.attrib['id']
+        url=self._secureUrl(result)
+        return ApiFinderResult(version=number, url=url)
 
     def _bestVersion(self, versionElts):
         '''
