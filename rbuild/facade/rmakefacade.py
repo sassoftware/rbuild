@@ -161,7 +161,9 @@ class RmakeFacade(object):
                 'windows' in platformInformation.platformClassifier.get_tags()):
 
                 rbuilder = self._handle.facade.rbuilder
-                cfg.windowsBuildService = rbuilder.getWindowsBuildService()
+
+                if not cfg.windowsBuildService:
+                    cfg.windowsBuildService = rbuilder.getWindowsBuildService()
 
         if self._handle.productStore:
             rmakeConfigPath = self._handle.productStore.getRmakeConfigPath()
