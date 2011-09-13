@@ -45,6 +45,8 @@ class OlderProductDefinitionError(IncompatibleProductDefinitionError):
                 'rebase through the rBuilder user interface.')
 
 def _trailingVersionDifference(a, b):
+    if not a:
+        return b
     a = a.split('/')
     b = b.split('/')
     for i in range(len(b)):
