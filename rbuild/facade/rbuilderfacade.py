@@ -354,15 +354,20 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
         return self._api
 
     def getProductDefinitionSchemaVersion(self):
-        # Return default schema if rbuilder doesn't support rest api
-        proddefSchemaVersion = getattr(self.api, 'proddefSchemaVersion', None)
-        if proddefSchemaVersion is None:
-            return '2.0'
-
+        # rBuilder 5.2.3 <= version < rBuilder 6.1.0
+        ver = getattr(self.api, 'proddefSchemaVersion', None)
+        if ver is not None:
+            return str(ver)
+        # version >= rBuilder 6.1.0
+        version_info = getattr(self.api, 'version_info', None)
+        if version_info is not None:
+            ver = getattr(version_info, 'product_definition_schema_version',
+                    None)
+            if ver is not None:
+                return str(ver)
         # proddefSchemaVersion was added in rBuilder 5.2.3, prior to that the
         # schema version was 2.0.
-        else:
-            return str(proddefSchemaVersion)
+        return '2.0'
 
     def getWindowsBuildService(self):
         systems = self.api.inventory.infrastructure_systems
