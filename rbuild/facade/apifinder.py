@@ -84,7 +84,10 @@ class ApiFinder(object):
         found = doc.find(purpose)
         if found is None:
             raise Exception("element not found: %s" % found)
-        result = found.attrib['id']
+        result = found.attrib.get('id', None)
+        if result is None:
+            # older API versions don't label elements with 'id'
+            result = found.attrib['href']
         url=self._secureUrl(result)
         return ApiFinderResult(version=number, url=url)
 
