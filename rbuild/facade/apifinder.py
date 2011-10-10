@@ -16,7 +16,7 @@
 
 import urllib2
 import urlparse
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from collections import namedtuple
 
 ApiFinderResult = namedtuple('ApiFinderResult', ['version', 'url'])
