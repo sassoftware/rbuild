@@ -252,8 +252,14 @@ Please answer the following questions to begin using rBuild:
         # only.  We do not prompt for an alternative rmakeUser setting.
         if rMakeCfg.rmakeUser is not None:
             cfg.rmakeUser = rMakeCfg.rmakeUser
+
+        keepPass = ui.getYn("Store your password in the local "
+                "configuration file?", default=False)
+        if keepPass:
+            cfg.user = (user, passwd)
+        else:
+            cfg.user = (user, None)
             
-        cfg.user = (user, passwd)
         cfg.serverUrl = serverUrl
         cfg.name = ui.getResponse('Name to display when committing',
                                   default=defaultName)
@@ -268,6 +274,8 @@ Please answer the following questions to begin using rBuild:
 
         self.writeConaryConfiguration()
         self.writeRmakeConfiguration()
+        # For operations after the initial setup
+        cfg.user = (user, passwd)
 
 #{ Synchronizing Conary and rMake configuration
     @_requiresHome
@@ -284,12 +292,17 @@ Please answer the following questions to begin using rBuild:
         conaryCfg = cf.getConaryConfig(useCache=False)
         conaryCfg.name = cfg.name
         conaryCfg.contact = cfg.contact
+        keys = set(['contact', 'name', 'user', 'repositoryMap'])
+        if not cfg.user[1]:
+            # Don't write "user bob None" or "user bob" or the user might get
+            # double-prompted.
+            keys.remove('user')
         self._writeConfiguration(homeConaryConfig + '-rbuild', cfg=conaryCfg,
             header='\n'.join((
             '# This file will be overwritten automatically by rBuild',
             '# You can ignore it by removing the associated includeConfigFile',
             '# line from ~/.conaryrc')),
-            keys=set(('contact', 'name', 'user', 'repositoryMap')),
+            keys=keys,
             replaceExisting=True)
 
         self._writeConfiguration(homeConaryConfig, cfg=None,
@@ -306,14 +319,20 @@ Please answer the following questions to begin using rBuild:
         referencing it, based on the contents of the rMakeCfg.
         '''
         homeRmakeConfig = os.sep.join((os.environ['HOME'], '.rmakerc'))
+        cfg = self.handle.getConfig()
         rf = self.handle.facade.rmake
         rmakeCfg = rf._getRmakeConfig(includeContext=False)
+        keys = set(['rmakeUser', 'rmakeUrl', 'rbuilderUrl'])
+        if not cfg.user[1]:
+            # Don't write "user bob None" or "user bob" or the user might get
+            # double-prompted.
+            keys.remove('rmakeUser')
         self._writeConfiguration(homeRmakeConfig + '-rbuild', cfg=rmakeCfg,
             header='\n'.join((
             '# This file will be overwritten automatically by rBuild.',
             '# You can ignore it by removing the associated includeConfigFile',
             '# line from ~/.rmakerc')),
-            keys=set(('rmakeUser', 'rmakeUrl', 'rbuilderUrl')),
+            keys=keys,
             replaceExisting=True)
 
         self._writeConfiguration(homeRmakeConfig, cfg=None,

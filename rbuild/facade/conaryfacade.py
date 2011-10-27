@@ -322,8 +322,9 @@ class ConaryFacade(object):
         cfg.contact = rbuildCfg.contact
         cfg.signatureKey = rbuildCfg.signatureKey
         cfg.signatureKeyMap = rbuildCfg.signatureKeyMap
-        self._conaryCfg = cfg
-        return self._conaryCfg
+        if useCache:
+            self._conaryCfg = cfg
+        return cfg
 
     def _getBaseConaryConfig(self, readConfigFiles=True):
         """
