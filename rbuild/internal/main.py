@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2008-2010 rPath, Inc.
+# Copyright (c) 2011 rPath, Inc.
 #
 # This program is distributed under the terms of the Common Public License,
 # version 1.0. A copy of this license should have been distributed with this
@@ -21,6 +21,7 @@ Example::
 """
 
 import errno
+import getpass
 import re
 import sys
 
@@ -149,6 +150,10 @@ class RbuildMain(mainhandler.MainHandler):
         if getattr(thisCommand, 'requireConfig', True) and \
            not self.handle.Config.isComplete(cfg):
             self.handle.Config.initializeConfig(cfg)
+        if cfg.user[0] and not cfg.user[1]:
+            passwd = self._promptPassword(cfg)
+            cfg.setPassword(passwd)
+
         if 'stage' in argSet:
             stageName = argSet.pop('stage')
             self.handle.productStore.setActiveStageName(stageName)
@@ -203,6 +208,37 @@ class RbuildMain(mainhandler.MainHandler):
             flags['description'] = docString
 
         return flags
+
+    def _promptPassword(self, cfg):
+        keyDesc = 'rbuild:user:%s:%s' % (cfg.user, cfg.serverUrl)
+        try:
+            import keyutils
+            keyring = keyutils.KEY_SPEC_SESSION_KEYRING
+        except ImportError:
+            keyutils = keyring = None
+        if keyutils:
+            keyId = keyutils.request_key(keyDesc, keyring)
+            if keyId is not None:
+                passwd = keyutils.read_key(keyId)
+                if self.handle.facade.rbuilder.validateCredentials(cfg.user[0],
+                        passwd, cfg.serverUrl):
+                    return passwd
+                # Fall through if the cached creds are invalid
+        for x in range(3):
+            self.handle.ui.write('Please enter the password for user %r on %s'
+                    % (cfg.user[0], cfg.serverUrl))
+            passwd = getpass.getpass("Password: ")
+            if self.handle.facade.rbuilder.validateCredentials(cfg.user[0],
+                    passwd, cfg.serverUrl):
+                if keyutils:
+                    keyutils.add_key(keyDesc, passwd, keyring)
+                return passwd
+            if not passwd:
+                # User wants out but getpass eats Ctrl-C
+                break
+            self.handle.ui.write("The specified credentials were not valid.")
+            self.handle.ui.write()
+        sys.exit("Unable to authenticate to the rBuilder")
 
 
 def _main(argv, MainClass):

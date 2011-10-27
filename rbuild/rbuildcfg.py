@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2006-2008 rPath, Inc.
+# Copyright (c) 2011 rPath, Inc.
 #
 # This program is distributed under the terms of the Common Public License,
 # version 1.0. A copy of this license should have been distributed with this
@@ -18,6 +18,7 @@ a C{conarycfg} object.
 import os
 
 from conary.lib import cfg
+from conary.lib import util
 from conary.lib.cfgtypes import CfgString, CfgPathList, CfgBool
 from conary.conarycfg import CfgRepoMap, CfgFingerPrint, CfgFingerPrintMap
 
@@ -101,3 +102,7 @@ class RbuildConfiguration(cfg.ConfigFile):
                 out.write("# %s (Default: %s) (At `rbuild init': %s)\n" % (
                     item.name,
                     _formatItem(item, item.default), _formatItem(item, value)))
+
+    def setPassword(self, passwd):
+        passwd = util.ProtectedString(passwd)
+        self.user = (self.user[0], passwd)
