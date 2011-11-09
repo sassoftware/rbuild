@@ -76,19 +76,27 @@ class ApiFinder(object):
         '''
         Retrieves a url for a specific service function
         '''
+
         versioned = False
         number = False
         if self.tipData is None:
             versioned, number, self.tipData = self._findTip()
+
         doc = ET.fromstring(self.tipData) 
-        found = doc.find(purpose)
-        if found is None:
-            raise Exception("element not found: %s" % found)
+
+        if not purpose:
+            found = doc
+        else:
+            found = doc.find(purpose)
+            if found is None:
+                raise Exception("element not found: %s" % found)
+
         result = found.attrib.get('id', None)
         if result is None:
             # older API versions don't label elements with 'id'
             result = found.attrib['href']
-        url=self._secureUrl(result)
+        url = self._secureUrl(result)
+
         return ApiFinderResult(version=number, url=url)
 
     def _bestVersion(self, versionElts):
