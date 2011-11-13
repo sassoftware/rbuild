@@ -246,20 +246,15 @@ Please answer the following questions to begin using rBuild:
         if rmakeUrl:
             cfg.rmakeUrl = rmakeUrl
 
-        # In a fresh setup, rmakeUser and user will be the same and
-        # so rmakeUser should not be specified; we preserve existing
-        # rmakeUser for backwards compatibility with existing setups
-        # only.  We do not prompt for an alternative rmakeUser setting.
-        if rMakeCfg.rmakeUser is not None:
-            cfg.rmakeUser = rMakeCfg.rmakeUser
-
         keepPass = ui.getYn("Store your password in the local "
                 "configuration file?", default=False)
         if keepPass:
             cfg.user = (user, passwd)
         else:
             cfg.user = (user, None)
-            
+        
+        cfg.rmakeUser = cfg.user
+    
         cfg.serverUrl = serverUrl
         cfg.name = ui.getResponse('Name to display when committing',
                                   default=defaultName)
@@ -323,10 +318,7 @@ Please answer the following questions to begin using rBuild:
         rf = self.handle.facade.rmake
         rmakeCfg = rf._getRmakeConfig(includeContext=False)
         keys = set(['rmakeUser', 'rmakeUrl', 'rbuilderUrl'])
-        if not cfg.user[1]:
-            # Don't write "user bob None" or "user bob" or the user might get
-            # double-prompted.
-            keys.remove('rmakeUser')
+        from conary.lib import debugger as epdb; epdb.st()
         self._writeConfiguration(homeRmakeConfig + '-rbuild', cfg=rmakeCfg,
             header='\n'.join((
             '# This file will be overwritten automatically by rBuild.',
