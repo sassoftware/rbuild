@@ -318,7 +318,6 @@ Please answer the following questions to begin using rBuild:
         rf = self.handle.facade.rmake
         rmakeCfg = rf._getRmakeConfig(includeContext=False)
         keys = set(['rmakeUser', 'rmakeUrl', 'rbuilderUrl'])
-        from conary.lib import debugger as epdb; epdb.st()
         self._writeConfiguration(homeRmakeConfig + '-rbuild', cfg=rmakeCfg,
             header='\n'.join((
             '# This file will be overwritten automatically by rBuild.',
