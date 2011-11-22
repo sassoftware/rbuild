@@ -150,7 +150,7 @@ class RbuildMain(mainhandler.MainHandler):
         if getattr(thisCommand, 'requireConfig', True) and \
            not self.handle.Config.isComplete(cfg):
             self.handle.Config.initializeConfig(cfg)
-        if cfg.user[0] and not cfg.user[1]:
+        if cfg.user and cfg.user[0] and not cfg.user[1]:
             passwd = self._promptPassword(cfg)
             cfg.setPassword(passwd)
 
