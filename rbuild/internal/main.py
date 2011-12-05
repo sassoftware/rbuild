@@ -210,7 +210,7 @@ class RbuildMain(mainhandler.MainHandler):
         return flags
 
     def _promptPassword(self, cfg):
-        keyDesc = 'rbuild:user:%s:%s' % (cfg.user, cfg.serverUrl)
+        keyDesc = 'rbuild:user:%s:%s' % (cfg.user[0], cfg.serverUrl)
         try:
             import keyutils
             keyring = keyutils.KEY_SPEC_SESSION_KEYRING
