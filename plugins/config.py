@@ -265,12 +265,20 @@ Please answer the following questions to begin using rBuild:
                    ' "rbuild config --ask" command',
             replaceExisting=True)
 
-        cfg.rmakeUser = cfg.user
+        # Only write rmakeUser to rbuildrc if it existed before, don't copy if
+        # it isn't set. This ensures that it inherits from 'user' and thus the
+        # password prompt only happens once. However, do always write rmakeUser
+        # to .rmakerc-rbuild
+        copyRmake = False
+        if not cfg.rmakeUser:
+            cfg.rmakeUser = cfg.user
+            copyRmake = True
         self.writeConaryConfiguration()
         self.writeRmakeConfiguration()
         # For operations after the initial setup
         cfg.user = (user, passwd)
-        cfg.rmakeUser = cfg.user
+        if copyRmake:
+            cfg.rmakeUser = cfg.user
 
 #{ Synchronizing Conary and rMake configuration
     @_requiresHome
