@@ -296,10 +296,9 @@ Please answer the following questions to begin using rBuild:
         conaryCfg.name = cfg.name
         conaryCfg.contact = cfg.contact
         keys = set(['contact', 'name', 'user', 'repositoryMap'])
-        if not cfg.user[1]:
-            # Don't write "user bob None" or "user bob" or the user might get
-            # double-prompted.
-            keys.remove('user')
+        if cfg.externalPassword:
+            # This will replace the existing glob for * ONLY containing passwd
+            conaryCfg.user.addServerGlob('*', cfg.user[0], '')
         self._writeConfiguration(homeConaryConfig + '-rbuild', cfg=conaryCfg,
             header='\n'.join((
             '# This file will be overwritten automatically by rBuild',
@@ -326,6 +325,8 @@ Please answer the following questions to begin using rBuild:
         rf = self.handle.facade.rmake
         rmakeCfg = rf._getRmakeConfig(includeContext=False)
         keys = set(['rmakeUser', 'rmakeUrl', 'rbuilderUrl'])
+        if cfg.externalPassword:
+            rmakeCfg.rmakeUser = (cfg.user[0], '')
         self._writeConfiguration(homeRmakeConfig + '-rbuild', cfg=rmakeCfg,
             header='\n'.join((
             '# This file will be overwritten automatically by rBuild.',

@@ -152,6 +152,7 @@ class RbuildMain(mainhandler.MainHandler):
             self.handle.Config.initializeConfig(cfg)
         if cfg.user and cfg.user[0] and not cfg.user[1]:
             passwd = self._promptPassword(cfg)
+            cfg.externalPassword = True
             cfg.setPassword(passwd)
 
         if 'stage' in argSet:
