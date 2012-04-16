@@ -46,13 +46,14 @@ class RbuildConfiguration(cfg.ConfigFile):
     signatureKey         = CfgFingerPrint
     signatureKeyMap      = CfgFingerPrintMap
 
-
     def __init__(self, readConfigFiles=False, ignoreErrors=False, root=''):
         cfg.ConfigFile.__init__(self)
         if hasattr(self, 'setIgnoreErrors'):
             self.setIgnoreErrors(ignoreErrors)
         if readConfigFiles:
             self.readFiles(root=root)
+
+        self._externalPassword = False
 
     def readFiles(self, root=''):
         """
@@ -106,3 +107,9 @@ class RbuildConfiguration(cfg.ConfigFile):
     def setPassword(self, passwd):
         passwd = util.ProtectedString(passwd)
         self.user = (self.user[0], passwd)
+        self._externalPassword = True
+
+    @property
+    def externalPassword(self):
+        return (self._externalPassword or
+            (self.user and self.user[0] and not self.user[1]))
