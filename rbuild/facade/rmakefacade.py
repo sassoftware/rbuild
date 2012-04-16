@@ -357,7 +357,21 @@ class RmakeFacade(object):
             groupName = str(build.getBuildImageGroup())
             buildImageName = str(build.getBuildName())
             buildImageType = build.getBuildImage().containerFormat
-            buildSettings = build.getBuildImage().fields.copy()
+
+            # Get the default set of settings from the container template
+            templateRef = build.containerTemplateRef
+            container = product.getContainerTemplate(templateRef, None)
+            if not container:
+                container = product.getPlatformContainerTemplate(templateRef,
+                    None)
+            buildSettings = {}
+            if container:
+                buildSettings.update(container.fields.copy())
+
+            for key, val in build.getBuildImage().fields.iteritems():
+                if val is not None and val != '':
+                    buildSettings[key] = val
+
             troveSpec = (groupName, stageLabel, buildFlavor)
             allImages.append((troveSpec, buildImageType,
                               buildSettings, buildImageName))
