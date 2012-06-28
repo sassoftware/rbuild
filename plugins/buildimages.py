@@ -49,7 +49,7 @@ class BuildImagesCommand(command.BaseCommand):
     # could be a function, and too few public methods
     def runCommand(self, handle, argSet, args):
         watch = not argSet.pop('no-watch', False)
-        release = not argSet.pop('no-release', False)
+        release = not argSet.pop('no-release', True)
         name = argSet.pop('release-name', None)
         version = argSet.pop('release-version', None)
         description = argSet.pop('release-description', None)
