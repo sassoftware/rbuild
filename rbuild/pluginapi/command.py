@@ -168,16 +168,24 @@ class CommandWithSubCommands(BaseCommand):
     paramHelp = '<subcommand> [options]'
 
     @classmethod
-    def registerSubCommand(cls, name, subCommandClass):
+    def registerSubCommand(cls, name, subCommandClass, aliases=None):
         """
         Hook for registering subCommand classes.
         @param name: name for the subcommand.
         @param subCommandClass: BaseCommand subclass that implements the
         subcommand.
+        @param aliases: list of command alias names.
         """
         if not '_subCommands' in cls.__dict__:
             cls._subCommands = {}
+        if not '_usageSubCommands' in cls.__dict__:
+            cls._usageSubCommands = {}
+        if not aliases:
+            aliases = []
+        for alias in aliases:
+            cls._subCommands[alias] = subCommandClass
         cls._subCommands[name] = subCommandClass
+        cls._usageSubCommands[name] = subCommandClass
         subCommandClass.name = '%s %s' % (cls.commands[0], name)
 
     def addParameters(self, argDef):
@@ -221,7 +229,9 @@ class CommandWithSubCommands(BaseCommand):
     def usage(self, rc=1):
         if not getattr(self, '_subCommands', None):
             self._subCommands = {}
-        commandList = sorted(self._subCommands.iteritems())
+        if not getattr(self, '_usageSubCommands', None):
+            self._usageSubCommands = {}
+        commandList = self._usageSubCommands.items()
         width = 0
         for commandName, commandClass in commandList:
             width = max(width, len(commandName))
