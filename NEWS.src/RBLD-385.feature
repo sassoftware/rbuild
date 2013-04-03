@@ -1,1 +1,1 @@
-Added support for sub command aliases.
+Added "build package" sub command.

@@ -84,7 +84,8 @@ class BuildPackages(pluginapi.Plugin):
 
     def initialize(self):
         self.handle.Commands.getCommandClass('build').registerSubCommand(
-                                    'packages', BuildPackagesCommand)
+                                    'packages', BuildPackagesCommand,
+                                    aliases=['package', ])
 
     def buildAllPackages(self):
         self.handle.Build.warnIfOldProductDefinition('building all packages')
