@@ -15,25 +15,18 @@
 #
 
 
-loadInstalled('python')
-class rBuild(BuildPackageRecipe, Python.VersionMixIn):
+class rBuild(BuildPackageRecipe):
     name = 'rbuild'
-    version = '1.2.x'
+    version = '1.2'
 
     buildRequires = [
         'rpath-product-definition:python',
-        'rpath-common:python',
-        'python:devel',
-        'python:runtime',
         'rmake:python',
-        'util-linux:runtime',
-        'mercurial:runtime',
+        'mercurial',
         'robj:python',
     ]
 
     def setup(r):
-        r.setDefaultPython()
-        #r.addArchive('ftp://download.rpath.com/rbuild/')
-        r.addMercurialSnapshot('http://hg.rpath.com/rbuild')
+        r.addMercurialSnapshot()
         r.Make()
         r.MakeInstall('lib=%(lib)s')

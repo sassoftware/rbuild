@@ -1,0 +1,43 @@
+#
+# Copyright (c) SAS Institute Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+loadSuperClass('testpackage')
+class rBuildTest(TestPackageRecipe):
+    name = 'rbuild-test'
+    version = '0'
+
+    # Requirements
+    buildRequires = [
+        'conary-test:python',
+        'rpath-product-definition-test:python',
+        'rbuild',
+        'rmake:runtime',
+        'rmake-multinode-server:data',
+        'rmake-test:python',
+        'rpath-product-definition:python',
+    ]
+
+    Flags.test = True
+
+    def setup(r):
+        r.addMercurialSnapshot('/srv/code/products/_rbuild/trunk/rbuild')
+        # Force the testsuite to use installed code
+        r.Move('rbuild', '../')
+        r.Move('plugins', '../')
+        if Flags.test:
+            r.run_tests(do_coverage=True)
+        r.Copy('rbuild_test', '%(libdir)s/python%(pyver)s/site-packages/')
+        r.ComponentSpec('python', '%(libdir)s/')

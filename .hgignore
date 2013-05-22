@@ -1,5 +1,9 @@
 .*\.(pyc|pyo|o|so|swp|swo|orig|rej|~)$
-.*,cover$
+annotate/
+,cover$
+\.times
+\.failed
+\.coverage/
 ^pylint/commit_pylint.txt$
 ^pylint/pylint_errors.txt$
 ^pylint/reports/

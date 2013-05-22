@@ -1,0 +1,6 @@
+For integration with mint test suite:
+ *  Check out mint and mcp
+ *  You need to have installed at least:
+    webunit:python reportlab:python renderPM:python stomp:python
+    mod_python:config mod_python:runtime mod_ssl httpd
+ *  Add test.rpath.local2 as an alias for localhost in /etc/hosts

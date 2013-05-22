@@ -15,21 +15,15 @@
 #
 
 
-class rBuild(BuildPackageRecipe):
-    name = 'rbuild'
-    version = '1.2.x'
+MYDIR=$(shell basename `pwd`)
 
-    buildRequires = [
-        'rpath-product-definition:python',
-        'rpath-common:python',
-        'python:devel',
-        'rmake:python',
-        'util-linux:runtime',
-        'mercurial:runtime',
-        'robj:python',
-    ]
+test:
+	cd .. && ./testsuite.py $(MYDIR)
 
-    def setup(r):
-        r.addMercurialSnapshot('http://hg.rpath.com/rbuild/')
-        r.Make()
-        r.MakeInstall('lib=%(lib)s')
+debug:
+	cd .. && ./testsuite.py $(MYDIR) --debug
+
+coverage:
+	rm -rf annotate;
+	cd .. && ./testsuite.py $(MYDIR) --coverage
+	mv ../annotate .
