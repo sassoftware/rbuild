@@ -33,7 +33,7 @@ from StringIO import StringIO
 import robj
 
 from rbuild import errors
-from rbuild import facade
+from rbuild import facade as fac_mod
 from rbuild.facade import rbuilderfacade
 
 from rpath_proddef import api1 as proddef
@@ -245,20 +245,31 @@ class RbuilderFacadeTest(rbuildhelp.RbuildHelper):
         facade.getProductDefinitionSchemaVersion()
         facade._getRbuilderRESTClient().getProductDefinitionSchemaVersion._mock.assertCalled()
 
+    def testCreateProject(self):
+        handle, facade = self.prep()
+        mock.mockMethod(facade._getRbuilderRESTClient)
+        facade.createProject('title', 'shortname', 'hostname', 'domain.name')
+        self.assertRaises(errors.BadParameterError, facade.createProject,
+                'title', 'illegal.short')
+        self.assertRaises(errors.BadParameterError, facade.createProject,
+                'title', 'short', 'illegal.host')
+        self.assertRaises(errors.BadParameterError, facade.createProject,
+                'title', 'short', None, 'bad.0.domain')
+
 
 class RbuilderRPCClientTest(rbuildhelp.RbuildHelper):
     def _getClient(self):
-        mock.mock(facade, 'ServerProxy')
+        mock.mock(fac_mod, 'ServerProxy')
         return rbuilderfacade.RbuilderRPCClient('http://localhost', 'foo', 'bar',
             mock.MockObject())
 
     def testRbuilderRPCClientInit(self):
-        mock.mock(facade, 'ServerProxy')
+        mock.mock(fac_mod, 'ServerProxy')
         rbuilderfacade.RbuilderRPCClient('http://localhost', 'foo', 'bar', None)
-        facade.ServerProxy._mock.assertCalled(
+        fac_mod.ServerProxy._mock.assertCalled(
                                 'http://localhost/xmlrpc-private', username='foo', password='bar')
         rbuilderfacade.RbuilderRPCClient('https://localhost2', 'foo2', 'bar', None)
-        facade.ServerProxy._mock.assertCalled(
+        fac_mod.ServerProxy._mock.assertCalled(
                                 'https://localhost2/xmlrpc-private', username='foo2', password='bar')
 
     def testGetProductLabelFromNameAndVersion2(self):
@@ -386,7 +397,6 @@ class RbuilderRPCClientTest(rbuildhelp.RbuildHelper):
         client = self._getClient()
         server = client.server
         mock.mock(time, 'sleep')
-        import socket
         server.getBuildStatus._mock.setReturns(
                             [(False, {'message' : 'foo', 'status' : 0}),
                              (False, {'message' : 'bar', 'status' : 300})],
@@ -435,7 +445,6 @@ class RbuilderRPCClientTest(rbuildhelp.RbuildHelper):
         server = client.server
         mock.mock(time, 'sleep')
         self.now = 1000
-        orig = self.now
         def foo():
             self.now += 1
             return self.now
@@ -585,8 +594,8 @@ class RbuilderRPCClientTest(rbuildhelp.RbuildHelper):
         server = client.server
         server.updatePublishedRelease._mock.setDefaultReturn((False, None))
         data = {'name':'foo', 'version':'1.0'}
-        
-        rc = client.updateRelease(42, data)
+
+        client.updateRelease(42, data)
         server.updatePublishedRelease._mock.assertCalled(42, data)
 
         server.updatePublishedRelease._mock.setDefaultReturn((True, ('x','')))
@@ -718,3 +727,30 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
         client._api.inventory._mock.set(infrastructure_systems=[wbs3, notwbs])
         self.failUnlessRaises(errors.RbuildError, client.getWindowsBuildService)
 
+    def testCreateProject(self):
+        client = rbuilderfacade.RbuilderRESTClient('http://localhost', 'foo',
+            'bar', mock.MockObject())
+        mock.mock(client, '_api')
+        class response:
+            project_id = 42
+        client._api.projects.append._mock.setDefaultReturn(response)
+        projectId = client.createProject('title', 'shortname', 'hostname', 'domain.name')
+        xml = client._api.projects.append._mock.calls[0][0][0].toxml()
+        self.assertEqual(xml, """\
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <domain_name>domain.name</domain_name>
+  <external>false</external>
+  <hostname>hostname</hostname>
+  <name>title</name>
+  <short_name>shortname</short_name>
+</project>
+""")
+        self.assertEqual(projectId, 42)
+
+        def append(doc):
+            raise robj.errors.HTTPConflictError(uri=None, status=None,
+                    reason=None, response=None)
+        client._api.projects._mock.set(append=append)
+        err = self.assertRaises(errors.RbuildError, client.createProject, 'title', 'shortname', 'hostname', 'domain.name')
+        self.assertIn('conflicting', str(err))

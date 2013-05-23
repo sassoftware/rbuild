@@ -24,6 +24,7 @@ via C{handle.facade.rbuilder} which is automatically available to
 all plugins through the C{handle} object.
 """
 import os
+import re
 import time
 import socket
 import random
@@ -32,12 +33,8 @@ import urllib2
 import urlparse
 
 import robj
+from xobj import xobj
 
-from lxml import etree
-
-from conary.conaryclient import cmdline as conarycmdline
-from conary.deps import deps as conarydeps
-from conary.lib import log
 from conary.lib import util
 from conary.lib.cfg import ConfigFile
 
@@ -394,6 +391,21 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
         address = str(network.ip_address) or str(network.dns_name)
         return address
 
+    def createProject(self, title, shortName, hostName=None, domainName=None):
+        doc = xobj.Document()
+        doc.project = proj = xobj.XObj()
+        proj.name = title
+        proj.short_name = shortName
+        proj.hostname = hostName or shortName
+        if domainName:
+            proj.domain_name = domainName
+        proj.external = 'false'
+        try:
+            return self.api.projects.append(doc).project_id
+        except robj.errors.HTTPConflictError:
+            raise errors.RbuildError("A project with conflicting "
+                    "parameters already exists")
+
 
 class RbuilderFacade(object):
     """
@@ -563,3 +575,22 @@ class RbuilderFacade(object):
     def getWindowsBuildService(self):
         client = self._getRbuilderRESTClient()
         return client.getWindowsBuildService()
+
+    def createProject(self, title, shortName, hostName=None, domainName=None):
+        if not self.isValidShortName(shortName):
+            raise errors.BadParameterError("Invalid project short name")
+        if hostName and not self.isValidShortName(hostName):
+            raise errors.BadParameterError("Invalid project hostname")
+        if not self.isValidDomainName(domainName):
+            raise errors.BadParameterError("Invalid project domain name")
+        client = self._getRbuilderRESTClient()
+        return client.createProject(title, shortName, hostName, domainName)
+
+    @staticmethod
+    def isValidShortName(value):
+        return len(value) < 63 and re.match('^[a-zA-Z][a-zA-Z0-9\-]*$', value)
+
+    @staticmethod
+    def isValidDomainName(value):
+        return not value or re.match(r'^([a-zA-Z][a-zA-Z0-9\-]*\.)*'
+                '[a-zA-Z][a-zA-Z0-9\-]*$', value)
