@@ -62,7 +62,7 @@ def _getJobFromNames(handle, packageList):
     Build everything in C{packageList} without a rebuild and without
     recursing into the image group.
     """
-    packageRecipes, _ = handle.productStore.getEditedRecipeDicts()
+    packageRecipes, groupRecipes = handle.productStore.getEditedRecipeDicts()
 
     flavors = set(x[1] for x in handle.productStore.getGroupFlavors())
     contexts = handle.facade.rmake._getRmakeContexts()
@@ -75,6 +75,8 @@ def _getJobFromNames(handle, packageList):
     for name in packageList:
         if name in packageRecipes:
             name = packageRecipes[name]
+        elif name in groupRecipes:
+            name = groupRecipes[name]
 
         for flavor in flavors:
             context = contexts[flavor]

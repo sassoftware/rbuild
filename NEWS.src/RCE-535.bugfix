@@ -1,0 +1,1 @@
+"rbuild build packages" will now build groups from checkout if explicitly passed on the command-line

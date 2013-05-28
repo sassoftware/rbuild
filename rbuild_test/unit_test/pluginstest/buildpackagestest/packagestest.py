@@ -72,15 +72,19 @@ class BuildPackagesTest(rbuildhelp.RbuildHelper):
         mock.mockMethod(handle.facade.rmake._getRmakeContexts)
         handle.facade.rmake._getRmakeContexts._mock.setReturn({'a': 'ACTX'})
         packageRecipes = {'foo': self.workDir + '/foo/foo.recipe'}
+        groupRecipes = {
+                'group-baz': self.workDir + '/group-baz/group-baz.recipe'}
         handle.productStore.getEditedRecipeDicts._mock.setReturn(
-            (packageRecipes, {}))
+            (packageRecipes, groupRecipes))
         mock.mockMethod(handle.facade.rmake.createBuildJobForStage)
 
         # normal
-        packages.createRmakeJobForPackages(handle, ['foo', 'bar'], False)
+        packages.createRmakeJobForPackages(handle,
+                ['foo', 'bar', 'group-baz'], False)
 
         handle.facade.rmake.createBuildJobForStage._mock.assertCalled(
-            [self.workDir + '/foo/foo.recipe{ACTX}', 'bar{ACTX}'],
+            [self.workDir + '/foo/foo.recipe{ACTX}', 'bar{ACTX}',
+                self.workDir + '/group-baz/group-baz.recipe{ACTX}'],
             recurse=False, rebuild=False, useLocal=True)
 
         # no group flavors
