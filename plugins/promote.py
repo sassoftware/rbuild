@@ -94,10 +94,13 @@ class Promote(pluginapi.Plugin):
         # groups to be promoted but are not in the platform. These will
         # be "flattened" to the target label.
         flattenLabels = cny.getAllLabelsFromTroves(allTroves) - platformLabels
-
-        # Now promote.
         fromTo = product.getPromoteMapsForStages(activeStage, nextStage,
                 flattenLabels=flattenLabels)
+        ui.info("The following promote map will be used:")
+        for fromLabel, toBranch in sorted(fromTo.iteritems()):
+            ui.info("  %s -- %s", fromLabel, toBranch)
+
+        # Now promote.
         ui.progress('Promoting %d troves', len(groupSpecs))
         promotedList = cny.promoteGroups(allTroves, fromTo, infoOnly=infoOnly)
         promotedList = [ x for x in promotedList
