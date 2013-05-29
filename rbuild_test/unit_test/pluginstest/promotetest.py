@@ -23,14 +23,10 @@ from rbuild_test import rbuildhelp
 
 class PromoteTest(rbuildhelp.RbuildHelper):
     def testCommand(self):
-        handle = self.getRbuildHandle()
-        handle.Promote.registerCommands()
-        handle.Promote.initialize()
-        cmd = handle.Commands.getCommandClass('promote')()
-        mock.mockMethod(handle.Promote.promoteAll)
-        handle.Promote.promoteAll._mock.setReturn(([], 'Stage'))
-        cmd.runCommand(handle, {}, ['rbuild', 'promote'])
-        handle.Promote.promoteAll._mock.assertCalled()
+        self.getRbuildHandle()
+        self.checkRbuild('promote',
+                'rbuild_plugins.promote.Promote.promoteAll', [None],
+                infoOnly=False)
 
     def testPromoteAll(self):
         productStore = mock.MockObject()
@@ -96,12 +92,16 @@ class PromoteTest(rbuildhelp.RbuildHelper):
         facade._findTrovesFlattened._mock.setReturn(groupDist,
                  ['group-dist[is: x86]', 'group-dist[is: x86_64]'],
                  'localhost@rpl:devel')
-        facade.promoteGroups._mock.setReturn(promoted, groupDist, map)
+        facade.promoteGroups._mock.setReturn(promoted, groupDist, map,
+                infoOnly=False)
+        facade.promoteGroups._mock.setReturn(promoted, groupDist, map,
+                infoOnly=True)
 
-        # Check the outcome of the promote
-        promotedList, stage = self.captureOutput(handle.Promote.promoteAll)[0]
+        # First an info-only pass
+        promotedList, stage = self.captureOutput(handle.Promote.promoteAll,
+                infoOnly=True)[0]
         self.assertEqual(stage, 'Quality')
-        self.failUnlessEqual(promotedList, [
+        expected = [
             'group-dist:source=1.0-1[]', 
             'group-dist=1.0-1-1[is: x86]', 
             'group-dist=1.0-1-1[is: x86_64]', 
@@ -111,5 +111,10 @@ class PromoteTest(rbuildhelp.RbuildHelper):
             'kernel=1.0-1-1[]',
             'setup:source=1.0-1[]',
             'setup=1.0-1-1[]',
-          ])
+          ]
+        self.assertEqual(promotedList, expected)
 
+        # Check the outcome of the promote
+        promotedList, stage = self.captureOutput(handle.Promote.promoteAll)[0]
+        self.assertEqual(stage, 'Quality')
+        self.assertEqual(promotedList, expected)

@@ -14,19 +14,26 @@
 # limitations under the License.
 #
 
-
 """
 Update packages and product definition source troves managed by Conary
 """
+
 from rbuild import pluginapi
+from rbuild.pluginapi import command
+
 
 class PromoteCommand(pluginapi.command.BaseCommand):
-    """
-    Updates source directories
-    """
+    """Promote groups and packages to the next stage"""
     commands = ['promote']
     help = 'Promote groups and packages to next stage'
-    def runCommand(self, handle, _, args):
+    docs = {
+            'info' : 'Show what would be done but do not actually promote',
+            }
+
+    def addLocalParameters(self, argDef):
+        argDef['info'] = command.NO_PARAM
+
+    def runCommand(self, handle, argSet, args):
         """
         Process the command line provided for this plugin
         @param handle: context handle
@@ -34,8 +41,8 @@ class PromoteCommand(pluginapi.command.BaseCommand):
         @param args: command-line arguments
         @type args: iterable
         """
-        _ = self.requireParameters(args)
-        promotedList, nextStage = handle.Promote.promoteAll()
+        self.requireParameters(args)
+        handle.Promote.promoteAll(infoOnly=argSet.get('info', False))
 
 
 class Promote(pluginapi.Plugin):
@@ -50,7 +57,7 @@ class Promote(pluginapi.Plugin):
         """
         self.handle.Commands.registerCommand(PromoteCommand)
 
-    def promoteAll(self):
+    def promoteAll(self, infoOnly=False):
         """
         Promote all appropriate troves from the currently active stage
         to the next stage.
@@ -92,7 +99,7 @@ class Promote(pluginapi.Plugin):
         fromTo = product.getPromoteMapsForStages(activeStage, nextStage,
                 flattenLabels=flattenLabels)
         ui.progress('Promoting %d troves', len(groupSpecs))
-        promotedList = cny.promoteGroups(allTroves, fromTo)
+        promotedList = cny.promoteGroups(allTroves, fromTo, infoOnly=infoOnly)
         promotedList = [ x for x in promotedList
                          if (':' not in x[0]
                              or x[0].split(':')[-1] == 'source') ]
@@ -100,5 +107,9 @@ class Promote(pluginapi.Plugin):
                          for x in promotedList ]
         promotedList.sort()
         promotedTroveList = '\n   '.join(promotedList)
-        ui.write('Promoted to %s:\n   %s', nextStage, promotedTroveList)
+        if infoOnly:
+            ui.write('The following would be promoted to %s:\n   %s',
+                    nextStage, promotedTroveList)
+        else:
+            ui.write('Promoted to %s:\n   %s', nextStage, promotedTroveList)
         return promotedList, nextStage

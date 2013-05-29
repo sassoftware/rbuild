@@ -823,7 +823,7 @@ class ConaryFacade(object):
 
         return set(x.asString() for x in labels)
 
-    def promoteGroups(self, groupList, fromTo):
+    def promoteGroups(self, groupList, fromTo, infoOnly=False):
         """
         Promote the troves in C{groupList} using the promote map in
         C{fromTo}. The former should be a list of trove tuples, and the
@@ -833,6 +833,8 @@ class ConaryFacade(object):
         @type  groupList: [(name, version, flavor)]
         @param fromTo: Mapping of labels to execute promote on
         @type  fromTo: {from: to}
+        @param infoOnly: If C{True}, return without committing anything
+        @type  infoOnly: C{bool}
         """
         def getLabelOrBranch(label):
             if isinstance(label, types.StringTypes):
@@ -856,7 +858,8 @@ class ConaryFacade(object):
                            for x in cs.iterNewTroveList() ]
             packageList = [ (str(x[0]), str(x[1]), str(x[2])) 
                             for x in packageList ]
-            self._getRepositoryClient().commitChangeSet(cs)
+            if not infoOnly:
+                self._getRepositoryClient().commitChangeSet(cs)
             return packageList
 
     def detachPackage(self, troveSpec, targetLabel, message=None):
