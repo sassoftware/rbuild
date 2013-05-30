@@ -260,9 +260,6 @@ class CheckoutProductStore(ProductStore):
 
     def _getStatusStore(self):
         if self.statusStore is None:
-            for stageName in self.iterStageNames():
-                stageKey = "%s-%s" % (stageName, "releaseId")
-                setattr(_FileStatusStore, stageKey, cfgtypes.CfgInt)
             self.statusStore = _FileStatusStore(self._baseDirectory
                     + '/.rbuild/status')
 

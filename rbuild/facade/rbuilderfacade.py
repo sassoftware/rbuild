@@ -293,31 +293,7 @@ class RbuilderRPCClient(_AbstractRbuilderClient):
                     productName)
             else:
                 raise errors.RbuilderError(*productId)
-        return productId            
-
-    def createRelease(self, productName, buildIds):
-        productId = self.getProductId(productName)
-        error, releaseId = self.server.newPublishedRelease(productId)
-        if error:
-            raise errors.RbuilderError(*releaseId)
-        for buildId in buildIds:
-            error, msg = self.server.setBuildPublished(buildId,
-                                                       releaseId, True)
-            if error:
-                raise errors.RbuilderError(*msg)
-        return releaseId
-
-    def updateRelease(self, releaseId, data):
-        error, result = self.server.updatePublishedRelease(releaseId, data)
-        if error:
-            raise errors.RbuilderError(*result)
-
-    def publishRelease(self, releaseId, shouldMirror):
-        error, result = self.server.publishPublishedRelease(releaseId,
-            shouldMirror)
-        if error:
-            raise errors.RbuilderError(*result)
-        return result
+        return productId
 
     def checkAuth(self):
         error, result = self.server.checkAuth()
@@ -534,39 +510,8 @@ class RbuilderFacade(object):
     def getBuildUrl(self, buildId):
         return self._getProjectUrl('build', buildId)
 
-    def getReleaseUrl(self, releaseId):
-        return self._getProjectUrl('release', releaseId)
-
     def getBuildFiles(self, buildId):
         return self._getRbuilderRPCClient().getBuildFiles(buildId)
-
-    def createRelease(self, buildIds):
-        client = self._getRbuilderRPCClient()
-        product = self._handle.product
-        productName = str(product.getProductShortname())
-        return client.createRelease(productName, buildIds) 
-
-    def updateRelease(self, releaseId, **kwargs):
-        '''
-        Update release C{releaseId} with rBuilder release information
-        dictionary elements passed as keyword arguments.
-        Raises C{errors.RbuilderError} particularly if arguments
-        have been passed that are not understood by the version of
-        rBuilder being contacted.  At least C{name}, C{version},
-        and C{description} will be accepted.
-
-        @param releaseId: rBuilder identifier for a release (see C{createRelease})
-        @type releaseId: int
-        @param kwargs: rBuilder release information dictionary elements
-        @type kwargs: dict
-        @raise errors.RbuilderError
-        '''
-        client = self._getRbuilderRPCClient()
-        return client.updateRelease(releaseId, kwargs)
-
-    def publishRelease(self, releaseId, shouldMirror):
-        client = self._getRbuilderRPCClient()
-        return client.publishRelease(releaseId, shouldMirror)
 
     def getProductDefinitionSchemaVersion(self):
         client = self._getRbuilderRESTClient()

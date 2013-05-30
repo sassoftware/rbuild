@@ -211,8 +211,6 @@ class DirStoreTest(rbuildhelp.RbuildHelper):
         productStore._mock.enableMethod('setPackageJobId')
         productStore._mock.enableMethod('setGroupJobId')
         productStore._mock.enableMethod('setImageJobId')
-        productStore._mock.enableMethod('setStageReleaseId')
-        productStore._mock.enableMethod('getStageReleaseId')
         productStore.iterStageNames._mock.setDefaultReturn(['teststage'])
         productStore.getActiveStageName._mock.setDefaultReturn('teststage')
         productStore._mock.enable('_baseDirectory')
@@ -229,8 +227,6 @@ class DirStoreTest(rbuildhelp.RbuildHelper):
         assert(productStore.getGroupJobId() is 10)
         assert(productStore.getImageJobId() is 15)
         assert(productStore.getPackageJobId() is 20)
-        productStore.setStageReleaseId(10)
-        assert(productStore.getStageReleaseId() is 10)
         # key 'foo' is not defined
         self.assertRaises(KeyError, productStore.setStatus, 'foo', 'asdf')
 

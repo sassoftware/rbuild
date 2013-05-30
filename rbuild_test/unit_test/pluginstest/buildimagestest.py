@@ -15,10 +15,6 @@
 # limitations under the License.
 #
 
-
-
-import datetime
-
 from rbuild import errors
 from rbuild_test import rbuildhelp
 from testutils import mock
@@ -33,7 +29,6 @@ class BuildImagesTest(rbuildhelp.RbuildHelper):
         mock.mockMethod(handle.BuildImages.buildImages, 1)
         mock.mockMethod(handle.Build.watchJob)
         mock.mockMethod(handle.facade.rmake.isJobBuilt, True)
-        mock.mockMethod(handle.BuildRelease.buildRelease, 42)
         mock.mockMethod(handle.BuildImages.printImageUrlsForJob)
         handle.productStore = mock.MockObject()
         handle.product = mock.MockObject()
@@ -44,29 +39,11 @@ class BuildImagesTest(rbuildhelp.RbuildHelper):
 
         cmd.runCommand(handle, {}, ['rbuild', 'build', 'images', 'image 1', 'image 2'])
         handle.BuildImages.buildImages._mock.assertCalled(['image 1', 'image 2'])
-        handle.productStore.setStageReleaseId._mock.assertNotCalled()
 
-        cmd.runCommand(handle, {'no-release':False}, ['rbuild', 'build',
-            'images'])
-        handle.productStore.setStageReleaseId._mock.assertCalled(0)
+        cmd.runCommand(handle, {}, ['rbuild', 'build', 'images'])
 
-        cmd.runCommand(handle, {'no-watch':True, 'no-release':True}, 
+        cmd.runCommand(handle, {'no-watch':True},
             ['rbuild', 'build', 'images'])
-
-        cmd.runCommand(handle, {'no-watch':True, 'no-release': False},
-            ['rbuild', 'build', 'images'])
-        handle.ui.errorStream.write._mock.assertCalled(
-            'warning: Not grouping built images into a release due to --no-watch option; use "rbuild build release" later.\n')
-        handle.BuildRelease.buildRelease._mock.assertCalled(1,
-            name=None, version=None, description=None)
-
-        cmd.runCommand(handle, {'release-name':'asdf',
-                                'release-version':'vername',
-                                'release-description':'reldesc',
-                                'no-release': False, },
-                                ['rbuild', 'build', 'images'])
-        handle.BuildRelease.buildRelease._mock.assertCalled(1,
-            name='asdf', version='vername', description='reldesc')
 
         handle.facade.rmake.isJobBuilt._mock.setDefaultReturn(False)
         self.assertRaises(errors.PluginError,

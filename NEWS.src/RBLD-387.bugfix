@@ -1,0 +1,1 @@
+Removed "build build release" and "rbuild publish" commands since the corresponding server functionality no longer exists.

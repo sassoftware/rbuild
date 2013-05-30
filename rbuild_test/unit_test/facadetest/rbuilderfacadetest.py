@@ -216,28 +216,6 @@ class RbuilderFacadeTest(rbuildhelp.RbuildHelper):
         mock.mockMethod(facade._getBaseServerUrlData)._mock.setDefaultReturn(('asdf', None, None))
         handle.product.getProductShortname._mock.setDefaultReturn('pdct')
         self.assertEquals(facade.getBuildUrl(5), 'asdf/project/pdct/build?id=5')
-        self.assertEquals(facade.getReleaseUrl(6), 'asdf/project/pdct/release?id=6')
-
-    def testCreateRelease(self):
-        handle, facade = self.prep()
-        mock.mockMethod(facade._getRbuilderRPCClient)
-        handle.product.getProductShortname._mock.setDefaultReturn('testproduct')
-        facade.createRelease([1, 2, 3])
-        facade._getRbuilderRPCClient().createRelease._mock.assertCalled('testproduct',
-            [1, 2, 3])
-
-    def testUpdateRelease(self):
-        handle, facade = self.prep()
-        mock.mockMethod(facade._getRbuilderRPCClient)
-        facade.updateRelease(1, name='foo', version='1.0')
-        facade._getRbuilderRPCClient().updateRelease._mock.assertCalled(1,
-            {'name':'foo', 'version':'1.0'})
-
-    def testPublishRelease(self):
-        handle, facade = self.prep()
-        mock.mockMethod(facade._getRbuilderRPCClient)
-        facade.publishRelease(1, True)
-        facade._getRbuilderRPCClient().publishRelease._mock.assertCalled(1, True)
 
     def testGetProductDefinitionSchemaVersion(self):
         handle, facade = self.prep()
@@ -565,57 +543,6 @@ class RbuilderRPCClientTest(rbuildhelp.RbuildHelper):
             (True, ('ItemNotFound',)))
         self.assertRaises(errors.RbuildError, client.getProductId, 
             'testproduct')
-
-    def testCreateRelease(self):
-        client = self._getClient()
-        server = client.server
-        buildIds = [1, 2, 3]
-        server.getProjectIdByHostname._mock.setDefaultReturn((False, 42))
-        server.setBuildPublished._mock.setDefaultReturn((None, None))
-        server.newPublishedRelease._mock.setDefaultReturn((False, 43))
-
-        rc = client.createRelease('testproduct', buildIds)
-        server.getProjectIdByHostname._mock.assertCalled('testproduct')
-        server.newPublishedRelease._mock.assertCalled(42)
-        server.setBuildPublished._mock.assertCalled(1, 43, True)
-        server.setBuildPublished._mock.assertCalled(2, 43, True)
-        server.setBuildPublished._mock.assertCalled(3, 43, True)
-        assert(rc==43)
-
-        server.setBuildPublished._mock.setDefaultReturn((True, (42, '')))
-        self.assertRaises(errors.RbuildError, client.createRelease,
-            'testproduct', buildIds)
-        server.newPublishedRelease._mock.setDefaultReturn((True, (43, '')))
-        self.assertRaises(errors.RbuildError, client.createRelease,
-            'testproduct', buildIds)
-
-    def testUpdateRelease(self):
-        client = self._getClient()
-        server = client.server
-        server.updatePublishedRelease._mock.setDefaultReturn((False, None))
-        data = {'name':'foo', 'version':'1.0'}
-
-        client.updateRelease(42, data)
-        server.updatePublishedRelease._mock.assertCalled(42, data)
-
-        server.updatePublishedRelease._mock.setDefaultReturn((True, ('x','')))
-        self.assertRaises(errors.RbuildError, client.updateRelease, 42, data)
-
-    def testPublishRelease(self):
-        client = self._getClient()
-        server = client.server
-        server.publishPublishedRelease._mock.setDefaultReturn((False, 43))
-
-        rc = client.publishRelease(42, True)
-        server.publishPublishedRelease._mock.assertCalled(42, True)
-        assert(rc==43)
-
-        server.publishPublishedRelease._mock.setDefaultReturn(
-                (True, ('BlarghError', 43)))
-        error = self.assertRaises(errors.RbuildError, client.publishRelease,
-                42, True)
-        self.assertEquals(error.error, 'BlarghError')
-        self.assertEquals(error.frozen, 43)
 
     def testCheckAuth(self):
         client = self._getClient()
