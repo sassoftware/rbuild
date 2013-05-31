@@ -37,6 +37,7 @@ class ProductStore(object):
     # Transparently weak-reference our handle so no dependency loop is
     # created.
     _handle = WeakReference()
+    proddef = proddef
 
     def __init__(self, handle=None):
         self._handle = handle
@@ -46,7 +47,7 @@ class ProductStore(object):
         self._handle = handle
 
     def getProduct(self):
-        return proddef.ProductDefinition()
+        return self.proddef.ProductDefinition()
 
     def update(self):
         """
@@ -54,6 +55,12 @@ class ProductStore(object):
         because it invalidates any cached copy of the data.
         """
         self._handle.product = self.getProduct()
+
+    def commit(self, message):
+        """
+        Commit a product definition change
+        """
+        return
 
     def iterStageNames(self):
         return (x.name for x in self._handle.product.getStages())

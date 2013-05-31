@@ -69,7 +69,7 @@ def mockedFunction(real, saveList, fakeReturn, *args, **kwargs):
     @param args: real arguments to function
     '''
     if saveList is not None:
-        saveList.append(args)
+        saveList.append((args, kwargs))
     if real:
         return real(*args, **kwargs)
     else:
@@ -191,8 +191,7 @@ class ConaryFacadeTest(rbuildhelp.RbuildHelper):
         self.mock(conaryclient, 'ConaryClient',
             lambda *args: mockedFunction(None, savedArgs, None, *args))
         facade._getConaryClient()
-        assert savedArgs == [('c',)], \
-                                'Failed to find return from getConaryConfig'
+        self.assertEquals(savedArgs, [(('c',), {})])
 
     def testGetRepositoryClient(self):
         _, facade = self.prep()
@@ -372,6 +371,23 @@ class ConaryFacadeTest(rbuildhelp.RbuildHelper):
         facade.setFactoryFlag(None, 'a')
         checkin.factory._mock.assertCalled('', targetDir='a')
 
+    def testCommit(self):
+        _, facade = self.prep()
+        mockConaryCfg = mock.MockObject()
+        mock.mockMethod(facade.getConaryConfig)
+        facade.getConaryConfig._mock.setDefaultReturn(mockConaryCfg)
+        mock.mockMethod(facade._getRepositoryClient)
+        facade._getRepositoryClient._mock.setDefaultReturn('r')
+        savedArgs = []
+        self.mock(checkin, 'commit',
+            lambda *args, **kwargs: mockedFunction(None, savedArgs, None, *args, **kwargs))
+        targetDir = os.path.join(self.workDir, "target")
+        os.makedirs(targetDir)
+        facade.commit(targetDir=targetDir, message="message 1")
+        expectedArgs = [(('r', mockConaryCfg),
+            dict(message="message 1"))]
+        self.assertEquals(savedArgs, expectedArgs)
+
     def testCheckout(self):
         _, facade = self.prep()
         mockConaryCfg = mock.MockObject()
@@ -383,9 +399,9 @@ class ConaryFacadeTest(rbuildhelp.RbuildHelper):
         self.mock(checkin, 'checkout',
             lambda *args: mockedFunction(None, savedArgs, None, *args))
         facade.checkout('packageName', 'labelName', targetDir='targetDirName')
-        expectedArgs = [('r', mockConaryCfg, 'targetDirName', 
-                        ['packageName=labelName'])]
-        assert savedArgs == expectedArgs
+        expectedArgs = [(('r', mockConaryCfg, 'targetDirName',
+                        ['packageName=labelName']), {})]
+        self.assertEquals(savedArgs, expectedArgs)
 
     def testDetachPackage(self):
         _, facade = self.prep()
@@ -418,9 +434,9 @@ class ConaryFacadeTest(rbuildhelp.RbuildHelper):
         self.mock(checkin, 'refresh',
             lambda *args, **kw: mockedFunction(None, savedArgs, None, *args))
         facade.refresh()
-        expectedArgs = [('r', mockConaryCfg)]
-        
-        assert savedArgs == expectedArgs
+        expectedArgs = [(('r', mockConaryCfg), {})]
+
+        self.assertEquals(savedArgs, expectedArgs)
         facade._initializeFlavors._mock.assertCalled()
         use.setBuildFlagsFromFlavor._mock.assertCalled(None,
             mockConaryCfg.buildFlavor, False)
@@ -433,8 +449,8 @@ class ConaryFacadeTest(rbuildhelp.RbuildHelper):
         self.mock(checkin, 'nologUpdateSrc',
             lambda *args: mockedFunction(None, savedArgs, True, *args))
         facade.updateCheckout('targetDirName')
-        self.assertEquals(savedArgs, [('r', [
-            os.sep.join((os.getcwd(), 'targetDirName'))])])
+        self.assertEquals(savedArgs, [
+            (('r', [os.sep.join((os.getcwd(), 'targetDirName'))]), {})])
 
         # Up to date condition
         def Up2Date(*args):
@@ -456,8 +472,8 @@ class ConaryFacadeTest(rbuildhelp.RbuildHelper):
         self.mock(checkin, 'updateSrc',
             lambda *args: mockedFunction(None, savedArgs, None, *args))
         self.assertEquals(None, facade.updateCheckout('targetDirName'))
-        self.assertEquals(savedArgs, [('r', [
-            os.sep.join((os.getcwd(), 'targetDirName'))])])
+        self.assertEquals(savedArgs, [
+            (('r', [os.sep.join((os.getcwd(), 'targetDirName'))]), {})])
 
         def CheckinErrorRaise(*args):
             raise builderrors.CheckinError()
@@ -726,6 +742,10 @@ class ConaryFacadeTest(rbuildhelp.RbuildHelper):
         mock.mockMethod(facade.getConaryConfig)
         facade.getConaryConfig._mock.setDefaultReturn(mockConaryCfg)
 
+        # Pin callback object
+        callback = conaryfacade._QuietUpdateCallback()
+        self.mock(conaryfacade, '_QuietUpdateCallback', lambda: callback)
+
         # quiet
         savedArgs = []
         doUpdateFn = lambda *args, **kwargs: mockedFunction(None, savedArgs,
@@ -733,16 +753,20 @@ class ConaryFacadeTest(rbuildhelp.RbuildHelper):
         self.mock(updatecmd, 'doUpdate', doUpdateFn)
         facade.checkoutBinaryPackage('packageName', 'packageVersion',
             'packageFlavor', 'targetDir')
-        assert mockConaryCfg.root == 'targetDir'
-        assert savedArgs == [(mockConaryCfg,
-                             'packageName=packageVersion[packageFlavor]')]
+        self.assertEquals(mockConaryCfg.root, 'targetDir')
+        self.assertEquals(savedArgs, [
+            ((mockConaryCfg, 'packageName=packageVersion[packageFlavor]'),
+                {'tagScript': None, 'callback': callback, 'depCheck': False})
+        ])
 
         # noisy
         savedArgs = []
         facade.checkoutBinaryPackage('packageName', 'packageVersion',
             'packageFlavor', 'targetDir', quiet=False)
-        assert savedArgs == [(mockConaryCfg,
-                             'packageName=packageVersion[packageFlavor]')]
+        self.assertEquals(savedArgs, [
+            ((mockConaryCfg, 'packageName=packageVersion[packageFlavor]'),
+                {'tagScript': None, 'callback': None, 'depCheck': False})
+        ])
 
 
     def testFindPackageInSearchPaths(self):

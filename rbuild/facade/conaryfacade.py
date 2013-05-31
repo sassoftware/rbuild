@@ -23,6 +23,7 @@ plugins.  It provides public methods which are only to be accessed
 via C{handle.facade.conary} which is automatically available to
 all plugins through the C{handle} object.
 """
+import sys
 import copy
 import itertools
 import os
@@ -357,6 +358,21 @@ class ConaryFacade(object):
             # convert from None to checkin's accepted ''
             factoryName = ''
         checkin.factory(factoryName, targetDir=targetDir)
+
+    def commit(self, targetDir, message):
+        cfg = self.getConaryConfig()
+        self._initializeFlavors()
+        use.setBuildFlagsFromFlavor(None, cfg.buildFlavor, False)
+        cwd = os.getcwd()
+        try:
+            os.chdir(targetDir)
+            checkin.commit(self._getRepositoryClient(), cfg, message=message)
+        except conaryerrors.CvcError, e:
+            tb = sys.exc_info()[2]
+            raise errors.RbuildError, str(e), tb
+        finally:
+            os.chdir(cwd)
+        return True
 
     def checkout(self, package, label, targetDir=None):
         """

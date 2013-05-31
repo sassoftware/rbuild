@@ -20,8 +20,6 @@ import os
 from conary.lib import cfg
 from conary.lib import cfgtypes
 
-from rpath_proddef import api1 as proddef
-
 from rbuild import errors
 from rbuild.productstore.abstract import ProductStore
 
@@ -107,10 +105,14 @@ class CheckoutProductStore(ProductStore):
     def getBaseDirectory(self):
         return self._baseDirectory
 
-    def getProduct(self):
+    def getProductDefinitionXmlPath(self):
         path = (self.getProductDefinitionDirectory()
                 + '/product-definition.xml')
-        return proddef.ProductDefinition(fromStream=open(path))
+        return path
+
+    def getProduct(self):
+        path = self.getProductDefinitionXmlPath()
+        return self.proddef.ProductDefinition(fromStream=open(path))
 
     def getProductVersion(self):
         return self.getProduct().getProductVersion()
@@ -125,6 +127,14 @@ class CheckoutProductStore(ProductStore):
             raise errors.RbuildError('Failed to update product definition')
         ProductStore.update(self)
 
+    def commit(self, message):
+        """
+        Commit a product definition change
+        """
+        if not self._handle.facade.conary.commit(
+                self.getProductDefinitionDirectory(),
+                message=message):
+            raise errors.RbuildError('Failed to commit product definition')
 
     @staticmethod
     def _testProductDirectory(baseDirectory):
