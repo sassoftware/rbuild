@@ -80,6 +80,7 @@ class RbuildHandle(_PluginProxy):
     # Hook the assignment of productStore so that its parent handle
     # is automatically set (to the current instance).
     productStore = AttributeHook('setHandle')
+    configClass = rbuildcfg.RbuildConfiguration
 
     def __init__(self, cfg=None, pluginManager=None, productStore=None,
                  userInterface=None, logRoot=None):
@@ -87,7 +88,7 @@ class RbuildHandle(_PluginProxy):
 
         self.product = None
         if cfg is None:
-            cfg = rbuildcfg.RbuildConfiguration(readConfigFiles=True)
+            cfg = self.configClass(readConfigFiles=True)
 
 
         if pluginManager is None:

@@ -57,7 +57,7 @@ def getHandle(dirName=None, prodDefLabel=None):
         @param prodDefLabel: (None) label for product definition.
         @return: C{handle} instance
         """
-        cfg = rbuildcfg.RbuildConfiguration(readConfigFiles=True)
+        cfg = handle.RbuildHandle.configClass(readConfigFiles=True)
 
         if prodDefLabel:
             productStore=None

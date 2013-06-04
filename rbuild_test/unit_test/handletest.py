@@ -60,9 +60,9 @@ class HandleTest(rbuildhelp.RbuildHelper):
 
 
     def testGetDefaultConfig(self):
-        mock.mock(rbuildcfg, 'RbuildConfiguration')
+        mock.mock(handle.RbuildHandle, 'configClass')
         h = handle.RbuildHandle(cfg=None, pluginManager=mock.MockObject())
-        rbuildcfg.RbuildConfiguration._mock.assertCalled(readConfigFiles=True)
+        handle.RbuildHandle.configClass._mock.assertCalled(readConfigFiles=True)
 
     def testRbuildConfigPath(self):
         productStore = mock.MockObject()

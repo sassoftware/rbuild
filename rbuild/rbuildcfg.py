@@ -31,7 +31,14 @@ from rmake.build.buildcfg import CfgUser
 #pylint: disable-msg=R0904
 # R0904: Too many public methods
 
-class RbuildConfiguration(cfg.ConfigFile):
+class CfgBase64String(cfg.CfgString):
+    def parseString(self, str):
+        return util.ProtectedString(base64.b64decode(str))
+
+    def format(self, val, displayOptions=None):
+        return base64.b64encode(val)
+
+class RbuildMainConfigSection(cfg.ConfigSection):
     """
     This is the base object for rbuild configuration.
     """
@@ -50,10 +57,22 @@ class RbuildConfiguration(cfg.ConfigFile):
     signatureKey         = CfgFingerPrint
     signatureKeyMap      = CfgFingerPrintMap
 
+
+class RbuildConfiguration(cfg.SectionedConfigFile):
+    """
+    This is the base object for rbuild configuration.
+    """
+    _allowNewSections = True
+    _defaultSectionType = RbuildMainConfigSection
+
     def __init__(self, readConfigFiles=False, ignoreErrors=False, root=''):
-        cfg.ConfigFile.__init__(self)
+        cfg.SectionedConfigFile.__init__(self)
         if hasattr(self, 'setIgnoreErrors'):
             self.setIgnoreErrors(ignoreErrors)
+        for info in RbuildMainConfigSection._getConfigOptions():
+            if info[0] not in self:
+                self.addConfigOption(*info)
+
         if readConfigFiles:
             self.readFiles(root=root)
 
@@ -117,3 +136,4 @@ class RbuildConfiguration(cfg.ConfigFile):
     def externalPassword(self):
         return (self._externalPassword or
             (self.user and self.user[0] and not self.user[1]))
+

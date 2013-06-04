@@ -39,7 +39,6 @@ from rmake import errors as rmakeerrors
 from rbuild import handle
 from rbuild import constants
 from rbuild import errors
-from rbuild import rbuildcfg
 from rbuild.internal import pluginloader
 from rbuild.internal import helpcommand
 from rbuild.pluginapi import command
@@ -55,7 +54,7 @@ class RbuildMain(mainhandler.MainHandler):
     version = constants.VERSION
 
     abstractCommand = command.BaseCommand
-    configClass = rbuildcfg.RbuildConfiguration
+    configClass = handle.RbuildHandle.configClass
     commandList = [helpcommand.HelpCommand]
 
     useConaryOptions = False

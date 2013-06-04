@@ -38,7 +38,7 @@ class Api1Test(rbuildhelp.RbuildHelper):
         self.abstractProductStore = mock.MockObject()
         self.getplugins = mock.MockObject()
         self.getconaryclient = mock.MockObject()
-        self.mock(rbuildcfg, 'RbuildConfiguration', self.rbuildconfig)
+        self.mock(api1.handle.RbuildHandle, 'configClass', self.rbuildconfig)
         self.mock(dirstore, 'CheckoutProductStore', self.checkoutProductStore)
         self.mock(abstract, 'ProductStore', self.abstractProductStore)
         self.mock(pluginloader, 'getPlugins', self.getplugins)
