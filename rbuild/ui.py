@@ -194,3 +194,29 @@ class UserInterface(object):
                 if not validationFn(response):
                     continue
             return response
+
+    def promptPassword(self, keyDesc, prompt, promptDesc, validateCallback):
+        try:
+            import keyutils
+            keyring = keyutils.KEY_SPEC_SESSION_KEYRING
+        except ImportError:
+            keyutils = keyring = None
+        if keyutils:
+            keyId = keyutils.request_key(keyDesc, keyring)
+            if keyId is not None:
+                passwd = keyutils.read_key(keyId)
+                if validateCallback(passwd):
+                    return passwd
+                # Fall through if the cached creds are invalid
+        for x in range(3):
+            self.write(promptDesc)
+            passwd = self.inputPassword(prompt)
+            if validateCallback(passwd):
+                if keyutils:
+                    keyutils.add_key(keyDesc, passwd, keyring)
+                return passwd
+            if not passwd:
+                # User wants out but getpass eats Ctrl-C
+                break
+            self.write("The specified credentials were not valid.\n")
+        return None

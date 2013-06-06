@@ -25,7 +25,6 @@ Example::
 """
 
 import errno
-import getpass
 import re
 import sys
 
@@ -213,34 +212,18 @@ class RbuildMain(mainhandler.MainHandler):
         return flags
 
     def _promptPassword(self, cfg):
-        keyDesc = 'rbuild:user:%s:%s' % (cfg.user[0], cfg.serverUrl)
-        try:
-            import keyutils
-            keyring = keyutils.KEY_SPEC_SESSION_KEYRING
-        except ImportError:
-            keyutils = keyring = None
-        if keyutils:
-            keyId = keyutils.request_key(keyDesc, keyring)
-            if keyId is not None:
-                passwd = keyutils.read_key(keyId)
-                if self.handle.facade.rbuilder.validateCredentials(cfg.user[0],
-                        passwd, cfg.serverUrl):
-                    return passwd
-                # Fall through if the cached creds are invalid
-        for x in range(3):
-            self.handle.ui.write('Please enter the password for user %r on %s'
-                    % (cfg.user[0], cfg.serverUrl))
-            passwd = getpass.getpass("Password: ")
-            if self.handle.facade.rbuilder.validateCredentials(cfg.user[0],
-                    passwd, cfg.serverUrl):
-                if keyutils:
-                    keyutils.add_key(keyDesc, passwd, keyring)
-                return passwd
-            if not passwd:
-                # User wants out but getpass eats Ctrl-C
-                break
-            self.handle.ui.write("The specified credentials were not valid.")
-            self.handle.ui.write()
+        userName, serverUrl = (cfg.user[0], cfg.serverUrl)
+        keyDesc = 'rbuild:user:%s:%s' % (userName, serverUrl)
+        promptDesc = 'Please enter the password for user %r on %s' % (
+                userName, serverUrl)
+        def validate(passwd):
+            return self.handle.facade.rbuilder.validateCredentials(
+                    userName, passwd, serverUrl)
+        passwd = self.handle.ui.promptPassword(keyDesc,
+                prompt="Password: ", promptDesc=promptDesc,
+                validateCallback=validate)
+        if passwd is not None:
+            return passwd
         sys.exit("Unable to authenticate to the rBuilder")
 
 
