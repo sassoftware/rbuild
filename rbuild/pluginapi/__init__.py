@@ -28,6 +28,7 @@ with a C{_} character are public.
 """
 import inspect
 import new
+from conary.lib import cfg
 
 
 # Note that if rmake.lib.pluginlib diverges, we may have to
@@ -38,6 +39,17 @@ from rmake.lib import pluginlib
 from rbuild import errors
 from rbuild.internal.internal_types import WeakReference
 
+class PluginConfiguration(cfg.ConfigSection):
+    """Base plugin configuration class"""
+
+    def __init__(self, *args, **kwargs):
+        self._empty = True
+        super(PluginConfiguration, self).__init__(*args, **kwargs)
+
+    def addConfigOption(self, *args, **kwargs):
+        self._empty = False
+        ret = super(PluginConfiguration, self).addConfigOption(*args, **kwargs)
+        return ret
 
 class Plugin(pluginlib.Plugin):
     """
@@ -50,8 +62,12 @@ class Plugin(pluginlib.Plugin):
     # this descriptor will transparently handle the dereferenceing.
     handle = WeakReference()
 
+    # Default plugin configuration
+    PluginConfiguration = PluginConfiguration
+
     def __init__(self, *args, **kw):
         pluginlib.Plugin.__init__(self, *args, **kw)
+        self.pluginCfg = None
 
         self._prehooks = {}
         self._posthooks = {}

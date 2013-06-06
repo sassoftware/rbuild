@@ -45,7 +45,8 @@ class RbuildHelper(rmakehelp.RmakeHelper):
 
     def setUp(self):
         rmakehelp.RmakeHelper.setUp(self)
-        self.rbuildCfg = rbuildcfg.RbuildConfiguration(readConfigFiles=False)
+        self.rbuildCfg = rbuildcfg.RbuildConfiguration(readConfigFiles=False,
+                root=self.cfg.root)
         self.rbuildCfg.contact = self.cfg.contact
         self.rbuildCfg.name = self.cfg.name
         self.rbuildCfg.pluginDirs = resources.get_plugin_dirs()

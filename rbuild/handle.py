@@ -90,9 +90,17 @@ class RbuildHandle(_PluginProxy):
         if cfg is None:
             cfg = self.configClass(readConfigFiles=True)
 
-
         if pluginManager is None:
             pluginManager = pluginloader.getPlugins([], cfg.pluginDirs)
+
+        # Unknown sections are initially stashed aside by the config object
+        # After the plugins are loaded we try to process their data
+
+        pluginManager.addPluginConfigurationClasses(cfg)
+        cfg.setIgnoreErrors(False)
+        cfg.processPluginSections()
+        pluginManager.setPluginConfigurations(cfg)
+
         self._cfg = cfg
         self._pluginManager = pluginManager
         for plugin in pluginManager.plugins:

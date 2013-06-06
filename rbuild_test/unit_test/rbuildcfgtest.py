@@ -20,6 +20,7 @@
 Test various methods of the RbuildConfiguration object.
 """
 
+import os
 from rbuild_test import rbuildhelp
 
 import tempfile
@@ -65,3 +66,50 @@ repositoryMap             bar.com                   https://dev.bar.com/conary/
 
         self.failUnlessEqual(dump, expected)
 
+    def testPluginConfigurations(self):
+        # Dump config file
+        cfgFile = os.path.join(self.workDir, "rbuildrc")
+        self.rbuildCfg.store(file(cfgFile, "w"))
+        # Add a few sections
+        with file(cfgFile, "a") as f:
+            f.write("""
+[edit]
+name Marvin the Martian
+device Illudium Q-36 Explosive Space Modulator
+[dummy-section]
+dummy-option-1 1
+dummy-option-2 2
+""")
+        self.rbuildCfg.__init__(readConfigFiles=False, ignoreErrors=True)
+        self.rbuildCfg.read(cfgFile)
+
+        from rbuild import handle
+        _C = rbuildcfg.cfg
+        # Mock plugin loading so we can add some config options to one
+        # of the plugins
+        origLoadPluginFromFileName = handle.pluginloader.PluginManager.loadPluginFromFileName
+        def mockedLoadPluginFromFileName(slf, dir, fileName, *args, **kwargs):
+            plugin = origLoadPluginFromFileName(slf, dir, fileName, *args, **kwargs)
+            if fileName == 'edit.py':
+                class MyPluginConfiguration(plugin.PluginConfiguration):
+                    name = (_C.CfgString, 'Jean Valjean')
+                    device = _C.CfgString
+                self.mock(plugin, 'PluginConfiguration', MyPluginConfiguration)
+            return plugin
+        self.mock(handle.pluginloader.PluginManager, 'loadPluginFromFileName',
+                mockedLoadPluginFromFileName)
+        handle = self.getRbuildHandle()
+        handle.Edit.registerCommands()
+        handle.Edit.initialize()
+
+        section = handle.getConfig().getSection('edit')
+        self.assertEquals(section.name, 'Marvin the Martian')
+        self.assertEquals(section.device, 'Illudium Q-36 Explosive Space Modulator')
+        # The section is passed by reference to the plugin
+        self.assertTrue(handle.Edit.pluginCfg is section)
+
+        # Dump the handler's config. It should include just the edit
+        # section
+        newCfg = cfgFile + '.new'
+        handle.getConfig().writeToFile(newCfg)
+        self.assertEquals(file(newCfg).read(), file(newCfg).read())

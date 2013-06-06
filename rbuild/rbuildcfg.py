@@ -31,17 +31,25 @@ from rmake.build.buildcfg import CfgUser
 #pylint: disable-msg=R0904
 # R0904: Too many public methods
 
-class CfgBase64String(cfg.CfgString):
-    def parseString(self, str):
-        return util.ProtectedString(base64.b64decode(str))
+class PluginSection(object):
+    """
+    Section plugin. Needs to store the section for later processing
+    (post plugin initialization)
+    """
+    def __init__(self, cfg):
+        self.cfg = cfg
+        self.configLines = []
 
-    def format(self, val, displayOptions=None):
-        return base64.b64encode(val)
+    def configLine(self, *args, **kwargs):
+        self.configLines.append((args, kwargs))
 
-class RbuildMainConfigSection(cfg.ConfigSection):
+class RbuildConfiguration(cfg.SectionedConfigFile):
     """
     This is the base object for rbuild configuration.
     """
+    _allowNewSections = True
+    _defaultSectionType = PluginSection
+
     serverUrl            = CfgString
     user                 = CfgUser
     name                 = CfgString
@@ -57,21 +65,10 @@ class RbuildMainConfigSection(cfg.ConfigSection):
     signatureKey         = CfgFingerPrint
     signatureKeyMap      = CfgFingerPrintMap
 
-
-class RbuildConfiguration(cfg.SectionedConfigFile):
-    """
-    This is the base object for rbuild configuration.
-    """
-    _allowNewSections = True
-    _defaultSectionType = RbuildMainConfigSection
-
     def __init__(self, readConfigFiles=False, ignoreErrors=False, root=''):
         cfg.SectionedConfigFile.__init__(self)
-        if hasattr(self, 'setIgnoreErrors'):
-            self.setIgnoreErrors(ignoreErrors)
-        for info in RbuildMainConfigSection._getConfigOptions():
-            if info[0] not in self:
-                self.addConfigOption(*info)
+        self._pluginConfigHandlers = dict()
+        self.setIgnoreErrors(ignoreErrors)
 
         if readConfigFiles:
             self.readFiles(root=root)
@@ -90,6 +87,35 @@ class RbuildConfiguration(cfg.SectionedConfigFile):
             self.read(root + os.environ["HOME"] + "/" + ".rbuildrc",
                       exception=False)
         self.read('rbuildrc', exception=False)
+
+    def addPluginConfigHandler(self, name, handler):
+        self._pluginConfigHandlers[name] = handler
+
+    def processPluginSections(self):
+        sectionNames = list(self.iterSectionNames())
+        pluginConfigHandlers = self._pluginConfigHandlers.copy()
+        for sectionName in sectionNames:
+            section = self.getSection(sectionName)
+            # XXX this should use an API
+            del self._sections[sectionName]
+            if not isinstance(section, PluginSection):
+                continue
+            handler = pluginConfigHandlers.pop(sectionName, None)
+            if handler is None:
+                continue
+            self.setSection(sectionName, handler)
+            for args, kwargs in section.configLines:
+                self.configLine(*args, **kwargs)
+        # Initialize config for plugins with no sections defined
+        for pluginName, handler in pluginConfigHandlers.items():
+            self.setSection(pluginName, handler)
+
+    def _writeSection(self, sectionName, options):
+        section = self.getSection(sectionName)
+        # Only write out a section if _empty is False. Sections not
+        # belonging to plugins won't have this attribute, so write them
+        # unconditionally
+        return not (getattr(section, '_empty', False))
 
     def writeCheckoutFile(self, path):
         """

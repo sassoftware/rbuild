@@ -35,6 +35,14 @@ class PluginManager(pluginlib.PluginManager):
         for plugin in self.plugins:
             plugin.initialize()
 
+    def addPluginConfigurationClasses(self, cfg):
+        for plugin in self.plugins:
+            cfg.addPluginConfigHandler(plugin.name, plugin.PluginConfiguration)
+
+    def setPluginConfigurations(self, cfg):
+        for plugin in self.plugins:
+            plugin.pluginCfg = cfg.getSection(plugin.name)
+
 def getPlugins(argv, pluginDirs, disabledPlugins=None):
     # TODO: look for plugin-related options in argv, perhaps with our
     # own lenient parser.
