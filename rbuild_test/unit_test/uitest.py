@@ -213,3 +213,10 @@ class UserInterfaceTest(rbuildhelp.RbuildHelper):
         getpass.getpass._mock.setReturn('', 'foo (Default: <obscured>): ')
         self.assertEquals(h.ui.getPassword('foo', default='result'), 'result')
 
+    def testGetChoice(self):
+        h = self.getRbuildHandle()
+        choices = ['a', 'b', 'c']
+        mock.mockMethod(h.ui.input)
+        h.ui.input._mock.setReturns(['', 'x', '0', '4', '3'], 'prompt [1-3]: ')
+        rc, txt = self.captureOutput(h.ui.getChoice, 'prompt', choices)
+        self.assertEqual(rc, 2)

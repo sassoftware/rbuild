@@ -195,6 +195,34 @@ class UserInterface(object):
                     continue
             return response
 
+    def getChoice(self, prompt, choices, prePrompt='Choose one:'):
+        """
+        Present a list of choices to the user and have them select one by
+        index. Returns a 0-indexed integer into the original list of choices.
+
+        @param prompt: string to display in the final prompt
+        @type  prompt: str
+        @param choices: list of items to display, in desired order
+        @type  choices: list
+        @param prePrompt: optional string to display before the list of choices
+        @type  prePrompt: str
+        """
+        choices = list(choices)
+        assert choices
+        pad = len(str(len(choices)))
+        while True:
+            self.write(prePrompt)
+            for n, choice in enumerate(choices):
+                self.write(' %*d. %s' % (pad, n + 1, choice))
+            response = self.input(prompt + ' [%d-%d]: ' % (1, len(choices)))
+            try:
+                response = int(response)
+            except ValueError:
+                continue
+            if not (0 < response <= len(choices)):
+                continue
+            return response - 1
+
     def promptPassword(self, keyDesc, prompt, promptDesc, validateCallback):
         try:
             import keyutils
