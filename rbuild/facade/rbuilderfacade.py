@@ -30,7 +30,6 @@ import socket
 import random
 import urllib
 import urllib2
-import urlparse
 
 import robj
 from xobj import xobj
@@ -42,7 +41,7 @@ from rpath_proddef import api1 as proddef
 from rbuild import constants
 from rbuild import errors
 from rbuild import facade
-from apifinder import ApiFinder
+
 
 class _rBuilderConfig(ConfigFile):
     serverUrl = None
@@ -312,22 +311,23 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
 
     def __init__(self, rbuilderUrl, user, pw, handle):
         _AbstractRbuilderClient.__init__(self, rbuilderUrl, user, pw, handle)
-        scheme, _, _, host, port, path, query, fragment = util.urlSplit(rbuilderUrl)
-        self._url = util.urlUnsplit((scheme, user, pw, host, port, path, query, fragment))
-
-        server_port = host
-        if port is not None:
-            server_port = "%s:%s" % (host, port)
-        found = ApiFinder(server_port).url('')
-        scheme, _, _, host, port, path, query, fragment = util.urlSplit(found.url)
-        self._basePath = path
+        scheme, _, _, host, port, path, _, _ = util.urlSplit(rbuilderUrl)
+        path = util.joinPaths(path, 'api')
+        self._url = util.urlUnsplit(
+                (scheme, user, pw, host, port, path, None, None))
         self._api = None
 
     @property
     def api(self):
         if self._api is None:
-            uri = urlparse.urljoin(self._url, self._basePath)
-            self._api = robj.connect(uri)
+            top = robj.connect(self._url)
+            for ver in top.api_versions:
+                if ver.name == 'v1':
+                    break
+            else:
+                raise errors.RbuildError("No compatible REST API found on "
+                        "rBuilder '%s'" % self._url.__safe_str__())
+            self._api = ver
         return self._api
 
     def getProductDefinitionSchemaVersion(self):
@@ -367,12 +367,14 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
         address = str(network.ip_address) or str(network.dns_name)
         return address
 
-    def createProject(self, title, shortName, hostName=None, domainName=None):
+    def createProject(self, title, shortName, hostName=None, domainName=None,
+            description=''):
         doc = xobj.Document()
         doc.project = proj = xobj.XObj()
         proj.name = title
         proj.short_name = shortName
         proj.hostname = hostName or shortName
+        proj.description = description or ''
         if domainName:
             proj.domain_name = domainName
         proj.external = 'false'
@@ -381,6 +383,48 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
         except robj.errors.HTTPConflictError:
             raise errors.RbuildError("A project with conflicting "
                     "parameters already exists")
+
+    def getProject(self, shortName):
+        # FIXME: robj allows neither URL construction nor searching/filtering,
+        # so the only "kosher" way to find a project is to iterate over all of
+        # them. So cheating looks attractive by comparison...
+        client = self.api._client
+        uri = self.api._uri + '/projects/' + shortName
+        try:
+            return client.do_GET(uri)
+        except robj.errors.HTTPNotFoundError:
+            raise errors.RbuildError("Project '%s' not found" % (shortName,))
+
+    def createBranch(self, project, name, platformId, namespace=None,
+            description=''):
+        project = self.getProject(project)
+        doc = xobj.Document()
+        doc.project_branch = br = xobj.XObj()
+        br.project = xobj.XObj()
+        # Why?
+        for key in ('id', 'name', 'short_name', 'domain_name'):
+            setattr(br.project, key, getattr(project, key))
+
+        br.name = name
+        br.platform = xobj.XObj()
+        br.platform.id = platformId
+        br.description = description
+        if namespace:
+            br.namespace = namespace
+        br = project.project_branches.append(doc)
+        return br.label
+
+    def listPlatforms(self):
+        ret = []
+        for platform in self.api.platforms.platform:
+            if platform.enabled.lower() == 'false':
+                continue
+            if platform.hidden.lower() == 'true':
+                continue
+            if platform.abstract.lower() == 'true':
+                continue
+            ret.append(platform)
+        return ret
 
 
 class RbuilderFacade(object):
@@ -521,7 +565,8 @@ class RbuilderFacade(object):
         client = self._getRbuilderRESTClient()
         return client.getWindowsBuildService()
 
-    def createProject(self, title, shortName, hostName=None, domainName=None):
+    def createProject(self, title, shortName, hostName=None, domainName=None,
+            description=''):
         if not self.isValidShortName(shortName):
             raise errors.BadParameterError("Invalid project short name")
         if hostName and not self.isValidShortName(hostName):
@@ -529,7 +574,20 @@ class RbuilderFacade(object):
         if not self.isValidDomainName(domainName):
             raise errors.BadParameterError("Invalid project domain name")
         client = self._getRbuilderRESTClient()
-        return client.createProject(title, shortName, hostName, domainName)
+        return client.createProject(title, shortName, hostName, domainName,
+                description)
+
+    def getProject(self, shortName):
+        client = self._getRbuilderRESTClient()
+        return client.getProject(shortName)
+
+    def createBranch(self, project, name, platformId, namespace=None,
+            description=''):
+        if not self.isValidBranchName(name):
+            raise errors.BadParameterError("Invalid branch name")
+        client = self._getRbuilderRESTClient()
+        return client.createBranch(project, name, platformId, namespace,
+                description)
 
     @staticmethod
     def isValidShortName(value):
@@ -539,3 +597,11 @@ class RbuilderFacade(object):
     def isValidDomainName(value):
         return not value or re.match(r'^([a-zA-Z][a-zA-Z0-9\-]*\.)*'
                 '[a-zA-Z][a-zA-Z0-9\-]*$', value)
+
+    @staticmethod
+    def isValidBranchName(value):
+        return re.match(r'^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*$', value)
+
+    def listPlatforms(self):
+        client = self._getRbuilderRESTClient()
+        return client.listPlatforms()

@@ -21,22 +21,19 @@ unit tests for rmake facade
 '''
 
 import os
+import robj
 import socket
-
-from rbuild_test import rbuildhelp
-from testutils import mock
 import time
 import urllib2
-
+from collections import namedtuple
+from rpath_proddef import api1 as proddef
 from StringIO import StringIO
-
-import robj
 
 from rbuild import errors
 from rbuild import facade as fac_mod
 from rbuild.facade import rbuilderfacade
-
-from rpath_proddef import api1 as proddef
+from rbuild_test import rbuildhelp
+from testutils import mock
 
 
 class RbuilderConfigTest(rbuildhelp.RbuildHelper):
@@ -233,6 +230,33 @@ class RbuilderFacadeTest(rbuildhelp.RbuildHelper):
                 'title', 'short', 'illegal.host')
         self.assertRaises(errors.BadParameterError, facade.createProject,
                 'title', 'short', None, 'bad.0.domain')
+
+    def testCreateBranch(self):
+        handle, facade = self.prep()
+        mock.mockMethod(facade._getRbuilderRESTClient)
+        facade.createBranch('proj', 'branch', 'plat')
+        facade._getRbuilderRESTClient().createBranch._mock.assertCalled(
+                'proj', 'branch', 'plat', None, '')
+        self.assertRaises(errors.BadParameterError, facade.createBranch,
+                'proj', '-1', 'plat')
+
+    def testGetProject(self):
+        handle, facade = self.prep()
+        mock.mockMethod(facade._getRbuilderRESTClient)
+        facade._getRbuilderRESTClient().getProject._mock.setReturn('project', 'shortname')
+        self.assertEqual(facade.getProject('shortname'), 'project')
+
+    def testListPlatforms(self):
+        handle, facade = self.prep()
+        mock.mockMethod(facade._getRbuilderRESTClient)
+        facade._getRbuilderRESTClient().listPlatforms._mock.setReturn(['platform'])
+        self.assertEqual(facade.listPlatforms(), ['platform'])
+
+    def testGetWindowsBuildService(self):
+        handle, facade = self.prep()
+        mock.mockMethod(facade._getRbuilderRESTClient)
+        facade._getRbuilderRESTClient().getWindowsBuildService._mock.setReturn('rwbs')
+        self.assertEqual(facade.getWindowsBuildService(), 'rwbs')
 
 
 class RbuilderRPCClientTest(rbuildhelp.RbuildHelper):
@@ -581,17 +605,27 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
     def testAPI(self):
         client = rbuilderfacade.RbuilderRESTClient('http://localhost', 'foo',
             'bar', mock.MockObject())
-
-        mock.mock(robj, 'connect')
-        mockRObj = mock.MockObject()
-        robj.connect._mock.setReturn(mockRObj, 'http://foo:bar@localhost/api/v1')
-
         self.failUnlessEqual(client._api, None)
 
-        api = client.api
+        mock.mock(robj, 'connect')
+        class v1:
+            name = 'v1'
+        class v2:
+            name = 'v2'
+        class top:
+            api_versions = [v2]
 
+        robj.connect._mock.setReturn(top, 'http://foo:bar@localhost/api')
+        err = self.assertRaises(errors.RbuildError, getattr, client, 'api')
+        self.assertEqual(str(err), "No compatible REST API found on rBuilder "
+                "'http://foo:<PASSWD>@localhost/api'")
+        self.assertEqual(client._api, None)
+
+        top.api_versions.append(v1)
+        robj.connect._mock.setReturn(top, 'http://foo:bar@localhost/api')
+        api = client.api
         self.failIfEqual(client._api, None)
-        self.failUnlessEqual(api, mockRObj)
+        self.failUnlessEqual(api, v1)
 
     def testGetProductDefinitionSchemaVersion(self):
         client = rbuilderfacade.RbuilderRESTClient('http://localhost', 'foo',
@@ -662,22 +696,65 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
             project_id = 42
         client._api.projects.append._mock.setDefaultReturn(response)
         projectId = client.createProject('title', 'shortname', 'hostname', 'domain.name')
-        xml = client._api.projects.append._mock.calls[0][0][0].toxml()
-        self.assertEqual(xml, """\
-<?xml version='1.0' encoding='UTF-8'?>
-<project>
-  <domain_name>domain.name</domain_name>
-  <external>false</external>
-  <hostname>hostname</hostname>
-  <name>title</name>
-  <short_name>shortname</short_name>
-</project>
-""")
         self.assertEqual(projectId, 42)
+        proj = client._api.projects.append._mock.popCall()[0][0].project
+        self.assertEqual(proj.name, 'title')
+        self.assertEqual(proj.hostname, 'hostname')
+        self.assertEqual(proj.short_name, 'shortname')
+        self.assertEqual(proj.domain_name, 'domain.name')
+        self.assertEqual(proj.external, 'false')
 
-        def append(doc):
-            raise robj.errors.HTTPConflictError(uri=None, status=None,
-                    reason=None, response=None)
-        client._api.projects._mock.set(append=append)
+        client._api.projects.append._mock.raiseErrorOnAccess(
+                robj.errors.HTTPConflictError(uri=None, status=None,
+                    reason=None, response=None))
         err = self.assertRaises(errors.RbuildError, client.createProject, 'title', 'shortname', 'hostname', 'domain.name')
         self.assertIn('conflicting', str(err))
+
+    def testGetProject(self):
+        client = rbuilderfacade.RbuilderRESTClient('http://localhost', 'foo',
+                'bar', mock.MockObject())
+        mock.mock(client, '_api')
+        client._api._mock.set(_uri='http://localhost')
+
+        client._api._client.do_GET._mock.setReturn('response',
+                'http://localhost/projects/foo')
+        self.assertEqual(client.getProject('foo'), 'response')
+
+        client._api._client.do_GET._mock.raiseErrorOnAccess(
+                robj.errors.HTTPNotFoundError(uri=None, status=None,
+                    reason=None, response=None))
+        err = self.assertRaises(errors.RbuildError, client.getProject, 'bar')
+        self.assertIn('not found', str(err))
+
+    def testCreateBranch(self):
+        client = rbuilderfacade.RbuilderRESTClient('http://localhost', 'foo',
+            'bar', mock.MockObject())
+        mock.mock(client, '_api')
+        proj = mock.MockObject()
+        proj._mock.set(id='id', name='proj', short_name='short',
+                domain_name='dom')
+        mock.mockMethod(client.getProject)
+        client.getProject._mock.setReturn(proj, 'proj')
+
+        client.createBranch('proj', 'branch', 'plat', 'nsp', 'desc')
+        xml = proj.project_branches.append._mock.popCall()[0][0].project_branch
+        self.assertEqual(xml.name, 'branch')
+        self.assertEqual(xml.platform.id, 'plat')
+        self.assertEqual(xml.description, 'desc')
+        self.assertEqual(xml.namespace, 'nsp')
+        self.assertEqual(xml.project.id, 'id')
+
+    def testListPlatforms(self):
+        client = rbuilderfacade.RbuilderRESTClient('http://localhost', 'foo',
+            'bar', mock.MockObject())
+        mock.mock(client, '_api')
+        Platform = namedtuple('Platform',
+                'enabled hidden abstract platformName label')
+        client._api.platforms._mock.set(platform=[
+            Platform('true',  'false', 'false', 'plat1', 'plat@1'),
+            Platform('false', 'false', 'false', 'plat2', 'plat@2'),
+            Platform('true',  'true',  'false', 'plat3', 'plat@3'),
+            Platform('true',  'false', 'true',  'plat4', 'plat@4'),
+            ])
+        results = client.listPlatforms()
+        self.assertEqual(results, [Platform('true', 'false', 'false', 'plat1', 'plat@1')])
