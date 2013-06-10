@@ -90,7 +90,7 @@ dummy-option-2 2
         origLoadPluginFromFileName = handle.pluginloader.PluginManager.loadPluginFromFileName
         def mockedLoadPluginFromFileName(slf, dir, fileName, *args, **kwargs):
             plugin = origLoadPluginFromFileName(slf, dir, fileName, *args, **kwargs)
-            if fileName == 'edit.py':
+            if plugin and plugin.name == 'edit':
                 class MyPluginConfiguration(plugin.PluginConfiguration):
                     name = (_C.CfgString, 'Jean Valjean')
                     device = _C.CfgString
