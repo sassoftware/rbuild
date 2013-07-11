@@ -106,7 +106,7 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
         handle.facade.rbuilder.createBranch._mock.assertCalled(
                 project='proj',
                 name='branch',
-                platformId='http://the/platform',
+                platformLabel='the@platform',
                 namespace=None,
                 description='',
                 )
@@ -147,7 +147,7 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
         rb.createBranch._mock.assertCalled(
                 project='proj',
                 name='branch',
-                platformId='http://the/platform',
+                platformLabel='the@platform',
                 namespace='nsp',
                 description='desc',
                 )

@@ -739,7 +739,7 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
         client.createBranch('proj', 'branch', 'plat', 'nsp', 'desc')
         xml = proj.project_branches.append._mock.popCall()[0][0].project_branch
         self.assertEqual(xml.name, 'branch')
-        self.assertEqual(xml.platform.id, 'plat')
+        self.assertEqual(xml.platform_label, 'plat')
         self.assertEqual(xml.description, 'desc')
         self.assertEqual(xml.namespace, 'nsp')
         self.assertEqual(xml.project.id, 'id')

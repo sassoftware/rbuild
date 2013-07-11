@@ -395,7 +395,7 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
         except robj.errors.HTTPNotFoundError:
             raise errors.RbuildError("Project '%s' not found" % (shortName,))
 
-    def createBranch(self, project, name, platformId, namespace=None,
+    def createBranch(self, project, name, platformLabel, namespace=None,
             description=''):
         project = self.getProject(project)
         doc = xobj.Document()
@@ -406,8 +406,7 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
             setattr(br.project, key, getattr(project, key))
 
         br.name = name
-        br.platform = xobj.XObj()
-        br.platform.id = platformId
+        br.platform_label = unicode(platformLabel)
         br.description = description
         if namespace:
             br.namespace = namespace
@@ -581,12 +580,12 @@ class RbuilderFacade(object):
         client = self._getRbuilderRESTClient()
         return client.getProject(shortName)
 
-    def createBranch(self, project, name, platformId, namespace=None,
+    def createBranch(self, project, name, platformLabel, namespace=None,
             description=''):
         if not self.isValidBranchName(name):
             raise errors.BadParameterError("Invalid branch name")
         client = self._getRbuilderRESTClient()
-        return client.createBranch(project, name, platformId, namespace,
+        return client.createBranch(project, name, platformLabel, namespace,
                 description)
 
     @staticmethod

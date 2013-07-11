@@ -90,28 +90,27 @@ class CreateBranchCommand(command.BaseCommand):
         platforms = rb.listPlatforms()
         if argSet.get('platform'):
             match = argSet['platform'].lower().strip()
-            platformId = None
+            platformLabel = None
             for platform in platforms:
                 for value in (platform.platformName, platform.label,
                         platform.id):
                     if value.lower().strip() == match:
-                        platformId = platform.id
+                        platformLabel = platform.label
                         break
-                if platformId is not None:
+                if platformLabel is not None:
                     break
-            if platformId is None:
+            if platformLabel is None:
                 raise errors.PluginError("No platform matching term '%s' "
                         "was found" % (argSet['platform'],))
         else:
-            keys = [x.id for x in platforms]
             display = ['%s - %s' % (x.platformName, x.label) for x in platforms]
             response = ui.getChoice("Platform", display,
                     "The following platforms are available:")
-            platformId = platforms[response].id
+            platformLabel = platforms[response].label
         label = rb.createBranch(
                 project=argSet['project'],
                 name=argSet['branch'],
-                platformId=platformId,
+                platformLabel=platformLabel,
                 namespace=argSet.get('namespace'),
                 description=argSet.get('description', ''),
                 )
