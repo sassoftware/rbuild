@@ -96,6 +96,12 @@ class Plugin(pluginlib.Plugin):
     def setHandle(self, handle):
         self.handle = handle
 
+    def registerFacade(self, handle):
+        """
+        Use this method to modify the set of available facades. Called
+        before initialize.
+        """
+
     def initialize(self):
         """
         Command called to initialize plugins.  Called after registerCommands.
