@@ -78,6 +78,7 @@ class RbuildMain(mainhandler.MainHandler):
         self.handle.ui.pushContext('rBuild %s: %s',
                                    self.version, ' '.join(argv))
         self.plugins.registerCommands(self, self.handle)
+        self.plugins.registerFacade(self.handle)
         self.plugins.initialize()
         return mainhandler.MainHandler.getCommand(self, argv, cfg)
 

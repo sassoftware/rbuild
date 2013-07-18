@@ -115,7 +115,7 @@ class Init(pluginapi.Plugin):
                                         product.getProductVersion())
                 if os.path.exists(productDir):
                     raise errors.PluginError(
-                                    'Directory %r already exists.' % productDir)
+                                    'Directory %s already exists.' % productDir)
                 os.rename(tempDir, productDir)
                 tempDir = None
                 targetDir = productDir + '/.rbuild/product-definition'

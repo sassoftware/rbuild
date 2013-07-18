@@ -31,6 +31,10 @@ class PluginManager(pluginlib.PluginManager):
         for command in handle.Commands.getAllCommandClasses():
             main.registerCommand(command)
 
+    def registerFacade(self, handle):
+        for plugin in self.plugins:
+            plugin.registerFacade(handle)
+
     def initialize(self):
         for plugin in self.plugins:
             plugin.initialize()
