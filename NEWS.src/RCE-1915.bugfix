@@ -1,0 +1,2 @@
+autoLoadRecipe is now resolved against the product's searchPath. The label
+portion is no longer used.
