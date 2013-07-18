@@ -703,45 +703,59 @@ class ConaryFacade(object):
         updatecmd.doUpdate(cfg, '%s=%s[%s]' % (name, version, flavor),
                 callback=callback, depCheck=False, tagScript=tagScript)
 
-    def _buildTroveSpec(self, searchPath, packageName):
+
+    def _buildTroveSpec(self, searchPath, packageNames):
         flv = self._getFlavor(searchPath[2], keepNone = True)
         if searchPath[0] is None:
             # the search path was a label. We look for exactly this package
-            return (packageName, str(searchPath[1]), flv)
-        return (str(searchPath[0]), str(searchPath[1]), flv)
-
+            return [ (packageName, str(searchPath[1]), flv)
+                    for packageName in packageNames ]
+        return [ (str(searchPath[0]), str(searchPath[1]), flv) ]
 
     def _findPackageInSearchPaths(self, searchPaths, packageName):
+        return self._findPackagesInSearchPaths(searchPaths, [ packageName ])[0]
+
+    def _findPackagesInSearchPaths(self, searchPaths, packageNames):
         repos = self._getRepositoryClient()
-        troveSpecs = [ self._buildTroveSpec(x, packageName)
-            for x in searchPaths ]
+        # Compose a list of all search paths. If a label is presented,
+        # add all package names to it.
+        extTroveSpecs = [ self._buildTroveSpec(x, packageNames)
+                for x in searchPaths ]
+        troveSpecs = list(itertools.chain(*extTroveSpecs))
         results = repos.findTroves(None, troveSpecs, allowMissing = True)
 
-        troveSpecResults = [ [] for x in troveSpecs ]
+        troveSpecResultsByPkgName = {}
+        for packageName in packageNames:
+            troveSpecResults = [ [] for x in troveSpecs ]
+            troveSpecResultsByPkgName[packageName] = troveSpecResults
+
         groupTroveList = []
         # Map back into groupTroveList
         groupIndexMap = {}
 
         # it's important that we go through this list in order so
         # that you'll find matches earlier on the searchPath first.
-        for idx, (searchPath, troveSpec) in enumerate(zip(searchPaths, troveSpecs)):
-            if troveSpec not in results:
-                continue
-            troveList = results[troveSpec]
-            # we may have multiple flavors here.  We only want those
-            # flavors of these troves that have been built most recently
-            # to be taken into account
-            maxVersion = sorted(troveList, key=lambda x:x[1])[-1][1]
-            troveTups = [ x for x in troveList if x[1] == maxVersion ]
-            if searchPath[0] is not None:
-                # This is a group
-                groupTroveList.extend(troveTups)
-                # Add indices back, so we know where to put the results
-                for troveTup in troveTups:
-                    groupIndexMap.setdefault(troveTup, []).append(idx)
-            else:
+        for idx, (searchPath, troveSpecs) in enumerate(zip(searchPaths, extTroveSpecs)):
+            for packageName, troveSpec in zip(packageNames, troveSpecs):
+                troveList = results.get(troveSpec)
+                if not troveList:
+                    continue
+                # we may have multiple flavors here.  We only want those
+                # flavors of these troves that have been built most recently
+                # to be taken into account
+                maxVersion = sorted(troveList, key=lambda x:x[1])[-1][1]
+                troveTups = [ x for x in troveList if x[1] == maxVersion ]
+                if searchPath[0] is not None:
+                    # This is a group
+                    assert len(troveSpecs) == 1
+                    groupTroveList.extend(troveTups)
+                    # Add indices back, so we know where to put the results
+                    for troveTup in troveTups:
+                        groupIndexMap.setdefault(troveTup, []).append(idx)
+                    continue # outer for loop too, we only have one entry in troveSpecs
+
                 # Not a group; trove(s) found on this label
-                troveSpecResults[idx] = troveTups
+                troveSpecResultsByPkgName[packageName][idx] = troveTups
 
         if groupTroveList:
             groupTroves = repos.getTroves(groupTroveList, withFiles=False)
@@ -749,13 +763,18 @@ class ConaryFacade(object):
                 idxList = groupIndexMap[troveSpec]
                 for troveTup in trv.iterTroveList(weakRefs=True,
                                                   strongRefs=True):
-                    if troveTup[0] == packageName:
+                    for packageName in packageNames:
+                        if troveTup[0] != packageName:
+                            continue
+                        troveSpecResults = troveSpecResultsByPkgName[packageName]
                         for idx in idxList:
                             troveSpecResults[idx].append(troveTup)
-        matchingTroveList = []
-        for troveTupList in troveSpecResults:
-            matchingTroveList.extend(troveTupList)
-        return matchingTroveList
+        ret = []
+        for packageName in packageNames:
+            troveSpecResults = troveSpecResultsByPkgName[packageName]
+            matchingTroveList = list(itertools.chain(*troveSpecResults))
+            ret.append(matchingTroveList)
+        return ret
 
     def _overrideFlavors(self, baseFlavor, flavorList):
         baseFlavor = self._getFlavor(baseFlavor)

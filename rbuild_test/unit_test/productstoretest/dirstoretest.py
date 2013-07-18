@@ -30,6 +30,8 @@ from rbuild import errors
 from rpath_proddef import api1 as proddef
 from rbuild.productstore import dirstore
 
+from rbuild.facade import conaryfacade
+from rbuild_test.unit_test.facadetest import conaryfacadetest
 
 class DirStoreTest(rbuildhelp.RbuildHelper):
     def _prepProductStore(self):
@@ -242,22 +244,38 @@ class DirStoreTest(rbuildhelp.RbuildHelper):
                                                 targetDir=self.workDir)
 
     def testGetPlatformAutoLoadRecipes(self):
+        pd = proddef.ProductDefinition()
+        handle = conaryfacadetest.MockHandle()
+        handle.product = pd
+        handle.facade = mock.MockObject()
+        handle.getConfig().user = ('JeanValjean', 'password')
+
         productStore = mock.MockInstance(dirstore.CheckoutProductStore)
         productStore._mock.enableMethod('getPlatformAutoLoadRecipes')
-        productStore._handle.product.getPlatformAutoLoadRecipes._mock.setReturn([])
-        alr = productStore.getPlatformAutoLoadRecipes()
-        assert(alr == [])
+        productStore._mock.set(_handle=handle)
 
-        pd = proddef.PlatformDefinition()
-        alRecipes = [('foo', 'foo.rpath.com@foo:1'),
-            ('bar', 'bar.rpath.com@bar:1')]
-        for troveName, label in alRecipes:
-            pd.addAutoLoadRecipe(troveName, label)
+        facade = conaryfacade.ConaryFacade(handle)
+        repos = conaryfacadetest.MockRepositoryClient()
+        self.mock(facade, '_getRepositoryClient', lambda: repos)
 
-        productStore._handle.product.getPlatformAutoLoadRecipes._mock.setReturn(pd.getAutoLoadRecipes())
+        handle.facade._mock.set(conary=facade)
         alr = productStore.getPlatformAutoLoadRecipes()
-        assert(alr == ['foo=foo.rpath.com@foo:1', 
-                       'bar=bar.rpath.com@bar:1'])
+        self.assertEquals(alr, [])
+
+        alRecipes = ['foo', 'bar']
+        for troveName in alRecipes:
+            pd.addPlatformAutoLoadRecipe(troveName)
+
+        pkg1 = self.makeTroveTuple('foo=/foo.rpath.com@foo:2/2-2-2')
+        groupTup1 =  self.makeTroveTuple('group-foo=/foo.rpath.com@foo:1/1-1-1')
+        groupTrv1 = mock.MockObject(stableReturnValues=True)
+        groupTrv1.iterTroveList._mock.setDefaultReturn([pkg1])
+        self.mock(repos, 'getTroves', lambda *args, **kwargs: [ groupTrv1 ])
+        pd.addSearchPath(groupTup1[0], label=str(groupTup1[1].branch()),
+            version=str(groupTup1[1].trailingRevision()))
+
+        alr = productStore.getPlatformAutoLoadRecipes()
+        self.assertEquals(alr, ['foo=/foo.rpath.com@foo:2/2-2-2'])
 
     def testGetStageDirectory(self):
         productStore = mock.MockInstance(dirstore.CheckoutProductStore)

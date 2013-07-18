@@ -232,9 +232,20 @@ class ProductStore(object):
         """
         autoLoadRecipes = []
         for alr in self._handle.product.getPlatformAutoLoadRecipes():
-            autoLoadRecipes.append('%s=%s' % \
-                (alr.getTroveName(), alr.getLabel()))
-        return autoLoadRecipes
+            autoLoadRecipes.append(alr.getTroveName())
+        searchPaths = [ x.getTroveTup()
+                for x in self._handle.product.getSearchPaths() ]
+        troveTups = self._handle.facade.conary._findPackagesInSearchPaths(
+                searchPaths, autoLoadRecipes)
+        ret = []
+        for pkgTroveTup in troveTups:
+            if pkgTroveTup:
+                ret.append("%s=%s" % (pkgTroveTup[0][0], pkgTroveTup[0][1]))
+
+        return ret
+
+    def _buildSearchSource(self, repos):
+        searchPaths = self._handle.product.getSearchPaths()
 
     def _assertImages(self, images):
         if not images:
