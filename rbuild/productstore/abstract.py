@@ -244,9 +244,6 @@ class ProductStore(object):
 
         return ret
 
-    def _buildSearchSource(self, repos):
-        searchPaths = self._handle.product.getSearchPaths()
-
     def _assertImages(self, images):
         if not images:
             raise errors.MissingImageDefinitionError(
