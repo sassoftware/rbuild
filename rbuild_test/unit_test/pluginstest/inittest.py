@@ -152,7 +152,7 @@ class InitTest(rbuildhelp.RbuildHelper):
 
         err = self.assertRaises(errors.PluginError, co.createProductDirectory,
                                 '/localhost@rpl:1/1.0-1')
-        assert(str(err) == "Directory 'foo-1' already exists.")
+        assert(str(err) == "Directory foo-1 already exists.")
 
         co.createProductDirectory('/localhost@rpl:1/1.0-1', productDir='foo2')
         assert(os.path.exists(self.workDir + '/foo2/devel/.stage'))
