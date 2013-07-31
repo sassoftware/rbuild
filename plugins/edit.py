@@ -71,9 +71,14 @@ class Edit(pluginapi.Plugin):
     def editProductDefinition(self, message):
         handle = self.handle
         tmpf = self._makeTemporaryFile()
-        handle.product.serialize(tmpf)
+        
+        try:
+            handle.product.serialize(tmpf)
+        except Exception:
+            handle.ui.writeError("Command run outside of expected context, "
+                                 "make sure you're in a checkout directory.")
+            return 1
         tmpf.flush()
-
         try:
             checkModified = True
             while 1:
