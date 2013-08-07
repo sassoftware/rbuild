@@ -31,14 +31,12 @@ import stat
 import types
 import urlparse
 
-from conary import clone
 from conary import conarycfg
 from conary import conaryclient
 from conary import checkin
 from conary import errors as conaryerrors
 from conary import state
 from conary import trove
-from conary import updatecmd
 from conary import versions
 
 from conary.build import loadrecipe
@@ -46,6 +44,8 @@ from conary.build import use
 from conary.build import errors as builderrors
 from conary.build import derive
 
+from conary.cmds import clone
+from conary.cmds import updatecmd
 from conary.conaryclient import cmdline
 from conary.deps import deps
 from conary.lib import util
