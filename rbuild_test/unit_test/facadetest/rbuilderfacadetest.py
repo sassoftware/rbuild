@@ -610,12 +610,19 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
         mock.mock(robj, 'connect')
         class v1:
             name = 'v1'
+            id = 'http://foo:bar@localhost/api/v1'
         class v2:
             name = 'v2'
+            id = 'http://foo:bar@localhost/api/v2'
         class top:
             api_versions = [v2]
 
+        class v1Full(v1):
+            class version_info:
+                product_definition_schema_version = 3.14
+
         robj.connect._mock.setReturn(top, 'http://foo:bar@localhost/api')
+        robj.connect._mock.setReturn(v1Full, 'http://foo:bar@localhost/api/v1')
         err = self.assertRaises(errors.RbuildError, getattr, client, 'api')
         self.assertEqual(str(err), "No compatible REST API found on rBuilder "
                 "'http://foo:<PASSWD>@localhost/api'")
@@ -625,7 +632,8 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
         robj.connect._mock.setReturn(top, 'http://foo:bar@localhost/api')
         api = client.api
         self.failIfEqual(client._api, None)
-        self.failUnlessEqual(api, v1)
+        self.failUnlessEqual(api, v1Full)
+        self.assertEquals(client.getProductDefinitionSchemaVersion(), '3.14')
 
     def testGetProductDefinitionSchemaVersion(self):
         client = rbuilderfacade.RbuilderRESTClient('http://localhost', 'foo',

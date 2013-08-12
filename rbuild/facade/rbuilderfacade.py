@@ -327,7 +327,7 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
             else:
                 raise errors.RbuildError("No compatible REST API found on "
                         "rBuilder '%s'" % self._url.__safe_str__())
-            self._api = ver
+            self._api = robj.connect(ver.id)
         return self._api
 
     def getProductDefinitionSchemaVersion(self):
