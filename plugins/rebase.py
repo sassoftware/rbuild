@@ -134,7 +134,8 @@ class Rebase(pluginapi.Plugin):
 
         oldPlatformSource = handle.product.getPlatformSourceTrove()
         oldSearchPaths = handle.product.getSearchPaths()
-        handle.product.rebase(conaryClient, label=label)
+        handle.product.rebase(conaryClient, label=label,
+                schemaVersion=versionKw.get('version'))
         platformSource = handle.product.getPlatformSourceTrove()
         searchPaths = handle.product.getSearchPaths()
         oldFormattedSP = _formatSearchPath(oldSearchPaths)
