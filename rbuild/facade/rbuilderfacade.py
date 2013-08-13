@@ -75,7 +75,7 @@ class RbuilderRPCClient(_AbstractRbuilderClient):
         rpcUrl = rbuilderUrl + '/xmlrpc-private'
         self.server = facade.ServerProxy(rpcUrl, username=user, password=pw)
 
-    def getProductLabelFromNameAndVersion(self, productName, versionName):
+    def getBranchIdFromName(self, productName, versionName):
         #pylint: disable-msg=R0914
         # not a great candidate for refactoring
         productId = self.getProductId(productName)
@@ -84,7 +84,6 @@ class RbuilderRPCClient(_AbstractRbuilderClient):
         if error:
             raise errors.RbuilderError(*versionList)
 
-        versionId = None
         versionNames = []
         # W0612: leave unused variables as documentation
         # W0631: versionId is guaranteed to be defined
@@ -93,25 +92,24 @@ class RbuilderRPCClient(_AbstractRbuilderClient):
              namespace, versionName2, desc)  in versionList:
             versionNames.append(versionName2)
             if versionName == versionName2:
-                versionId = versionId2
-                break
+                return versionId2
 
-        if versionId:
-            error, stream = self.server.getProductDefinitionForVersion(
-                versionId)
-            if error:
-                raise errors.RbuilderError(*stream)
-            product = proddef.ProductDefinition(stream)
-            return product.getProductDefinitionLabel()
+        errstr = '%s is not a valid version for product %s.' % \
+            (versionName, productName)
+        if versionNames:
+            errstr += '\nValid versions are: %s' % \
+                ', '.join(versionNames)
         else:
-            errstr = '%s is not a valid version for product %s.' % \
-                (versionName, productName)
-            if versionNames:
-                errstr += '\nValid versions are: %s' % \
-                    ', '.join(versionNames)
-            else:
-                errstr += '\nNo versions found for product %s.' % productName
-            raise errors.RbuildError(errstr)
+            errstr += '\nNo versions found for product %s.' % productName
+        raise errors.RbuildError(errstr)
+
+    def getProductLabelFromNameAndVersion(self, productName, versionName):
+        versionId = self.getBranchIdFromName(productName, versionName)
+        error, stream = self.server.getProductDefinitionForVersion(versionId)
+        if error:
+            raise errors.RbuilderError(*stream)
+        product = proddef.ProductDefinition(stream)
+        return product.getProductDefinitionLabel()
 
     def startProductBuilds(self, productName, versionName, stageName, force=False):
         productId = self.getProductId(productName)
