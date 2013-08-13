@@ -111,44 +111,13 @@ class RbuilderRPCClient(_AbstractRbuilderClient):
         product = proddef.ProductDefinition(stream)
         return product.getProductDefinitionLabel()
 
-    def startProductBuilds(self, productName, versionName, stageName, force=False):
-        productId = self.getProductId(productName)
-        error, versionList = self.server.getProductVersionListForProduct(
-                                                                    productId)
-        if error:
-            raise errors.RbuilderError(*versionList)
-
-        versionId = None
-        # W0612: leave unused variables as documentation
-        # W0631: versionId is guaranteed to be defined
-        #pylint: disable-msg=W0612,W0631
-        if versionList:
-            if len(versionList[0]) == 4:
-                #This is an older rBuilder
-                for (versionId2, productId2, versionName2, desc) in versionList:
-                    if versionName == versionName2:
-                        versionId = versionId2
-                        break
-            else:
-                for (versionId2, productId2,
-                     namespace, versionName2, desc)  in versionList:
-                    if versionName == versionName2:
-                        versionId = versionId2
-                        break
-        if versionId is None:
-            raise errors.RbuildError(
-                "could not find version %r for product %r" % (versionName,
-                                                              productName))
+    def startProductBuilds(self, productName, versionName, stageName,
+            buildNames=None):
+        versionId = self.getBranchIdFromName(productName, versionName)
         error, buildIds = self.server.newBuildsFromProductDefinition(
-                                                versionId, stageName, force)
-
+                versionId, stageName, False, buildNames)
         if error:
-            if buildIds[0] == 'TroveNotFoundForBuildDefinition':
-                errFlavors = '\n'.join(buildIds[1][0])
-                raise errors.RbuildError('%s\n\nTo submit the partial set of '
-                    'builds, re-run this command with --force' % errFlavors)
-            else:
-                raise errors.RbuilderError(*buildIds)
+            raise errors.RbuilderError(*buildIds)
         return buildIds
 
     def watchImages(self, buildIds, timeout = 0, interval = 5, quiet=False):
@@ -201,6 +170,10 @@ class RbuilderRPCClient(_AbstractRbuilderClient):
             self._printStatus(activeBuilds, '    Last status: ')
         self._handle.ui.write('Finished builds:')
         self._printStatus(finalStatus, '    ')
+        if any(x['status'] != 300 for x in finalStatus.values()):
+            return False
+        else:
+            return True
 
     statusNames = {
             -1:  'Unknown',
@@ -481,13 +454,13 @@ class RbuilderFacade(object):
             serverUrl = serverUrl.replace('%s@' %user, '', 1)
         return serverUrl, user, password
 
-    def buildAllImagesForStage(self):
+    def buildAllImagesForStage(self, buildNames=None):
         client = self._getRbuilderRPCClient()
         stageName = self._handle.productStore.getActiveStageName()
         productName = str(self._handle.product.getProductShortname())
         versionName = str(self._handle.product.getProductVersion())
         buildIds = client.startProductBuilds(productName, versionName,
-                                             stageName)
+                stageName, buildNames=buildNames)
         return buildIds
 
     def getProductLabelFromNameAndVersion(self, productName, versionName):
@@ -497,7 +470,8 @@ class RbuilderFacade(object):
 
     def watchImages(self, buildIds, timeout=0, interval = 5, quiet = False):
         client = self._getRbuilderRPCClient()
-        client.watchImages(buildIds, timeout=timeout, interval=interval, quiet=quiet)
+        return client.watchImages(buildIds, timeout=timeout, interval=interval,
+                quiet=quiet)
 
     def checkForRmake(self, serverUrl):
         try:

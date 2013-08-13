@@ -40,12 +40,16 @@ class BuildImagesCommand(command.BaseCommand):
         _, imageNames = self.requireParameters(args, allowExtra=True)
         if imageNames == []:
             imageNames = None
-        jobId = handle.BuildImages.buildImages(imageNames)
+        buildIds = handle.BuildImages.buildImages(imageNames)
         if watch:
-            handle.Build.watchJob(jobId)
-            if not handle.facade.rmake.isJobBuilt(jobId):
-                raise errors.PluginError('Image build failed')
-            handle.BuildImages.printImageUrlsForJob(jobId)
+            ok = handle.facade.rbuilder.watchImages(buildIds)
+            if not ok:
+                return 10
+            for buildId in buildIds:
+                handle.BuildImages.printImageUrlsForBuild(buildId)
+        else:
+            for buildId in buildIds:
+                print buildId
 
 
 class BuildImages(pluginapi.Plugin):
@@ -65,18 +69,9 @@ class BuildImages(pluginapi.Plugin):
         @rtype: int
         '''
         self.handle.Build.warnIfOldProductDefinition('building images')
-        job = self.handle.facade.rmake.createImagesJobForStage(names)
-        jobId = self.handle.facade.rmake.buildJob(job)
-        self.handle.productStore.setImageJobId(jobId)
-        return jobId
-
-    def printImageUrlsForJob(self, jobId):
-        '''
-        Print image URLs for all builds associated with an image job
-        '''
-        buildIds = self.handle.facade.rmake.getBuildIdsFromJobId(jobId)
-        for buildId in buildIds:
-            self.printImageUrlsForBuild(buildId)
+        buildIds = self.handle.facade.rbuilder.buildAllImagesForStage(
+                buildNames=names)
+        return buildIds
 
     def printImageUrlsForBuild(self, buildId):
         '''
