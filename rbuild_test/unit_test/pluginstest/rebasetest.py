@@ -67,7 +67,7 @@ class Rebase(rbuildhelp.RbuildHelper):
 
         handle.Rebase.rebaseProduct(label='localhost@rpl:1')
         handle.product.rebase._mock.assertCalled(conaryClient,
-                                          label='localhost@rpl:1')
+                label='localhost@rpl:1', schemaVersion='4.0')
         handle.product.saveToRepository._mock.assertCalled(conaryClient,
             version='4.0')
         # should be called twice (RBLD-155)
