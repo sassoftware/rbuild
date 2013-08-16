@@ -269,10 +269,12 @@ class RbuilderRPCClientTest(rbuildhelp.RbuildHelper):
         mock.mock(fac_mod, 'ServerProxy')
         rbuilderfacade.RbuilderRPCClient('http://localhost', 'foo', 'bar', None)
         fac_mod.ServerProxy._mock.assertCalled(
-                                'http://localhost/xmlrpc-private', username='foo', password='bar')
+                'http://localhost/xmlrpc-private',
+                username='foo', password='bar', allow_none=True)
         rbuilderfacade.RbuilderRPCClient('https://localhost2', 'foo2', 'bar', None)
         fac_mod.ServerProxy._mock.assertCalled(
-                                'https://localhost2/xmlrpc-private', username='foo2', password='bar')
+                'https://localhost2/xmlrpc-private',
+                username='foo2', password='bar', allow_none=True)
 
     def testGetBranchIdFromName(self):
         client = self._getClient()

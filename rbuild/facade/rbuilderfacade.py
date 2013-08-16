@@ -73,7 +73,8 @@ class RbuilderRPCClient(_AbstractRbuilderClient):
     def __init__(self, rbuilderUrl, user, pw, handle):
         _AbstractRbuilderClient.__init__(self, rbuilderUrl, user, pw, handle)
         rpcUrl = rbuilderUrl + '/xmlrpc-private'
-        self.server = facade.ServerProxy(rpcUrl, username=user, password=pw)
+        self.server = facade.ServerProxy(rpcUrl, username=user, password=pw,
+                allow_none=True)
 
     def getBranchIdFromName(self, productName, versionName):
         #pylint: disable-msg=R0914
