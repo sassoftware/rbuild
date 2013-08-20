@@ -131,8 +131,8 @@ class RbuilderFacadeTest(rbuildhelp.RbuildHelper):
         handle.product.getProductVersion._mock.setReturn('1.0')
         mock.mockMethod(facade._getRbuilderRPCClient)
         client = facade._getRbuilderRPCClient()
-        client.startProductBuilds._mock.setReturn([1],
-                                                  'shortname', '1.0', 'devel')
+        client.startProductBuilds._mock.setReturn([1], 'shortname', '1.0',
+                'devel', buildNames=None)
         buildIds = facade.buildAllImagesForStage()
         assert(buildIds == [1])
 
@@ -269,12 +269,14 @@ class RbuilderRPCClientTest(rbuildhelp.RbuildHelper):
         mock.mock(fac_mod, 'ServerProxy')
         rbuilderfacade.RbuilderRPCClient('http://localhost', 'foo', 'bar', None)
         fac_mod.ServerProxy._mock.assertCalled(
-                                'http://localhost/xmlrpc-private', username='foo', password='bar')
+                'http://localhost/xmlrpc-private',
+                username='foo', password='bar', allow_none=True)
         rbuilderfacade.RbuilderRPCClient('https://localhost2', 'foo2', 'bar', None)
         fac_mod.ServerProxy._mock.assertCalled(
-                                'https://localhost2/xmlrpc-private', username='foo2', password='bar')
+                'https://localhost2/xmlrpc-private',
+                username='foo2', password='bar', allow_none=True)
 
-    def testGetProductLabelFromNameAndVersion2(self):
+    def testGetBranchIdFromName(self):
         client = self._getClient()
         server = client.server
         server.getProjectIdByHostname._mock.setReturn((False, 32),
@@ -283,6 +285,41 @@ class RbuilderRPCClientTest(rbuildhelp.RbuildHelper):
                               (2, 32, 'rpl', '2.0', 'version 2.0')]
         returnValue = (False, productVersionList)
         server.getProductVersionListForProduct._mock.setReturn(returnValue, 32)
+        rc = client.getBranchIdFromName('foo.rpath.org', '1.0')
+        self.assertEqual(rc, 1)
+
+        err = self.assertRaises(errors.RbuildError,
+                    client.getBranchIdFromName,
+                    'foo.rpath.org', '3.0')
+        self.assertEquals(str(err), '3.0 is not a valid version for product '
+            'foo.rpath.org.\nValid versions are: 1.0, 2.0')
+
+        server.getProductVersionListForProduct._mock.setReturn((False, []), 32)
+        err = self.assertRaises(errors.RbuildError,
+                    client.getBranchIdFromName,
+                    'foo.rpath.org', '3.0')
+        self.assertEquals(str(err), '3.0 is not a valid version for product '
+            'foo.rpath.org.\nNo versions found for product foo.rpath.org.')
+        server.getProductVersionListForProduct._mock.setReturn(returnValue, 32)
+
+        server.getProductVersionListForProduct._mock.setReturn(
+                (True, ('BarError', '')), 32)
+        assertRaiseArgs = (errors.RbuildError,
+            client.getProductLabelFromNameAndVersion, 'foo.rpath.org', '1.0')
+        err = self.assertRaises(*assertRaiseArgs)
+        self.assertEqual(str(err), "rBuilder error BarError: ''")
+
+        server.getProjectIdByHostname._mock.setReturn(
+                (True, ('BazError', 1337)), 'foo.rpath.org')
+        err = self.assertRaises(*assertRaiseArgs)
+        self.assertEqual(str(err), "rBuilder error BazError: 1337")
+
+    def testGetProductLabelFromNameAndVersion2(self):
+        client = self._getClient()
+        server = client.server
+        mock.mockMethod(client.getBranchIdFromName)
+        client.getBranchIdFromName._mock.setReturn(1, 'foo.rpath.org', '1.0')
+        client.getBranchIdFromName._mock.setReturn(2, 'foo.rpath.org', '2.0')
         server.getProductDefinitionForVersion._mock.setReturn(
                                                     (False, 'stream'), 1)
         mock.mock(proddef, 'ProductDefinition')
@@ -292,68 +329,34 @@ class RbuilderRPCClientTest(rbuildhelp.RbuildHelper):
                                                         'foo.rpath.org@rpl:1')
         rc = client.getProductLabelFromNameAndVersion('foo.rpath.org', '1.0')
         assert(rc == 'foo.rpath.org@rpl:1')
-        err = self.assertRaises(errors.RbuildError,
-                    client.getProductLabelFromNameAndVersion, 
-                    'foo.rpath.org', '3.0')
-        self.assertEquals(str(err), '3.0 is not a valid version for product '
-            'foo.rpath.org.\nValid versions are: 1.0, 2.0')
-        server.getProductVersionListForProduct._mock.setReturn((False, []), 32)
-        err = self.assertRaises(errors.RbuildError,
-                    client.getProductLabelFromNameAndVersion, 
-                    'foo.rpath.org', '3.0')
-        self.assertEquals(str(err), '3.0 is not a valid version for product '
-            'foo.rpath.org.\nNo versions found for product foo.rpath.org.')
-        server.getProductVersionListForProduct._mock.setReturn(returnValue, 32)
+
         server.getProductDefinitionForVersion._mock.setReturn(
                 (True, ('FooError', '')), 1)
-        assertRaiseArgs = (errors.RbuildError,
-            client.getProductLabelFromNameAndVersion, 'foo.rpath.org', '1.0')
-        err = self.assertRaises(*assertRaiseArgs)
+        err = self.assertRaises(errors.RbuildError,
+                client.getProductLabelFromNameAndVersion,
+                'foo.rpath.org', '1.0')
         self.assertEqual(str(err), "rBuilder error FooError: ''")
-
-        server.getProductVersionListForProduct._mock.setReturn(
-                (True, ('BarError', '')), 32)
-        err = self.assertRaises(*assertRaiseArgs)
-        self.assertEqual(str(err), "rBuilder error BarError: ''")
-
-        server.getProjectIdByHostname._mock.setReturn(
-                (True, ('BazError', 1337)), 'foo.rpath.org')
-        err = self.assertRaises(*assertRaiseArgs)
-        self.assertEqual(str(err), "rBuilder error BazError: 1337")
 
     def testStartProductBuilds(self):
         client = self._getClient()
         server = client.server
-        server.getProjectIdByHostname._mock.setReturn((False, 32),
-                                                       'foo.rpath.org')
-        productVersionList = [(1, 32, 'rpl', '1.0', 'version 1.0'),
-                              (2, 32, 'rpl', '2.0', 'version 2.0')]
+        mock.mockMethod(client.getBranchIdFromName)
+        client.getBranchIdFromName._mock.setReturn(2, 'foo.rpath.org', '2.0')
 
-        oldProductVersionList = [(1, 32, '1.0', 'version 1.0'),
-                                 (2, 32, '2.0', 'version 2.0')]
-        returnValue = (False, productVersionList)
-        server.getProductVersionListForProduct._mock.setReturn(returnValue, 32)
-        returnValue = (False, [1, 2, 3, 4, 5])
-        server.newBuildsFromProductDefinition._mock.setReturn(returnValue,
-                                                              2, 'devel', False)
+        server.newBuildsFromProductDefinition._mock.setReturn(
+                [False, [1, 2, 3, 4, 5]],
+                2, 'devel', False, None)
         buildIds = client.startProductBuilds('foo.rpath.org', '2.0', 'devel')
         assert(buildIds == [1, 2, 3, 4, 5])
 
-        #Test for old productVersionLists
-        server.getProductVersionListForProduct._mock.setReturn((False,
-                                                oldProductVersionList), 32)
-        buildIds = client.startProductBuilds('foo.rpath.org', '2.0', 'devel')
-        assert(buildIds == [1, 2, 3, 4, 5])
-        
         # now test for error conditions
-        server.newBuildsFromProductDefinition._mock.setReturn((True,
-                                                    ['ErrorClass', 'message']),
-                                                    2, 'devel', False)
+        server.newBuildsFromProductDefinition._mock.setReturn(
+                [True, ['ErrorClass', 'message']],
+                2, 'devel', False, None)
         err = self.assertRaises(errors.RbuildError,
                                 client.startProductBuilds, 
                                 'foo.rpath.org', '2.0', 'devel')
         self.failUnlessEqual(str(err), "rBuilder error ErrorClass: 'message'")
-        
 
         server.newBuildsFromProductDefinition._mock.setReturn((True,
             ['TroveNotFoundForBuildDefinition', [[
@@ -364,36 +367,6 @@ class RbuilderRPCClientTest(rbuildhelp.RbuildHelper):
         err = self.assertRaises(errors.RbuildError,
                                 client.startProductBuilds, 
                                 'foo.rpath.org', '2.0', 'devel')
-        self.assertEquals(err.msg,
-            "Trove 'group-dumponme-appliance' has no matching flavors for "
-            "'~X,~!alternatives,!bootstrap,!cross,~!dom0,!domU,~vmware,"
-            "~!xen,~!xfce is: x86(~cmov,~i486,~i586,~i686,~mmx,~sse,~sse2)'"
-            "\n\nTo submit the partial set of builds, re-run this command "
-            "with --force")
-
-        productVersionList = [(1, 32, 'rpl', '1.0', 'version 1.0')]
-        returnValue = (False, productVersionList)
-        server.getProductVersionListForProduct._mock.setReturn(returnValue, 32)
-
-        err = self.assertRaises(errors.RbuildError,
-                                client.startProductBuilds, 
-                                'foo.rpath.org', '2.0', 'devel')
-        assert(str(err) == "could not find version '2.0'"
-                           " for product 'foo.rpath.org'")
-        server.getProductVersionListForProduct._mock.setReturn(
-                                [True, ["ErrorClass2", "Message"]], 32)
-        err = self.assertRaises(errors.RbuildError,
-                                client.startProductBuilds, 
-                                'foo.rpath.org', '2.0', 'devel')
-        self.assertEqual(str(err), "rBuilder error ErrorClass2: 'Message'")
-        server.getProjectIdByHostname._mock.setReturn(
-                                        [True, ["ErrorClass3", "message3"]],
-                                        'foo.rpath.org')
-        err = self.assertRaises(errors.RbuildError,
-                                client.startProductBuilds, 
-                                'foo.rpath.org', '2.0', 'devel')
-        self.assertEqual(str(err), "rBuilder error ErrorClass3: 'message3'")
-
 
     def testWatchImages(self):
         client = self._getClient()

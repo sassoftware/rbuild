@@ -124,7 +124,11 @@ class Rebase(pluginapi.Plugin):
         if 'version' in versionKw:
             versionKw['version'] = rbSchemaVer
 
-        proddir = handle.productStore.getProductDefinitionDirectory()
+        try:
+            proddir = handle.productStore.getProductDefinitionDirectory()
+        except Exception:
+            handle.ui.writeError("Product Definition directory not found.")
+            return 1
         conaryClient = handle.facade.conary._getConaryClient()
         self._raiseErrorIfModified(proddir)
         self._raiseErrorIfConflicts(proddir)

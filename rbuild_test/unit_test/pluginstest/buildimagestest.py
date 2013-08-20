@@ -15,9 +15,11 @@
 # limitations under the License.
 #
 
-from rbuild import errors
+import sys
 from rbuild_test import rbuildhelp
+from StringIO import StringIO
 from testutils import mock
+
 
 class BuildImagesTest(rbuildhelp.RbuildHelper):
     def testCommandParsing(self):
@@ -26,42 +28,38 @@ class BuildImagesTest(rbuildhelp.RbuildHelper):
         handle.Build.initialize()
         handle.BuildImages.initialize()
         cmd = handle.Commands.getCommandClass('build')()
-        mock.mockMethod(handle.BuildImages.buildImages, 1)
-        mock.mockMethod(handle.Build.watchJob)
-        mock.mockMethod(handle.facade.rmake.isJobBuilt, True)
-        mock.mockMethod(handle.BuildImages.printImageUrlsForJob)
+        mock.mockMethod(handle.BuildImages.buildImages, [1])
+        mock.mockMethod(handle.facade.rbuilder.watchImages)
+        mock.mockMethod(handle.BuildImages.printImageUrlsForBuild)
         handle.productStore = mock.MockObject()
         handle.product = mock.MockObject()
         cmd.runCommand(handle, {}, ['rbuild', 'build', 'images'])
         handle.BuildImages.buildImages._mock.assertCalled(None)
-        handle.Build.watchJob._mock.assertCalled(1)
-        handle.facade.rmake.isJobBuilt._mock.assertCalled(1)
+        handle.facade.rbuilder.watchImages._mock.assertCalled([1])
+        handle.BuildImages.printImageUrlsForBuild._mock.assertCalled(1)
 
         cmd.runCommand(handle, {}, ['rbuild', 'build', 'images', 'image 1', 'image 2'])
         handle.BuildImages.buildImages._mock.assertCalled(['image 1', 'image 2'])
 
-        cmd.runCommand(handle, {}, ['rbuild', 'build', 'images'])
+        handle.facade.rbuilder.watchImages._mock.setReturn(False, [1])
+        rv = cmd.runCommand(handle, {}, ['rbuild', 'build', 'images'])
+        self.assertEqual(rv, 10)
 
+        self.mock(sys, 'stdout', StringIO())
         cmd.runCommand(handle, {'no-watch':True},
             ['rbuild', 'build', 'images'])
-
-        handle.facade.rmake.isJobBuilt._mock.setDefaultReturn(False)
-        self.assertRaises(errors.PluginError,
-            cmd.runCommand, handle, {}, ['rbuild', 'build', 'images'])
+        self.assertEqual(sys.stdout.getvalue(), '1\n')
 
     def testBuildAllImages(self):
         handle = self.getRbuildHandle()
         handle.productStore = mock.MockObject()
         handle.product = mock.MockObject()
-        mock.mockMethod(handle.facade.rmake.createImagesJobForStage,
-                        'job')
-        mock.mockMethod(handle.facade.rmake.buildJob, 31)
         mock.mockMethod(handle.Build.warnIfOldProductDefinition)
+        mock.mockMethod(handle.facade.rbuilder.buildAllImagesForStage, [1])
         rc = handle.BuildImages.buildImages()
-        handle.facade.rmake.createImagesJobForStage._mock.assertCalled(None)
-        handle.facade.rmake.buildJob._mock.assertCalled('job')
-        handle.productStore.setImageJobId._mock.assertCalled(31)
-        assert(rc == 31)
+        self.assertEqual(rc, [1])
+        handle.facade.rbuilder.buildAllImagesForStage._mock.assertCalled(
+                buildNames=None)
         handle.Build.warnIfOldProductDefinition._mock.assertCalled(
             'building images')
 
@@ -75,13 +73,6 @@ class BuildImagesTest(rbuildhelp.RbuildHelper):
             'rbuild_plugins.buildimages.BuildImagesCommand.runCommand',
             [None, None, {'no-watch' : True},
             ['build', 'images', 'image 1']])
-
-    def testPrintImageUrlsForJob(self):
-        handle = self.getRbuildHandle()
-        mock.mockMethod(handle.facade.rmake.getBuildIdsFromJobId)._mock.setReturn([2], 1)
-        mock.mockMethod(handle.BuildImages.printImageUrlsForBuild)
-        handle.BuildImages.printImageUrlsForJob(1)
-        handle.BuildImages.printImageUrlsForBuild._mock.assertCalled(2)
 
     def testPrintImageUrlsForBuild(self):
         handle = self.getRbuildHandle()

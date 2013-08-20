@@ -133,8 +133,16 @@ class RmakeFacadeTest(rbuildhelp.RbuildHelper):
 
     def test_getBaseRmakeConfig(self):
         # avoid finding any real rmakerc on testing system
+        # that breaks plugin config option parsing, so add back in rmakeUrl
+        class mockRmakeBuildContext(buildcfg.RmakeBuildContext):
+            rmakeUrl   = (cfgtypes.CfgString, None)
+            strictMode = (cfgtypes.CfgBool, False)
+            rmakeUser  = (buildcfg.CfgUser, None)
+            signatureKey = (conarycfg.CfgFingerPrint, None)
+            signatureKeyMap = (conarycfg.CfgFingerPrintMap, None)
         bc = buildcfg.BuildConfiguration
-        class mockBuildConfiguration(bc):
+        class mockBuildConfiguration(buildcfg.BuildConfiguration):
+            _cfg_bases = [mockRmakeBuildContext]
             def __init__(s2, readConfigFiles=False, root='',
                          conaryConfig=None, serverConfig=None,
                          ignoreErrors=False, log=None, 
@@ -142,14 +150,6 @@ class RmakeFacadeTest(rbuildhelp.RbuildHelper):
                 root = self.workDir
                 bc.__init__(s2, readConfigFiles, root, conaryConfig,
                             serverConfig, ignoreErrors, log, strictMode)
-        # that breaks plugin config option parsing, so add back in rmakeUrl
-        rbc = buildcfg.RmakeBuildContext
-        class mockRmakeBuildContext(rbc):
-            rmakeUrl   = (cfgtypes.CfgString, None)
-            strictMode = (cfgtypes.CfgBool, False)
-            rmakeUser  = (buildcfg.CfgUser, None)
-            signatureKey = (conarycfg.CfgFingerPrint, None)
-            signatureKeyMap = (conarycfg.CfgFingerPrintMap, None)
 
         _, facade = self.prep()
         self.mock(buildcfg, 'BuildConfiguration', mockBuildConfiguration)

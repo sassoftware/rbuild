@@ -28,20 +28,19 @@ import os
 from rbuild.facade import conaryfacade
 from rbuild import errors
 
-from conary import clone
 from conary import conarycfg
 from conary import conaryclient
 from conary import checkin
 from conary import errors as conaryerrors
-from conary import updatecmd
 from conary import state
 from conary import versions
+from conary.cmds import clone
+from conary.cmds import updatecmd
 from conary.versions import VersionFromString as VFS
 from conary.versions import Label
 from conary.build import loadrecipe, use, errors as builderrors
 from conary.deps import deps
 from conary.deps.deps import parseFlavor as Flavor
-from conary.lib import log
 
 
 def mockedMethod(self, real, saveList, fakeReturn, *args, **kwargs):
