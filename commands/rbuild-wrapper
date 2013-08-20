@@ -16,7 +16,8 @@
 bindir=$(dirname $0)
 bin=$(basename $0)
 importdir=$(cd $bindir/.. 2> /dev/null && pwd -P;)
-export PYTHONPATH=$importdir${RMAKE_PATH:+:$RMAKE_PATH}${CONARY_PATH:+:$CONARY_PATH}${PRODUCT_DEFINITION_PATH:+:$PRODUCT_DEFINITION_PATH}
+includedir=$(cd $bindir/../../include 2> /dev/null && pwd -P;)
+export PYTHONPATH=$importdir${includedir:+:$includedir}${RMAKE_PATH:+:$RMAKE_PATH}${CONARY_PATH:+:$CONARY_PATH}${PRODUCT_DEFINITION_PATH:+:$PRODUCT_DEFINITION_PATH}
 declare -a config
 config=("--config=pluginDirs $importdir/plugins:/usr/share/rbuild/plugins:~/.rbuild/plugins.d")
 exec $importdir/commands/$bin ${config:+"${config[@]}"} "$@"
