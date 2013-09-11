@@ -317,6 +317,7 @@ class ConaryFacade(object):
         if self._conaryCfg and useCache:
             return self._conaryCfg
         cfg = conarycfg.ConaryConfiguration(False)
+        cfg.read(os.path.expanduser('~/.conaryrc-rbuild'), exception=False)
         rbuildCfg = self._handle.getConfig()
         self._parseRBuilderConfigFile(cfg)
         #pylint: disable-msg=E1101
