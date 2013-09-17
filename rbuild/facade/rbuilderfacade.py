@@ -299,7 +299,7 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
             else:
                 raise errors.RbuildError("No compatible REST API found on "
                         "rBuilder '%s'" % self._url.__safe_str__())
-            self._api = robj.connect(ver.id)
+            self._api = ver
         return self._api
 
     def getProductDefinitionSchemaVersion(self):
@@ -316,7 +316,8 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
                 return str(ver)
         # proddefSchemaVersion was added in rBuilder 5.2.3, prior to that the
         # schema version was 2.0.
-        return '2.0'
+        raise errors.RbuildError("Unable to determine the product definition "
+                "version offered by rBuilder")
 
     def getWindowsBuildService(self):
         systems = self.api.inventory.infrastructure_systems
