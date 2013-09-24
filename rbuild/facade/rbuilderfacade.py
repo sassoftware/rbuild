@@ -120,7 +120,7 @@ class RbuilderRPCClient(_AbstractRbuilderClient):
             # image builds from system model was added later (Sept # 2013),
             # and it causes tracebacks on older rbuilders; only supply
             # it if really needed
-            methodArgs.append(groupSpecs)
+            methodArgs.extend([None, groupSpecs])
         error, buildIds = self.server.newBuildsFromProductDefinition(
                 *methodArgs)
         if error:

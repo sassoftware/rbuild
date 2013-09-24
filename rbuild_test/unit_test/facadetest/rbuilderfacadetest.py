@@ -160,7 +160,7 @@ class RbuilderFacadeTest(rbuildhelp.RbuildHelper):
         # Now invoke with groupSpecs
         groupSpecs = [ 'group-1=cny.org@ex:1', 'group-2=cny.org@ex:2' ]
         buildIds = facade.buildAllImagesForStage(groupSpecs=groupSpecs)
-        self.assertEquals(_mock.calls, [((1, 'devel', False, None, groupSpecs), ())])
+        self.assertEquals(_mock.calls, [((1, 'devel', False, None, None, groupSpecs), ())])
 
     def testWatchImages(self):
         _, facade = self.prep()
