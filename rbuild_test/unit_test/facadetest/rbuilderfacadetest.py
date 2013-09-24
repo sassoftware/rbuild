@@ -132,10 +132,35 @@ class RbuilderFacadeTest(rbuildhelp.RbuildHelper):
         mock.mockMethod(facade._getRbuilderRPCClient)
         client = facade._getRbuilderRPCClient()
         client.startProductBuilds._mock.setReturn([1], 'shortname', '1.0',
-                'devel', buildNames=None)
+                'devel', buildNames=None, groupSpecs=None)
         buildIds = facade.buildAllImagesForStage()
-        assert(buildIds == [1])
+        self.assertEquals(buildIds, [1])
 
+    def testBuildAllImagesForStage_groupSpecs(self):
+        handle, facade = self.prep()
+        handle.product.getProductShortname._mock.setReturn('shortname')
+        handle.product.getProductVersion._mock.setReturn('1.0')
+        client = facade._getRbuilderRPCClient()
+        mock.mockMethod(facade._getRbuilderRPCClient, returnValue=client)
+        # Make sure we don't pass in groupSpecs if not necessary
+        mock.mock(client, 'server')
+        client.server.getProductVersionListForProduct._mock.setDefaultReturn(
+                (False, [(1, 1, 'sas', '1.0', '')]))
+        client.server.getProjectIdByHostname._mock.setDefaultReturn(
+                (False, 1))
+
+        client.server.newBuildsFromProductDefinition._mock.setDefaultReturn(
+                (False, [1]))
+        buildIds = facade.buildAllImagesForStage()
+        self.assertEquals(buildIds, [1])
+        _mock = client.server.newBuildsFromProductDefinition._mock
+        self.assertEquals(_mock.calls, [((1, 'devel', False, None), ())])
+        _mock.popCall()
+
+        # Now invoke with groupSpecs
+        groupSpecs = [ 'group-1=cny.org@ex:1', 'group-2=cny.org@ex:2' ]
+        buildIds = facade.buildAllImagesForStage(groupSpecs=groupSpecs)
+        self.assertEquals(_mock.calls, [((1, 'devel', False, None, groupSpecs), ())])
 
     def testWatchImages(self):
         _, facade = self.prep()
