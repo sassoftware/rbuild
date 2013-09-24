@@ -113,10 +113,16 @@ class RbuilderRPCClient(_AbstractRbuilderClient):
         return product.getProductDefinitionLabel()
 
     def startProductBuilds(self, productName, versionName, stageName,
-            buildNames=None):
+            buildNames=None, groupSpecs=None):
         versionId = self.getBranchIdFromName(productName, versionName)
+        methodArgs = [versionId, stageName, False, buildNames ]
+        if groupSpecs is not None:
+            # image builds from system model was added later (Sept # 2013),
+            # and it causes tracebacks on older rbuilders; only supply
+            # it if really needed
+            methodArgs.append(groupSpecs)
         error, buildIds = self.server.newBuildsFromProductDefinition(
-                versionId, stageName, False, buildNames)
+                *methodArgs)
         if error:
             raise errors.RbuilderError(*buildIds)
         return buildIds
@@ -456,13 +462,13 @@ class RbuilderFacade(object):
             serverUrl = serverUrl.replace('%s@' %user, '', 1)
         return serverUrl, user, password
 
-    def buildAllImagesForStage(self, buildNames=None):
+    def buildAllImagesForStage(self, buildNames=None, groupSpecs=None):
         client = self._getRbuilderRPCClient()
         stageName = self._handle.productStore.getActiveStageName()
         productName = str(self._handle.product.getProductShortname())
         versionName = str(self._handle.product.getProductVersion())
         buildIds = client.startProductBuilds(productName, versionName,
-                stageName, buildNames=buildNames)
+                stageName, buildNames=buildNames, groupSpecs=groupSpecs)
         return buildIds
 
     def getProductLabelFromNameAndVersion(self, productName, versionName):
