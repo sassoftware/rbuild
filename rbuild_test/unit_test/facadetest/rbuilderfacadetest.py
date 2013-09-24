@@ -633,8 +633,8 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
         # no REST api case
         client._api._mock.set(proddefSchemaVersion=None)
         client._api._mock.set(version_info=None)
-        result = client.getProductDefinitionSchemaVersion()
-        self.failUnlessEqual(result, '2.0')
+        e = self.assertRaises(errors.RbuildError, client.getProductDefinitionSchemaVersion)
+        self.assertEquals(e.msg, 'Unable to determine the product definition version offered by rBuilder')
 
         # pre 5.2.3 api
         client._api._mock.set(proddefSchemaVersion='2.0')
