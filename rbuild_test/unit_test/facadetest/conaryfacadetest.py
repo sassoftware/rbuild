@@ -86,8 +86,6 @@ class MockConfig(object):
         self.signatureKeyMap = {}
     def includeConfigFile(self, path):
         self.includedConfigFile = path
-    def read(self, *args, **kwargs):
-        return
     
 class MockHandle(object):
     def __init__(self, serverUrl=None):
