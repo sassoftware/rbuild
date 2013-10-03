@@ -322,6 +322,7 @@ class ConaryFacade(object):
         #pylint: disable-msg=E1101
         # pylint does not understand config objects very well
         cfg.repositoryMap.update(rbuildCfg.repositoryMap)
+        cfg.user.extend(rbuildCfg.repositoryUser)
         cfg.user.append(('*',) + rbuildCfg.user)
         cfg.name = rbuildCfg.name
         cfg.contact = rbuildCfg.contact

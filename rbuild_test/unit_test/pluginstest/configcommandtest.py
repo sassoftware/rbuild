@@ -54,6 +54,7 @@ name                      Test
 pluginDirs                %s
 quiet                     False
 repositoryMap             []
+repositoryUser            []
 rmakePluginDirs           %s
 serverUrl                 some non-empty value
 signatureKeyMap           []
@@ -69,6 +70,7 @@ name                      Test
 pluginDirs                %s
 quiet                     False
 repositoryMap             []
+repositoryUser            []
 rmakePluginDirs           %s
 serverUrl                 some non-empty value
 signatureKeyMap           []
@@ -188,6 +190,8 @@ pluginDirs                %s
 quiet                     False
 # repositoryMap (Default: [])
 repositoryMap             []
+# repositoryUser (Default: [])
+repositoryUser            []
 # rmakePluginDirs (Default: /usr/share/rmake/plugins:~/.rmake/plugins.d)
 rmakePluginDirs           %s
 # rmakeUrl (Default: None)
@@ -322,6 +326,8 @@ pluginDirs                %s
 quiet                     False
 # repositoryMap (Default: [])
 repositoryMap             []
+# repositoryUser (Default: [])
+repositoryUser            []
 # rmakePluginDirs (Default: /usr/share/rmake/plugins:~/.rmake/plugins.d)
 rmakePluginDirs           %s
 # rmakeUrl (Default: None)
@@ -393,6 +399,8 @@ pluginDirs                %s
 quiet                     False
 # repositoryMap (Default: [])
 repositoryMap             []
+# repositoryUser (Default: [])
+repositoryUser            []
 # rmakePluginDirs (Default: /usr/share/rmake/plugins:~/.rmake/plugins.d)
 rmakePluginDirs           %s
 # rmakeUrl (Default: None)
@@ -448,6 +456,8 @@ pluginDirs                %s
 quiet                     False
 # repositoryMap (Default: [])
 repositoryMap             []
+# repositoryUser (Default: [])
+repositoryUser            []
 # rmakePluginDirs (Default: /usr/share/rmake/plugins:~/.rmake/plugins.d)
 rmakePluginDirs           %s
 # rmakeUrl (Default: None)
@@ -637,6 +647,8 @@ pluginDirs                %s
 quiet                     False
 # repositoryMap (Default: [])
 repositoryMap             []
+# repositoryUser (Default: [])
+repositoryUser            []
 # rmakePluginDirs (Default: /usr/share/rmake/plugins:~/.rmake/plugins.d)
 rmakePluginDirs           %s
 # rmakeUrl (Default: None)
@@ -702,5 +714,57 @@ rmakeUser                 testuser
             txt = open(self.workDir + '/home/.rmakerc-rbuild').read()
             self.assertEqualsText(txt, expectedTxt)
             self.assertEquals(os.stat(self.workDir + '/home/.rmakerc-rbuild').st_mode & 0777, 0600)
+        finally:
+            os.environ['HOME'] = oldHome
+
+    def testConaryCfgRepoUser(self):
+        homeDir = self.workDir + '/home'
+        os.mkdir(homeDir)
+        oldHome = os.environ['HOME']
+        try:
+            os.environ['HOME'] = homeDir
+            # update self.rbuildCfg
+            self.rbuildCfg.repositoryUser = [('bar.com', 'bar', 'barpass')]
+
+            # regenerate conaryrc-rbuild
+            handle = self.getRbuildHandle(productStore=mock.MockObject(),
+                                          mockOutput=False)
+            mock.mockMethod(handle.facade.conary._parseRBuilderConfigFile)
+
+            rc, out = self.captureOutput(
+                handle.Config.writeConaryConfiguration)
+
+            # Now test contents of synced conary/rmake config files
+            expectedTxt = '''\
+# Include config file maintained by rBuild:
+includeConfigFile ~/.conaryrc-rbuild
+'''
+            txt = open(self.workDir + '/home/.conaryrc').read()
+            self.assertEqualsText(txt, expectedTxt)
+            self.assertEquals(
+                os.stat(self.workDir + '/home/.conaryrc').st_mode & 0777,
+                0600)
+
+            expectedTxt = '''\
+# This file will be overwritten automatically by rBuild
+# You can ignore it by removing the associated includeConfigFile
+# line from ~/.conaryrc
+# contact (Default: None)
+contact                   http://bugzilla.rpath.com/
+# name (Default: None)
+name                      Test
+# repositoryMap (Default: [])
+repositoryMap             []
+# user (Default: [])
+user                      bar.com bar barpass
+user                      * test foo
+'''
+
+            txt = open(self.workDir + '/home/.conaryrc-rbuild').read()
+            self.assertEqualsText(txt, expectedTxt)
+            self.assertEquals(
+                os.stat(self.workDir +
+                        '/home/.conaryrc-rbuild').st_mode & 0777,
+                0600)
         finally:
             os.environ['HOME'] = oldHome

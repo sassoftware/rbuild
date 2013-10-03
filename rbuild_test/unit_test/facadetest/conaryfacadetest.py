@@ -336,11 +336,14 @@ class ConaryFacadeTest(rbuildhelp.RbuildHelper):
         handle._cfg.contact = 'rbuildCfgContact'
         handle._cfg.signatureKey = 'ASDF'
         handle._cfg.signatureKeyMap = {'foo': 'FDSA'}
+        handle._cfg.repositoryUser = [('foo', 'foouser', 'foopassword')]
         self.mock(conarycfg, 'ConaryConfiguration',
             lambda *args: mockedFunction(None, None, mockConaryConfig, *args))
         facadeCfg = facade.getConaryConfig()
         self.assertEquals(facadeCfg.repositoryMap, handle._cfg.repositoryMap)
-        self.assertEquals(facadeCfg.user, [('*', 'rbuildCfgUser', 'rbuildCfgPassword')])
+        self.assertEquals(facadeCfg.user, [
+                ('foo', 'foouser', 'foopassword'),
+                ('*', 'rbuildCfgUser', 'rbuildCfgPassword')])
         self.assertEquals(facadeCfg.name, handle._cfg.name)
         self.assertEquals(facadeCfg.contact, handle._cfg.contact)
         self.assertEquals(facadeCfg.signatureKey, 'ASDF')
