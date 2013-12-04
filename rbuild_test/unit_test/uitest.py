@@ -220,3 +220,80 @@ class UserInterfaceTest(rbuildhelp.RbuildHelper):
         h.ui.input._mock.setReturns(['', 'x', '0', '4', '3'], 'prompt [1-3]: ')
         rc, txt = self.captureOutput(h.ui.getChoice, 'prompt', choices)
         self.assertEqual(rc, 2)
+
+    def testGetChoicePaged(self):
+        h = self.getRbuildHandle()
+        choices = [ chr(x) for x in range(65, 91) ]
+        mock.mockMethod(h.ui.input)
+        h.ui.input._mock.setReturns(['', 'x', '0', '27', '3'], 'prompt [1-26]: ')
+        rc, txt = self.captureOutput(h.ui.getChoice, 'prompt', choices, pageSize=5)
+        self.assertEqual(rc, 2)
+
+        # Now test page navigation
+        del h.ui.outStream.write._mock.calls[:]
+        h.ui.input._mock.setReturns(['<', '>', '>', '>', '>', '>', '3'], 'prompt [1-26]: ')
+        rc, txt = self.captureOutput(h.ui.getChoice, 'prompt', choices, pageSize=7)
+        self.assertEqual(rc, 2)
+        self.assertEqual(
+                ''.join(x[0][0] for x in  h.ui.outStream.write._mock.calls),
+                '''\
+Choose one:
+  1. A
+  2. B
+  3. C
+  4. D
+  5. E
+  6. F
+  7. G
+  >  (next page)
+Choose one:
+  1. A
+  2. B
+  3. C
+  4. D
+  5. E
+  6. F
+  7. G
+  >  (next page)
+Choose one:
+  8. H
+  9. I
+ 10. J
+ 11. K
+ 12. L
+ 13. M
+ 14. N
+  <  (previous page)
+  >  (next page)
+Choose one:
+ 15. O
+ 16. P
+ 17. Q
+ 18. R
+ 19. S
+ 20. T
+ 21. U
+  <  (previous page)
+  >  (next page)
+Choose one:
+ 22. V
+ 23. W
+ 24. X
+ 25. Y
+ 26. Z
+  <  (previous page)
+Choose one:
+ 22. V
+ 23. W
+ 24. X
+ 25. Y
+ 26. Z
+  <  (previous page)
+Choose one:
+ 22. V
+ 23. W
+ 24. X
+ 25. Y
+ 26. Z
+  <  (previous page)
+''')

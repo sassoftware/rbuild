@@ -195,7 +195,7 @@ class UserInterface(object):
                     continue
             return response
 
-    def getChoice(self, prompt, choices, prePrompt='Choose one:'):
+    def getChoice(self, prompt, choices, prePrompt='Choose one:', pageSize=None):
         """
         Present a list of choices to the user and have them select one by
         index. Returns a 0-indexed integer into the original list of choices.
@@ -206,15 +206,44 @@ class UserInterface(object):
         @type  choices: list
         @param prePrompt: optional string to display before the list of choices
         @type  prePrompt: str
+        @param pageSize: (optional) number of items per page. Defaults to no pagination.
+        @type  pageSize: int
         """
         choices = list(choices)
         assert choices
         pad = len(str(len(choices)))
+        if pageSize:
+            pageNo = 0
+            pageCount, remainder = divmod(len(choices), pageSize)
+            if remainder:
+                pageCount += 1
         while True:
+            hasPrev = hasNext = None
             self.write(prePrompt)
-            for n, choice in enumerate(choices):
+            if pageSize:
+                idxStart = pageNo * pageSize
+                idxEnd = (pageNo + 1) * pageSize
+                hasPrev = (pageNo > 0)
+                chunk = ((idxStart + x, y)
+                        for x, y in enumerate(choices[idxStart:idxEnd]))
+            else:
+                chunk = enumerate(choices)
+            for n, choice in chunk:
                 self.write(' %*d. %s' % (pad, n + 1, choice))
+            if hasPrev:
+                self.write(' %*s  %s' % (pad, '<', "(previous page)"))
+            if pageSize and pageNo < pageCount - 1:
+                self.write(' %*s  %s' % (pad, '>', "(next page)"))
+                hasNext = True
+
             response = self.input(prompt + ' [%d-%d]: ' % (1, len(choices)))
+            if hasPrev and response == '<':
+                pageNo -= 1
+                continue
+            if hasNext and response == '>':
+                pageNo += 1
+                continue
+
             try:
                 response = int(response)
             except ValueError:
