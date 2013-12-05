@@ -1,0 +1,2 @@
+stdout is now flushed after writing. This fixes output not appearing in job
+runners such as Jenkins until the job has completed.

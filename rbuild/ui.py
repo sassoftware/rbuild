@@ -80,6 +80,7 @@ class UserInterface(object):
         
     def write(self, msg='', *args):
         self.outStream.write('%s\n' % (msg % args, ))
+        self.outStream.flush()
         if self._log:
             self._log(msg, *args)
 
@@ -97,6 +98,7 @@ class UserInterface(object):
     def writeProgress(self, msg='', *args):
         timeStamp = time.ctime(time.time())
         self.outStream.write('[%s] %s\n' % (timeStamp, msg % args))
+        self.outStream.flush()
 
     def info(self, msg, *args):
         if not self.cfg.quiet:
