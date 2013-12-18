@@ -77,6 +77,7 @@ class MockConfig(object):
         self.serverUrl = serverUrl
         self.includedConfigFile = None
         self.repositoryMap = {'a' : 'b'}
+        self.repositoryUser = [('baz.com', 'baz', 'secret')]
         self.user = ('foo', 'bar')
         self.name = None
         self.rmakeUrl = 'unix://var/lib/rmake/socket2'
@@ -218,7 +219,9 @@ class RmakeFacadeTest(rbuildhelp.RbuildHelper):
         self.assertEquals(str(rmakeCfg._sections['foo'].buildFlavor), 'bam,foo')
 
         self.assertEquals(rmakeCfg.repositoryMap, {'a': 'b'})
-        self.assertEquals(list(rmakeCfg.user), [('localhost', 'foo', 'bar')])
+        self.assertEquals(list(rmakeCfg.user),
+                 [('baz.com', 'baz', 'secret'),
+                  ('localhost', 'foo', 'bar')])
         self.assertEquals(rmakeCfg.rmakeUrl, 'unix://var/lib/rmake/socket2')
         self.assertEquals(rmakeCfg.rmakeUser, ('foo', 'bar'))
         self.assertEquals(sorted(contextDict.items()),
@@ -336,6 +339,7 @@ class RmakeFacadeTest(rbuildhelp.RbuildHelper):
         rmakeClient = facade._getRmakeHelperWithContexts()[0]
         handle.productStore.getGroupFlavors._mock.setDefaultReturn([])
         handle.productStore.getActiveStageName._mock.setDefaultReturn('QA')
+        handle.product.getLabelForStage._mock.setDefaultReturn('localhost@foo:bar')
         handle.productStore.getActiveStageLabel._mock.setReturn('localhost@foo:bar')
 
         devTup = ('group-dev', 'example.devenv@rpl:2/5-6-7', None)

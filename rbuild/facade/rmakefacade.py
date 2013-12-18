@@ -107,6 +107,7 @@ class RmakeFacade(object):
         cfg = buildcfg.BuildConfiguration(False)
         cfg.rbuilderUrl = rbuildConfig.serverUrl
         cfg.rmakeUser = rbuildConfig.user
+        cfg.user.extend(rbuildConfig.repositoryUser)
         cfg.resolveTrovesOnly = True
         cfg.shortenGroupFlavors = True
         cfg.ignoreExternalRebuildDeps = True
