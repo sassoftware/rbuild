@@ -34,6 +34,18 @@ from rbuild import facade as fac_mod
 from rbuild.facade import rbuilderfacade
 from rbuild_test import rbuildhelp
 from testutils import mock
+from xobj import xobj
+
+
+TARGET_XML = '''\
+<?xml version='1.0' encoding='UTF-8'?>
+<target>
+    <description>Foo</description>
+    <name>foo</name>
+    <target_type_name>vmware</target_type_name>
+    <zone_name>local</zone_name>
+</target>
+'''
 
 
 class RbuilderConfigTest(rbuildhelp.RbuildHelper):
@@ -686,6 +698,52 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
         client._api.inventory._mock.set(infrastructure_systems=[wbs3, notwbs])
         self.failUnlessRaises(errors.RbuildError, client.getWindowsBuildService)
 
+    def testConfigureTarget(self):
+        client = rbuilderfacade.RbuilderRESTClient('http://localhost', 'foo',
+            'bar', mock.MockObject())
+        mock.mock(client, '_api')
+        job = mock.MockObject()
+        job.job_state._mock.set(name='Completed')
+        _jobs = []
+        def _append(x):
+            _jobs.append(x)
+            return job
+        target = mock.MockObject()
+        target.jobs._mock.set(append=_append)
+        ddata = mock.MockObject()
+        ddata._mock.set(toxml=lambda: '<descriptor_data/>')
+        results = client.configureTarget(target, ddata)
+        self.assertEqual(results, target)
+        self.assertTrue(len(_jobs) == 1)
+
+        job.job_state._mock.set(name='Failed')
+        self.assertRaises(
+            errors.RbuildError, client.configureTarget, target, ddata)
+        self.assertTrue(len(_jobs) == 2)
+
+    def testConfigureTargetCredentials(self):
+        client = rbuilderfacade.RbuilderRESTClient('http://localhost', 'foo',
+            'bar', mock.MockObject())
+        mock.mock(client, '_api')
+        job = mock.MockObject()
+        job.job_state._mock.set(name='Completed')
+        _jobs = []
+        def _append(x):
+            _jobs.append(x)
+            return job
+        target = mock.MockObject()
+        target.jobs._mock.set(append=_append)
+        ddata = mock.MockObject()
+        ddata._mock.set(toxml=lambda: '<descriptor_data/>')
+        results = client.configureTargetCredentials(target, ddata)
+        self.assertEqual(results, target)
+        self.assertTrue(len(_jobs) == 1)
+
+        job.job_state._mock.set(name='Failed')
+        self.assertRaises(
+            errors.RbuildError, client.configureTarget, target, ddata)
+        self.assertTrue(len(_jobs) == 2)
+
     def testCreateProject(self):
         client = rbuilderfacade.RbuilderRESTClient('http://localhost', 'foo',
             'bar', mock.MockObject())
@@ -708,6 +766,39 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
         err = self.assertRaises(errors.RbuildError, client.createProject, 'title', 'shortname', 'hostname', 'domain.name')
         self.assertIn('conflicting', str(err))
 
+    def testCreateTarget(self):
+        client = rbuilderfacade.RbuilderRESTClient('http://localhost', 'foo',
+            'bar', mock.MockObject())
+        mock.mock(client, '_api')
+        _targets = []
+        def _append(x, tag=None):
+            _targets.append(x)
+            return x
+
+        client._api.targets._mock.set(append=_append)
+        _ddata = {
+            'name': 'foo',
+            'zone': 'local',
+            'description': 'Foo',
+            }
+        ddata = mock.MockObject()
+        ddata._mock.set(getField=lambda x: _ddata[x])
+
+        expected_results = xobj.parse(TARGET_XML)
+
+        results = client.createTarget(ddata, 'vmware')
+        self.assertEqual(results.toxml(), expected_results.toxml())
+        self.assertTrue(len(_targets) == 1)
+
+        def _append_error(x, tag=None):
+            raise robj.errors.HTTPConflictError(
+                uri=None, status=None, reason=None, response=None)
+
+        client._api.targets._mock.set(append=_append_error)
+        self.assertRaises(
+            errors.RbuildError, client.createTarget, ddata, 'vmware')
+        self.assertTrue(len(_targets) == 1)
+
     def testGetProject(self):
         client = rbuilderfacade.RbuilderRESTClient('http://localhost', 'foo',
                 'bar', mock.MockObject())
@@ -723,6 +814,50 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
                     reason=None, response=None))
         err = self.assertRaises(errors.RbuildError, client.getProject, 'bar')
         self.assertIn('not found', str(err))
+
+    def testGetTargetDescriptor(self):
+        client = rbuilderfacade.RbuilderRESTClient('http://localhost', 'foo',
+            'bar', mock.MockObject())
+        mock.mock(client, '_api')
+        TargetType = namedtuple('TargetType', 'name descriptor_create_target')
+        client._api._mock.set(_uri='http://localhost')
+        client._api._client._mock.set(do_GET=lambda x: [
+            TargetType('vmware', StringIO('descriptor data')),
+            ])
+
+        results = client.getTargetDescriptor('vmware')
+        self.assertEqual(results, 'descriptor data')
+        results = client.getTargetDescriptor('foo')
+        self.assertEqual(results, None)
+
+    def testGetTargetTypes(self):
+        client = rbuilderfacade.RbuilderRESTClient('http://localhost', 'foo',
+            'bar', mock.MockObject())
+        mock.mock(client, '_api')
+        TargetType = namedtuple('TargetType', 'name value')
+        client._api._mock.set(_uri='http://localhost')
+        client._api._client._mock.set(do_GET=lambda x: [
+            TargetType('vmware', 'VMWare'),
+            TargetType('ec2', 'Amazon EC2'),
+            ])
+        results = client.getTargetTypes()
+        self.assertEqual(
+            results,
+            {'vmware': TargetType('vmware', 'VMWare'),
+             'ec2': TargetType('ec2', 'Amazon EC2'),
+             },
+            )
+
+        def f(x):
+            raise robj.errors.HTTPNotFoundError(
+                uri='https://localhost/target_types',
+                status='404',
+                reason='Not Found',
+                response=None,
+                )
+
+        client._api._client._mock.set(do_GET=f)
+        self.assertRaises(errors.RbuildError, client.getTargetTypes)
 
     def testCreateBranch(self):
         client = rbuilderfacade.RbuilderRESTClient('http://localhost', 'foo',

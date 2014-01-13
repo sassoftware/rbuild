@@ -308,6 +308,117 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
             self._api = ver
         return self._api
 
+    def createTarget(self, ddata, ttype):
+        '''
+        Create a target using the descriptor data provided
+
+        @param ddata: descriptor data for target
+        @type: DescriptorData
+        @param ttype: target type
+        @type ttype: string
+        @return: the created Target
+        @rtype: robj.HTTPData
+        '''
+        # Construct the target xml
+        target_doc = xobj.Document()
+        target_doc.target = target = xobj.XObj()
+        target.description = ddata.getField('description')
+        target.name = ddata.getField('name')
+        target.zone_name = ddata.getField('zone')
+        target.target_type_name = ttype
+
+        try:
+            target = self.api.targets.append(target_doc, tag='target')
+        except robj.errors.HTTPConflictError:
+            raise errors.RbuildError(
+                "A target with conflicting parameters already exists")
+        return target
+
+    def configureTarget(self, target, ddata):
+        '''
+        Configure a target
+
+        @param ddata: descriptor for target
+        @type ddata: DescriptorData
+        @param target: target to configure
+        @type target: rObj(target)
+        @return: the configured target
+        @rtype: rObj(target)
+        '''
+        # make sure our target object is up to date
+        target.refresh()
+
+        doc = xobj.Document()
+        doc.job = job = xobj.XObj()
+
+        job.job_type = target.actions[0]._root.job_type
+        job.descriptor = target.actions[0]._root.descriptor
+        job.descriptor_data = xobj.parse(ddata.toxml()).descriptor_data
+
+        jobObj = target.jobs.append(doc)
+        while jobObj.job_state.name in ['Queued', 'Running']:
+            jobObj.refresh()
+
+        if jobObj.job_state.name == 'Failed':
+            raise errors.RbuildError('Target creation failed')
+        return target
+
+    def configureTargetCredentials(self, target, ddata):
+        '''
+        Configure credentials for a target
+
+        @param ddata: descriptor for target
+        @type ddata: DescriptorData
+        @param target: target to configure
+        @type target: rObj(target)
+        @return: the configured target
+        @rtype: rObj(target)
+        '''
+        # make sure our target object is up to date
+        target.refresh()
+
+        doc = xobj.Document()
+        doc.job = job = xobj.XObj()
+        job.job_type = target.actions[1]._root.job_type
+        job.descriptor = target.actions[1]._root.descriptor
+        job.descriptor_data = xobj.parse(ddata.toxml()).descriptor_data
+
+        jobObj = target.jobs.append(doc)
+        while jobObj.job_state.name in ['Queued', 'Running']:
+            jobObj.refresh()
+
+        if jobObj.job_state.name == 'Failed':
+            raise errors.RbuildError('Unable to set credentials')
+        return target
+
+    def getTargetDescriptor(self, targetType):
+        '''
+        Get the descriptor for a given target type
+
+        @param targetType: type of target descriptor to get
+        @type targetType: string
+        @return: target descriptor
+        @rtype: ...
+        '''
+        ttype = self.getTargetTypes().get(targetType, None)
+        if ttype:
+            return ttype.descriptor_create_target.read()
+
+    def getTargetTypes(self):
+        '''
+        Return all target types
+
+        @return: mapping of TargetType name to TargetType
+        @rtype: dict
+        '''
+        client = self.api._client
+        uri = self.api._uri + '/target_types'
+        try:
+            return dict((x.name, x) for x in client.do_GET(uri))
+        except robj.errors.HTTPNotFoundError:
+            raise errors.RbuildError(
+                msg='Target types url not found: %s' % uri)
+
     def getProductDefinitionSchemaVersion(self):
         # rBuilder 5.2.3 <= version < rBuilder 6.1.0
         ver = getattr(self.api, 'proddefSchemaVersion', None)
@@ -471,6 +582,48 @@ class RbuilderFacade(object):
                 stageName, buildNames=buildNames, groupSpecs=groupSpecs)
         return buildIds
 
+    def configureTarget(self, target, ddata):
+        '''
+        Configure a target
+
+        @param ddata: descriptor for target
+        @type ddata: DescriptorData
+        @param target: target to configure
+        @type target: rObj(target)
+        @return: the configured target
+        @rtype: rObj(target)
+        '''
+        client = self._getRbuilderRESTClient()
+        return client.configureTarget(target, ddata)
+
+    def configureTargetCredentials(self, target, ddata):
+        '''
+        Configure credentials for a target
+
+        @param ddata: descriptor for target
+        @type ddata: DescriptorData
+        @param target: target to configure
+        @type target: rObj(target)
+        @return: the configured target
+        @rtype: rObj(target)
+        '''
+        client = self._getRbuilderRESTClient()
+        return client.configureTargetCredentials(target, ddata)
+
+    def createTarget(self, ddata, ttype):
+        '''
+        Create and configure a target using the descriptor data provided
+
+        @param ddata: descriptor data for target
+        @type: DescriptorData
+        @param ttype: target type
+        @type ttype: string
+        @return: the created Target
+        @rtype: robj.HTTPData
+        '''
+        client = self._getRbuilderRESTClient()
+        return client.createTarget(ddata, ttype)
+
     def getProductLabelFromNameAndVersion(self, productName, versionName):
         client = self._getRbuilderRPCClient()
         return client.getProductLabelFromNameAndVersion(productName,
@@ -584,3 +737,10 @@ class RbuilderFacade(object):
     def listPlatforms(self):
         client = self._getRbuilderRESTClient()
         return client.listPlatforms()
+
+    def getTargetDescriptor(self, targetType):
+        client = self._getRbuilderRESTClient()
+        return client.getTargetDescriptor(targetType)
+
+    def getTargetTypes(self):
+        return self._getRbuilderRESTClient().getTargetTypes()
