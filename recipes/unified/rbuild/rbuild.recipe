@@ -24,6 +24,7 @@ class rBuild(BuildPackageRecipe):
         'rmake:python',
         'mercurial',
         'robj:python',
+        'smartform:python',
     ]
 
     def setup(r):
