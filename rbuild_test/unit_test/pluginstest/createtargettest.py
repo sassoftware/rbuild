@@ -56,7 +56,7 @@ class CreateTargetTest(rbuildhelp.RbuildHelper):
     def testCreateTargetCmdlineNoTargetType(self):
         handle = self.getRbuildHandle(mock.MockObject())
         handle.Create.registerCommands()
-        handle.CreateTargetPlugin.initialize()
+        handle.CreateTarget.initialize()
         rbuilder = handle.facade.rbuilder
 
         mock.mockMethod(rbuilder.getTargetDescriptor, None)
@@ -72,7 +72,7 @@ class CreateTargetTest(rbuildhelp.RbuildHelper):
             )
 
     def testCreateTargetCmdline(self):
-        from plugins.createtarget import descriptor
+        from rbuild_plugins.createtarget import descriptor
         _ddata = mock.mockClass(descriptor.ConfigurationDescriptor)
         _cred_ddata = mock.mockClass(descriptor.ConfigurationDescriptor)
         _target = mock.MockObject()
@@ -84,7 +84,7 @@ class CreateTargetTest(rbuildhelp.RbuildHelper):
 
         handle = self.getRbuildHandle(mock.MockObject())
         handle.Create.registerCommands()
-        handle.CreateTargetPlugin.initialize()
+        handle.CreateTarget.initialize()
         rbuilder = handle.facade.rbuilder
 
         mock.mockMethod(rbuilder.getTargetDescriptor)
@@ -105,7 +105,7 @@ class CreateTargetTest(rbuildhelp.RbuildHelper):
             _target, _cred_ddata)
 
     def testCreateTargetBadField(self):
-        from plugins.createtarget import descriptor
+        from rbuild_plugins.createtarget import descriptor
         _descr = mock.MockObject()
 
         def _createDescriptorData(*args, **kwargs):
@@ -117,7 +117,7 @@ class CreateTargetTest(rbuildhelp.RbuildHelper):
 
         handle = self.getRbuildHandle(mock.MockObject())
         handle.Create.registerCommands()
-        handle.CreateTargetPlugin.initialize()
+        handle.CreateTarget.initialize()
         rbuilder = handle.facade.rbuilder
 
         mock.mockMethod(rbuilder.getTargetDescriptor)

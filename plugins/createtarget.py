@@ -76,7 +76,7 @@ class CreateTargetCommand(command.BaseCommand):
         rb.configureTargetCredentials(target, creds_ddata)
 
 
-class CreateTargetPlugin(pluginapi.Plugin):
+class CreateTarget(pluginapi.Plugin):
     name = 'target'
 
     def initialize(self):
