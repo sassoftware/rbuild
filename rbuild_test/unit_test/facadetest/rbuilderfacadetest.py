@@ -295,6 +295,59 @@ class RbuilderFacadeTest(rbuildhelp.RbuildHelper):
         facade._getRbuilderRESTClient().getWindowsBuildService._mock.setReturn('rwbs')
         self.assertEqual(facade.getWindowsBuildService(), 'rwbs')
 
+    def testGetEnabledTargets(self):
+        handle, facade = self.prep()
+        _target1 = mock.MockObject()
+        _target1._mock.set(is_configured=True)
+        _target1._mock.set(credentials_valid=True)
+
+        _target2 = mock.MockObject()
+        _target2._mock.set(is_configured=True)
+        _target2._mock.set(credentials_valid=False)
+
+        _target3 = mock.MockObject()
+        _target3._mock.set(is_configured=False)
+        _target3._mock.set(credentials_valid=True)
+
+        _target4 = mock.MockObject()
+        _target4._mock.set(is_configured=False)
+        _target4._mock.set(credentials_valid=False)
+
+        mock.mock(
+            facade, 'getTargets', [_target1, _target2, _target3, _target4])
+        rv = facade.getEnabledTargets()
+        self.assertEqual(rv, [_target1])
+
+    def testGetImageByName(self):
+        handle, facade = self.prep()
+        Image = namedtuple('Image', 'name')
+        mock.mockMethod(facade.getImages)
+        facade.getImages._mock.setReturn(
+            [Image(name='foo'), Image(name='bar')])
+        self.assertEqual(facade.getImageByName('foo').name, 'foo')
+        self.assertRaises(errors.RbuildError, facade.getImageByName, 'baz')
+
+    def testGetImages(self):
+        handle, facade = self.prep()
+        mock.mockMethod(facade._getRbuilderRESTClient)
+        facade._getRbuilderRESTClient().api._mock.set(images=['foo', 'bar'])
+        self.assertEqual(facade.getImages(), ['foo', 'bar'])
+
+    def testGetTargetByName(self):
+        handle, facade = self.prep()
+        Target = namedtuple('Target', 'name')
+        mock.mockMethod(facade.getTargets)
+        facade.getTargets._mock.setReturn(
+            [Target(name='foo'), Target(name='bar')])
+        self.assertEqual(facade.getTargetByName('foo').name, 'foo')
+        self.assertRaises(errors.RbuildError, facade.getTargetByName, 'baz')
+
+    def testGetTargets(self):
+        handle, facade = self.prep()
+        mock.mockMethod(facade._getRbuilderRESTClient)
+        facade._getRbuilderRESTClient().getTargets._mock.setReturn(
+            ['foo', 'bar'])
+        self.assertEqual(facade.getTargets(), ['foo', 'bar'])
 
 class RbuilderRPCClientTest(rbuildhelp.RbuildHelper):
     def _getClient(self):
@@ -891,3 +944,10 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
             ])
         results = client.listPlatforms()
         self.assertEqual(results, [Platform('true', 'false', 'false', 'plat1', 'plat@1')])
+
+    def testGetTargets(self):
+        client = rbuilderfacade.RbuilderRESTClient(
+            'http://localhost', 'foo', 'bar', mock.MockObject())
+        mock.mock(client, '_api')
+        client._api._mock.set(targets=['foo', 'bar'])
+        self.assertEqual(client.getTargets(), ['foo', 'bar'])

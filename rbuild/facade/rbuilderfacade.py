@@ -64,6 +64,156 @@ class _AbstractRbuilderClient(object):
         self._handle = handle
 
 
+class RbuilderCallback(object):
+    def __init__(self, ui, config):
+        self.ui = ui
+        self.config = config or {}
+
+    def start(self, descriptor, name=None):
+        pass
+
+    def end(self, descriptor):
+        pass
+
+    def getValueForField(self, field):
+        # prefer pre-configured values if they are available
+        if field.name in self.config:
+            val = self.config[field.name]
+        else:
+            val = self._getValueForField(field)
+        return val
+
+    def _description(cls, description):
+        """
+        Normally descriptions should always have a "default" empty lang, but
+        sometimes we set en_US. So try to fetch None first, and if that fails,
+        get the first value and hope for the best.
+        """
+        descriptions = description.asDict()
+        return descriptions.get(None, descriptions.values()[0])
+
+
+    def _getValueForField(self, field):
+        ''' helper function that returns the value for the field, but does not store
+    it '''
+
+        defmsg = "" # message about the default value, if there is one
+        reqmsg = "" # message about whether the field is required, if so
+        typmsg = " (type %s)" % field.type
+
+        if field.required and field.hidden and field.default:
+            # return the default value and don't ask the user for input
+            if field.multiple:
+                return field.default
+            return field.default[0]
+
+        if field.required:
+            # tell the user this is a required field
+            reqmsg = " [required]"
+
+        # get the description for the field
+        fieldDescr = self._description(field.get_descriptions())
+
+        if field.enumeratedType:
+            # FIXME: refactor into subfunction
+
+            # print a list of options and let the user choose it by number
+
+            choices = [ (self._description(x.descriptions), x.key)
+                    for x in field.type ]
+
+            if field.default:
+                # Find description for default
+                defaultDescr = [ x[0] for x in choices
+                        if x[1] == field.default[0] ][0]
+                defmsg = " [default %s] " % defaultDescr
+                prompt = "Enter choice (blank for default): "
+            else:
+                prompt = "Enter choice: "
+
+            self.ui.write("Pick %s%s:" % (fieldDescr, defmsg))
+            for i, (choice, _) in enumerate(choices):
+                self.ui.write("\t%-2d: %s" % (i+1, choice))
+
+            # enumerated type input
+            # loop while the user hasn't entered a valid number
+            while 1:
+
+                data = self.ui.input(prompt).strip()
+
+                # FIXME: error checking
+                if not data:
+                    # user entered blank input
+                    # if no default is present, prompt again
+                    if not field.default:
+                        continue
+                    data = 0
+                else:
+                    # ensure user entered an integer
+                    try:
+                        data = int(data)
+                    except ValueError:
+                        continue
+
+                # make sure the user input is inside the valid range
+                rangeMax = len(choices)
+                rangeMin = 0 if field.default else 1
+                if not (rangeMin <= data <= rangeMax):
+                    continue
+
+                # if selected the 0th element, return the default
+                if data == 0:
+                    return field.default[0]
+                # return the selected choice
+                return choices[data-1][1]
+
+        # for non enumerated types ...
+
+        # if there is a default, say what it is
+        if field.default:
+            defmsg = " [default %s]" % str(field.default[0])
+
+        # FIXME: refactor into subfunction
+        # TODO: nicer entry on the same line, try on certain failures in casting, etc
+        prompt = "Enter %s%s%s%s: " % (fieldDescr, reqmsg, defmsg, typmsg)
+        while 1:
+            if re.search(r'[Pp]assword', prompt):
+                data = self.ui.inputPassword(prompt)
+            else:
+                data = self.ui.input(prompt).strip()
+            if data == '':
+                # if input is blank use the entered default data if it exists
+                if field.default:
+                    data = field.default[0]
+                elif field.required:
+                    # if blank and required, input again
+                    continue
+                else:
+                    # Assume the user chose not to fill in the value
+                    return None
+            try:
+                # convert true/yes/etc to booleans and so on
+                return self.cast(data, field.type)
+            except ValueError:
+                continue
+
+    def cast(self, value, typename):
+        # FIXME: we can probably do a getattr on the core namespace here
+        if typename == 'str':
+            return value
+        elif typename == 'int':
+            return int(value)
+        elif typename == 'float':
+            return float(value)
+        elif typename == 'bool':
+            if value.lower() in [ "yes", "yup", "y", "true", "1" ]:
+                return True
+            else:
+                return False
+        else:
+            return value
+
+
 class RbuilderRPCClient(_AbstractRbuilderClient):
     """
     XMLRPC rBuilder Client. As rBuilder moves functionality to the REST
@@ -419,6 +569,15 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
             raise errors.RbuildError(
                 msg='Target types url not found: %s' % uri)
 
+    def getTargets(self):
+        '''
+        Get all configured targets
+
+        @return: list of configured targets
+        @rtype: list of rObj(target)
+        '''
+        return self.api.targets
+
     def getProductDefinitionSchemaVersion(self):
         # rBuilder 5.2.3 <= version < rBuilder 6.1.0
         ver = getattr(self.api, 'proddefSchemaVersion', None)
@@ -738,9 +897,67 @@ class RbuilderFacade(object):
         client = self._getRbuilderRESTClient()
         return client.listPlatforms()
 
+    def getEnabledTargets(self):
+        '''
+        Get configured targets with valid credentials
+
+        @return: list of targets
+        @rtype: list of rObj(target)
+        '''
+        return [x for x in self.getTargets()
+                if x.is_configured and x.credentials_valid]
+
+    def getImageByName(self, image_name):
+        '''
+        Get an image rObj by name
+
+        @param image_name: name of image
+        @type image_name: str
+        @return: image or None
+        @rtype: rObj(image)
+        '''
+        for image in self.getImages():
+            if image_name == image.name:
+                return image
+        raise errors.RbuildError('No such image: %s' % image_name)
+
+    def getImages(self):
+        '''
+        Get all images
+
+        @return: list of images objects
+        @rtype: list of rObj(image)
+        '''
+        client = self._getRbuilderRESTClient()
+        return client.api.images
+
     def getTargetDescriptor(self, targetType):
         client = self._getRbuilderRESTClient()
         return client.getTargetDescriptor(targetType)
+
+    def getTargetByName(self, target_name):
+        '''
+        Get a target object by name
+
+        @param target_name: name of target
+        @type target_name: str
+        @return: target or None
+        @rtype: rObj(target)
+        '''
+        for target in self.getTargets():
+            if target.name == target_name:
+                return target
+        raise errors.RbuildError('No such target: %s' % target_name)
+
+    def getTargets(self):
+        '''
+        Get all targets
+
+        @return: list of targets
+        @rtype: list of rObj
+        '''
+        client = self._getRbuilderRESTClient()
+        return client.getTargets()
 
     def getTargetTypes(self):
         return self._getRbuilderRESTClient().getTargetTypes()
