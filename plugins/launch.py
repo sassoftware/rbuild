@@ -172,6 +172,7 @@ class Launch(pluginapi.Plugin):
             last_status = status
             time.sleep(1)
             job.refresh()
+        out.write('\n')
 
         if job.job_state.name == 'Failed':
-            raise errors.RbuildError('Image launch/deploy failed')
+            raise errors.RbuildError(job.status_text)
