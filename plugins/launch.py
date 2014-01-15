@@ -27,7 +27,7 @@ from xobj import xobj
 
 
 DEPLOY = 'deploy_image_on_target'
-LAUNCH = 'launch_image_on_target'
+LAUNCH = 'launch_system_on_target'
 
 
 class LaunchCommand(command.BaseCommand):
@@ -147,7 +147,7 @@ class Launch(pluginapi.Plugin):
                 return action
         raise errors.RbuildError(
             'Image cannot be %s on this target' %
-            'deployed' if key == DEPLOY else 'launched')
+            ('deployed' if key == DEPLOY else 'launched'))
 
     def watchJob(self, job):
         last_status = None
