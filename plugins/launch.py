@@ -63,16 +63,27 @@ class LaunchCommand(command.BaseCommand):
         else:
             config = {}
 
-        command, image_name, target_name = self.requireParameters(
+        command, image, target = self.requireParameters(
             args, expected=['IMAGE', 'TARGET'])
 
         if command == 'deploy':
-            job = handle.Launch.deployImage(image_name, target_name, config)
+            job = handle.Launch.deployImage(image, target, config)
         else:
-            job = handle.Launch.launchImage(image_name, target_name, config)
+            job = handle.Launch.launchImage(image, target, config)
 
         if watch:
             handle.Launch.watchJob(job)
+            job.refresh()
+            if job.job_type.name.startswith('launch'):
+                for resource in job.created_resources:
+                    if hasattr(resource, 'networks'):
+                        msg = 'Created system %s with address' % resource.name
+                        if len(resource.networks) > 1:
+                            msg += 'es'
+                        msg += ': '
+                        msg += ', '.join(n.dns_name for n in resource.networks)
+                        handle.ui.write(msg)
+
 
 
 class Launch(pluginapi.Plugin):
