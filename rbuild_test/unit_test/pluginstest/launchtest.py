@@ -208,8 +208,6 @@ class LaunchTest(rbuildhelp.RbuildHelper):
             )
 
     def testGetAction(self):
-        from rbuild_plugins.launch import DEPLOY
-
         handle = self.getRbuildHandle(mock.MockObject())
         handle.Launch.registerCommands()
         handle.Launch.initialize()
@@ -218,27 +216,30 @@ class LaunchTest(rbuildhelp.RbuildHelper):
             AssertionError, handle.Launch._getAction, None, None, 'foo')
 
         _action1 = mock.MockObject()
-        _action1._mock.set(key=DEPLOY)
+        _action1._mock.set(key=handle.Launch.DEPLOY)
         _action1._mock.set(name="Deploy image on 'foo' (vmware)")
         _action2 = mock.MockObject()
-        _action2._mock.set(key=DEPLOY)
+        _action2._mock.set(key=handle.Launch.DEPLOY)
         _action2._mock.set(name="Deploy image on 'bar' (vmware)")
 
         _image = mock.MockObject()
         _image._mock.set(actions=[_action1, _action2])
 
         self.assertRaises(
-            errors.RbuildError, handle.Launch._getAction, _image, 'baz', DEPLOY)
+            errors.RbuildError,
+            handle.Launch._getAction,
+            _image,
+            'baz',
+            handle.Launch.DEPLOY,
+            )
 
-        rv = handle.Launch._getAction(_image, 'foo', DEPLOY)
+        rv = handle.Launch._getAction(_image, 'foo', handle.Launch.DEPLOY)
         self.assertEqual(rv, _action1)
 
-        rv = handle.Launch._getAction(_image, 'bar', DEPLOY)
+        rv = handle.Launch._getAction(_image, 'bar', handle.Launch.DEPLOY)
         self.assertEqual(rv, _action2)
 
     def testCreateJob(self):
-        from rbuild_plugins.launch import DEPLOY
-
         handle = self.getRbuildHandle(mock.MockObject())
         handle.Launch.registerCommands()
         handle.Launch.initialize()
@@ -263,13 +264,34 @@ class LaunchTest(rbuildhelp.RbuildHelper):
         _ddata.toxml._mock.setDefaultReturn(DDATA_XML)
         mock.mockMethod(handle.Launch._createDescriptorData, _ddata)
 
-        rv = handle.Launch._createJob('foo', 'bar', {'name': 'baz'}, DEPLOY)
-        handle.facade.rbuilder.getImageByName._mock.assertCalled('foo')
+        rv = handle.Launch._createJob(
+            'foo', 'bar', {'name': 'baz'}, handle.Launch.DEPLOY)
+        handle.facade.rbuilder.getImageByName._mock.assertCalled('foo', '')
         handle.Launch._getAction._mock.assertCalled(
-            _image, 'bar', DEPLOY)
+            _image, 'bar', handle.Launch.DEPLOY)
 
         self.assertEqual(len(_jobs), 1)
         self.assertEqual(rv, _jobs[0])
+        self.assertEqual(rv.toxml(), JOB_XML)
+
+        rv = handle.Launch._createJob(
+            'foo=', 'bar', {'name': 'baz'}, handle.Launch.DEPLOY)
+        handle.facade.rbuilder.getImageByName._mock.assertCalled('foo', '')
+        handle.Launch._getAction._mock.assertCalled(
+            _image, 'bar', handle.Launch.DEPLOY)
+
+        self.assertEqual(len(_jobs), 2)
+        self.assertEqual(rv, _jobs[1])
+        self.assertEqual(rv.toxml(), JOB_XML)
+
+        rv = handle.Launch._createJob(
+            'foo=1', 'bar', {'name': 'baz'}, handle.Launch.DEPLOY)
+        handle.facade.rbuilder.getImageByName._mock.assertCalled('foo', '1')
+        handle.Launch._getAction._mock.assertCalled(
+            _image, 'bar', handle.Launch.DEPLOY)
+
+        self.assertEqual(len(_jobs), 3)
+        self.assertEqual(rv, _jobs[2])
         self.assertEqual(rv.toxml(), JOB_XML)
 
     def testWatchJob(self):

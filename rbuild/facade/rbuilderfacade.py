@@ -907,7 +907,7 @@ class RbuilderFacade(object):
         return [x for x in self.getTargets()
                 if x.is_configured and x.credentials_valid]
 
-    def getImageByName(self, image_name):
+    def getImageByName(self, image_name, trailing_version=None):
         '''
         Get an image rObj by name
 
@@ -916,8 +916,16 @@ class RbuilderFacade(object):
         @return: image or None
         @rtype: rObj(image)
         '''
-        for image in self.getImages():
+        images = sorted(
+            self.getImages(),
+            key=lambda image: image.time_created,
+            reverse=True,
+            )
+        for image in images:
             if image_name == image.name:
+                if (trailing_version
+                        and image.trailing_version != trailing_version):
+                    continue
                 return image
         raise errors.RbuildError('No such image: %s' % image_name)
 

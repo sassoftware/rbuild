@@ -320,12 +320,21 @@ class RbuilderFacadeTest(rbuildhelp.RbuildHelper):
 
     def testGetImageByName(self):
         handle, facade = self.prep()
-        Image = namedtuple('Image', 'name')
+        Image = namedtuple('Image', 'name time_created trailing_version')
         mock.mockMethod(facade.getImages)
-        facade.getImages._mock.setReturn(
-            [Image(name='foo'), Image(name='bar')])
-        self.assertEqual(facade.getImageByName('foo').name, 'foo')
-        self.assertRaises(errors.RbuildError, facade.getImageByName, 'baz')
+        _foo2 = Image(name='foo', time_created=1, trailing_version=2)
+        _foo2_2 = Image(name='foo', time_created=2, trailing_version=2)
+        _foo1 = Image(name='foo', time_created=3, trailing_version=1)
+        facade.getImages._mock.setReturn([_foo2, _foo2_2, _foo1])
+
+        rv = facade.getImageByName('foo')
+        self.assertEqual(rv, _foo1)
+
+        rv = facade.getImageByName('foo', 2)
+        self.assertEqual(rv, _foo2_2)
+
+        self.assertRaises(errors.RbuildError, facade.getImageByName, 'bar')
+        self.assertRaises(errors.RbuildError, facade.getImageByName, 'foo', 3)
 
     def testGetImages(self):
         handle, facade = self.prep()

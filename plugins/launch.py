@@ -26,10 +26,6 @@ from rbuild.pluginapi import command
 from xobj import xobj
 
 
-DEPLOY = 'deploy_image_on_target'
-LAUNCH = 'launch_system_on_target'
-
-
 class LaunchCommand(command.BaseCommand):
     help = 'Launch/Deploy an image onto a target'
     paramHelp = '<IMAGE> <TARGET>'
@@ -77,6 +73,8 @@ class LaunchCommand(command.BaseCommand):
 
 class Launch(pluginapi.Plugin):
     name = 'launch'
+    DEPLOY = 'deploy_image_on_target'
+    LAUNCH = 'launch_system_on_target'
 
     def registerCommands(self):
         self.handle.Commands.registerCommand(LaunchCommand)
@@ -94,7 +92,7 @@ class Launch(pluginapi.Plugin):
         @return: image deploy job
         @rtype: rObj(job)
         '''
-        return self._createJob(image, target, config, DEPLOY)
+        return self._createJob(image, target, config, self.DEPLOY)
 
     def launchImage(self, image, target, config):
         '''
@@ -109,7 +107,7 @@ class Launch(pluginapi.Plugin):
         @return: image launch job
         @rtype: rObj(job)
         '''
-        return self._createJob(image, target, config, LAUNCH)
+        return self._createJob(image, target, config, self.LAUNCH)
 
     def _createDescriptorData(self, descriptor, config):
         cb = RbuilderCallback(self.handle.ui, config)
@@ -121,7 +119,8 @@ class Launch(pluginapi.Plugin):
     def _createJob(self, image_name, target_name, config, atype):
         rb = self.handle.facade.rbuilder
 
-        image = rb.getImageByName(image_name)
+        image_name, _, version = image_name.partition('=')
+        image = rb.getImageByName(image_name, version)
 
         action = self._getAction(image, target_name, atype)
 
@@ -140,14 +139,14 @@ class Launch(pluginapi.Plugin):
         return image.jobs.append(doc)
 
     def _getAction(self, image, target, key):
-        assert key in (DEPLOY, LAUNCH)
+        assert key in (self.DEPLOY, self.LAUNCH)
 
         for action in image.actions:
             if key == action.key and target in action.name:
                 return action
         raise errors.RbuildError(
             'Image cannot be %s on this target' %
-            ('deployed' if key == DEPLOY else 'launched'))
+            ('deployed' if key == self.DEPLOY else 'launched'))
 
     def watchJob(self, job):
         last_status = None
