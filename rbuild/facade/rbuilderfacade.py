@@ -905,7 +905,8 @@ class RbuilderFacade(object):
         @rtype: list of rObj(target)
         '''
         return [x for x in self.getTargets()
-                if x.is_configured and x.credentials_valid]
+                if x.is_configured == 'true'
+                and x.credentials_valid == 'true']
 
     def getImageByName(self, image_name, trailing_version=None):
         '''

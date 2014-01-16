@@ -298,20 +298,20 @@ class RbuilderFacadeTest(rbuildhelp.RbuildHelper):
     def testGetEnabledTargets(self):
         handle, facade = self.prep()
         _target1 = mock.MockObject()
-        _target1._mock.set(is_configured=True)
-        _target1._mock.set(credentials_valid=True)
+        _target1._mock.set(is_configured=u'true')
+        _target1._mock.set(credentials_valid=u'true')
 
         _target2 = mock.MockObject()
-        _target2._mock.set(is_configured=True)
-        _target2._mock.set(credentials_valid=False)
+        _target2._mock.set(is_configured=u'true')
+        _target2._mock.set(credentials_valid=u'false')
 
         _target3 = mock.MockObject()
-        _target3._mock.set(is_configured=False)
-        _target3._mock.set(credentials_valid=True)
+        _target3._mock.set(is_configured=u'false')
+        _target3._mock.set(credentials_valid=u'true')
 
         _target4 = mock.MockObject()
-        _target4._mock.set(is_configured=False)
-        _target4._mock.set(credentials_valid=False)
+        _target4._mock.set(is_configured=u'false')
+        _target4._mock.set(credentials_valid=u'false')
 
         mock.mock(
             facade, 'getTargets', [_target1, _target2, _target3, _target4])
