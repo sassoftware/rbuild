@@ -73,17 +73,6 @@ class LaunchCommand(command.BaseCommand):
 
         if watch:
             handle.Launch.watchJob(job)
-            job.refresh()
-            if job.job_type.name.startswith('launch'):
-                for resource in job.created_resources:
-                    if hasattr(resource, 'networks'):
-                        msg = 'Created system %s with address' % resource.name
-                        if len(resource.networks) > 1:
-                            msg += 'es'
-                        msg += ': '
-                        msg += ', '.join(n.dns_name for n in resource.networks)
-                        handle.ui.write(msg)
-
 
 
 class Launch(pluginapi.Plugin):
@@ -162,28 +151,26 @@ class Launch(pluginapi.Plugin):
 
     def watchJob(self, job):
         last_status = None
-        last_length = 0
-        out = self.handle.ui.outStream
-
         while job.job_state.name in ['Queued', 'Running']:
             status = job.status_text
-            length = len(status)
-
             if status != last_status:
-                if out.isatty():
-                    timeStamp = time.ctime(time.time())
-                    out.write('\r[%s] %s' % (timeStamp, status))
-                    if length < last_length:
-                        i = last_length - length
-                        out.write(' ' * i + '\b' * i)
-                    out.flush()
-                else:
-                    self.handle.ui.progress(status.replace('%', '%%'))
-            last_length = length
+                self.handle.ui.lineOutProgress(status.replace('%', '%%'))
             last_status = status
             time.sleep(1)
             job.refresh()
-        out.write('\n')
 
         if job.job_state.name == 'Failed':
             raise errors.RbuildError(job.status_text)
+
+        if self.handle.ui.outStream.isatty():
+            self.handle.ui.write()
+
+        if job.job_type.name.startswith('launch'):
+            for resource in job.created_resources:
+                if hasattr(resource, 'networks'):
+                    msg = 'Created system %s with address' % resource.name
+                    if len(resource.networks) > 1:
+                        msg += 'es'
+                    msg += ': '
+                    msg += ', '.join(n.dns_name for n in resource.networks)
+                    self.handle.ui.write(msg)

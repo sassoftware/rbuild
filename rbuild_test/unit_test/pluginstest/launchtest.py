@@ -132,6 +132,7 @@ class LaunchTest(rbuildhelp.RbuildHelper):
         handle.Launch.initialize()
         mock.mockMethod(handle.Launch.deployImage)
         mock.mockMethod(handle.Launch.launchImage)
+        mock.mockMethod(handle.Launch.watchJob)
 
         cmd = handle.Commands.getCommandClass('launch')()
         cmd.runCommand(handle, {}, ['rbuild', 'launch', 'foo', 'bar'])
@@ -154,6 +155,7 @@ class LaunchTest(rbuildhelp.RbuildHelper):
         handle.Launch.initialize()
         mock.mockMethod(handle.Launch.deployImage)
         mock.mockMethod(handle.Launch.launchImage)
+        mock.mockMethod(handle.Launch.watchJob)
 
         cmd = handle.Commands.getCommandClass('launch')()
         cmd.runCommand(
@@ -283,15 +285,25 @@ class LaunchTest(rbuildhelp.RbuildHelper):
 
         _job = mock.MockObject()
         _job.job_state._mock.set(name='Failed')
+        _job.job_type._mock.set(name='launch system on taraget')
 
         self.assertRaises(errors.RbuildError, handle.Launch.watchJob, _job)
 
         _status_text = ['Text4', 'Text3 ', 'Text2  ', 'Text1   ']
+        _network1 = mock.MockObject()
+        _network1._mock.set(dns_name='foo')
+        _network2 = mock.MockObject()
+        _network2._mock.set(dns_name='bar')
+        _resource = mock.MockObject()
+        _resource._mock.set(name='baz')
+        _resource._mock.set(networks=[_network1, _network2])
+
         def _refresh():
             try:
                 _job._mock.set(status_text=_status_text.pop())
             except IndexError:
                 _job.job_state._mock.set(name='Completed')
+                _job._mock.set(created_resources=[_resource])
 
         _job._mock.set(refresh=_refresh)
         _job.job_state._mock.set(name='Running')
@@ -309,6 +321,8 @@ class LaunchTest(rbuildhelp.RbuildHelper):
             ((' \b',), ()),
             (('\r[] Text4',), ()),
             ((' \b',), ()),
+            (('\n',), ()),
+            (('Created system baz with addresses: foo, bar\n',), ()),
             ]
         self.assertEqual(handle.ui.outStream.write._mock.calls, expected_calls)
 
@@ -324,5 +338,6 @@ class LaunchTest(rbuildhelp.RbuildHelper):
             (('[] Text2  \n',), ()),
             (('[] Text3 \n',), ()),
             (('[] Text4\n',), ()),
+            (('Created system baz with addresses: foo, bar\n',), ()),
             ]
         self.assertEqual(handle.ui.outStream.write._mock.calls, expected_calls)

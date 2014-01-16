@@ -48,10 +48,24 @@ class UserInterfaceTest(rbuildhelp.RbuildHelper):
         h.ui.outStream.write._mock.assertCalled('[NOW] foo bar\n')
         h.ui._log._mock.assertCalled('foo %s', 'bar')
 
+        h.ui.lineOutProgress('foo %s', 'bar')
+        h.ui.outStream.write._mock.assertCalled('\r[NOW] foo bar')
+
+        h.ui.lineOutProgress('spam')
+        h.ui.outStream.write._mock.assertCalled('\r[NOW] spam')
+        h.ui.outStream.write._mock.assertCalled('  \b\b')
+
+        h.ui.outStream.isatty._mock.setReturn(False)
+        h.ui.lineOutProgress('foo %s', 'bar')
+        h.ui.outStream.write._mock.assertCalled('[NOW] foo bar\n')
+
         h.ui.cfg.quiet = True
         h.ui.progress('foo %s', 'bar')
         h.ui.outStream.write._mock.assertNotCalled()
         h.ui._log._mock.assertCalled('foo %s', 'bar')
+
+        h.ui.lineOutProgress('foo %s', 'bar')
+        h.ui.outStream.write._mock.assertNotCalled()
 
         h.ui.info('foo %s', 'bar')
         h.ui.outStream.write._mock.assertNotCalled()

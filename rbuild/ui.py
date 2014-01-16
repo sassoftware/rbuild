@@ -26,7 +26,10 @@ import time
 from rbuild import errors
 from rbuild.internal import logger
 
+
 class UserInterface(object):
+    _last_length = None
+
     def __init__(self, cfg, outStream=None, errorStream=None,
                  logRoot=None):
         if outStream is None:
@@ -279,3 +282,29 @@ class UserInterface(object):
                 break
             self.write("The specified credentials were not valid.\n")
         return None
+
+    def lineOutProgress(self, msg, *args):
+        '''
+        Writes progress message; used to indicate that a potentially
+        long-running operation has been started, unless quiet mode
+        has been selected in the configuration, but only display it
+        transiently while the operation is underway. This method should
+        not be used to display important information that should not be
+        missed by the user.
+        @param msg: printf-style string
+        @param args: printf-style variable arguments
+        '''
+        if not self.cfg.quiet:
+            if self.outStream.isatty():
+                timeStamp = time.ctime(time.time())
+                length = len(msg)
+                self.outStream.write('\r[%s] %s' % (timeStamp, msg % args, ))
+                if length < self._last_length:
+                    i = self._last_length - length
+                    self.outStream.write(' ' * i + '\b' * i)
+                self.outStream.flush()
+                self._last_length = length
+                if self._log:
+                    self._log(msg, *args)
+            else:
+                self.progress(msg, *args)
