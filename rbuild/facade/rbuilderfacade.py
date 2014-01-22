@@ -371,7 +371,7 @@ class RbuilderRPCClient(_AbstractRbuilderClient):
         - C{title}: (string) Title describing file (not necessarily file name)
         - C{downloadUrl}: (string) URL to use to download the file directly
         - C{torrentUrl}: (string) URL to use to downlad the file via bittorrent
-        - C{baseFileName}: (string) basename of the file 
+        - C{baseFileName}: (string) basename of the file
         - C{fileId}: (int) unique identifier for this file
         Additional items may be set as well.
         @param buildId: unique identifier for a build
@@ -540,6 +540,57 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
         if jobObj.job_state.name == 'Failed':
             raise errors.RbuildError('Unable to set credentials')
         return target
+
+    def getImage(self, name, shortName=None, stageName=None,
+                 trailingVersion=None):
+        '''
+        Get an image by name. shortName limits search to that project.
+        stageName limits search to that stage of shortName. trailingVersion
+        limits the image to ones built with that group trailingVersion. If the
+        query returns multiple images, return the most recently created.
+
+        @param name: name of image
+        @type name: str
+        @param shortName: short name of project
+        @type shortName: str
+        @param stageName: name of stage, requires shortName
+        @type stageName: str
+        @param trailingVersion: trailing version of product group
+        @type trailingVersion: str or None
+        @return: image or None
+        @rtype: rObj(image)
+        '''
+        # we only support stageName if we also got a shortName
+        assert not (stageName and not shortName), \
+            'stageName requires a shortName'
+
+        client = self.api._client
+        if shortName:
+            # filter by project
+            project = self.getProject(shortName)
+            uri = project.id
+        else:
+            uri = self.api._uri
+
+        # filter by image name
+        uri += '/images;filter_by=[name,EQUAL,%s]' % (name,)
+
+        if stageName:
+            # filter stage
+            uri += ';filter_by=[stage_name,EQUAL,%s]' % (stageName,)
+
+        if trailingVersion:
+            # filter by group trailing version
+            uri += ';filter_by=[trailing_version,EQUAL,%s]' % (
+                trailingVersion,)
+
+        # always sort by most recently created first
+        uri += ';order_by=-time_created'
+
+        images = client.do_GET(uri)
+        if images:
+            return images[0]
+        raise errors.RbuildError("Image '%s' not found." % (name,))
 
     def getTargetDescriptor(self, targetType):
         '''
@@ -908,37 +959,11 @@ class RbuilderFacade(object):
                 if x.is_configured == 'true'
                 and x.credentials_valid == 'true']
 
-    def getImageByName(self, image_name, trailing_version=None):
-        '''
-        Get an image rObj by name
-
-        @param image_name: name of image
-        @type image_name: str
-        @return: image or None
-        @rtype: rObj(image)
-        '''
-        images = sorted(
-            self.getImages(),
-            key=lambda image: image.time_created,
-            reverse=True,
-            )
-        for image in images:
-            if image_name == image.name:
-                if (trailing_version
-                        and image.trailing_version != trailing_version):
-                    continue
-                return image
-        raise errors.RbuildError('No such image: %s' % image_name)
-
-    def getImages(self):
-        '''
-        Get all images
-
-        @return: list of images objects
-        @rtype: list of rObj(image)
-        '''
+    def getImage(self, name, shortName=None, stageName=None,
+                 trailingVersion=None):
         client = self._getRbuilderRESTClient()
-        return client.api.images
+        return client.getImage(name, shortName=shortName, stageName=stageName,
+                               trailingVersion=trailingVersion)
 
     def getTargetDescriptor(self, targetType):
         client = self._getRbuilderRESTClient()

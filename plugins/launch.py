@@ -33,7 +33,8 @@ class LaunchCommand(command.BaseCommand):
     docs = {'list': 'List available targets',
             'from-file': 'Load launch/deploy descriptor from yaml file',
             'no-watch': 'Do not wait for job to complete',
-            'deploy-only': 'Deploy image template but do not launch system',}
+            'deploy-only': 'Deploy image template but do not launch system',
+            }
 
     def addLocalParameters(self, argDef):
         argDef['list'] = '-l', command.NO_PARAM
@@ -76,57 +77,30 @@ class Launch(pluginapi.Plugin):
     DEPLOY = 'deploy_image_on_target'
     LAUNCH = 'launch_system_on_target'
 
-    def registerCommands(self):
-        self.handle.Commands.registerCommand(LaunchCommand)
-
-    def deployImage(self, image, target, config):
-        '''
-        Deploys an image template to a target
-
-        @param image: name of image to deploy
-        @type image: str
-        @param target: name of target to deploy to
-        @type target: str
-        @param config: deploy configuration data
-        @type config: dict
-        @return: image deploy job
-        @rtype: rObj(job)
-        '''
-        return self._createJob(image, target, config, self.DEPLOY)
-
-    def launchImage(self, image, target, config):
-        '''
-        Launches an image to a target
-
-        @param image: name of image to deploy
-        @type image: str
-        @param target: name of target to launch to
-        @type target: str
-        @param config: deploy configuration data
-        @type config: dict
-        @return: image launch job
-        @rtype: rObj(job)
-        '''
-        return self._createJob(image, target, config, self.LAUNCH)
-
     def _createDescriptorData(self, descriptor, config):
         cb = RbuilderCallback(self.handle.ui, config)
         try:
             return descriptor.createDescriptorData(cb)
         except descriptor_errors.ConstraintsValidationError as e:
-            raise errors.RbuildError('\n'.join(m for m in e[0]))
+            raise errors.PluginError('\n'.join(m for m in e[0]))
 
-    def _createJob(self, image_name, target_name, config, atype):
+    def _createJob(self, image_name, target_name, action_type, config=None):
         rb = self.handle.facade.rbuilder
 
+        product, stage = self._getProductStage()
         image_name, _, version = image_name.partition('=')
-        image = rb.getImageByName(image_name, version)
+        image = rb.getImage(
+            image_name,
+            shortName=product,
+            stageName=stage,
+            trailingVersion=version,
+            )
 
-        action = self._getAction(image, target_name, atype)
+        action = self._getAction(image, target_name, action_type)
 
         ddata = self._createDescriptorData(
             descriptor.ConfigurationDescriptor(fromStream=action.descriptor),
-            config,
+            config=config,
             )
 
         doc = xobj.Document()
@@ -144,9 +118,57 @@ class Launch(pluginapi.Plugin):
         for action in image.actions:
             if key == action.key and target in action.name:
                 return action
-        raise errors.RbuildError(
+        raise errors.PluginError(
             'Image cannot be %s on this target' %
             ('deployed' if key == self.DEPLOY else 'launched'))
+
+    def _getProductStage(self):
+        try:
+            product = self.handle.product.getProductShortname()
+        except AttributeError:
+            raise errors.PluginError(
+                'Current directory is not part of a product.\n'
+                'To initialize a new product directory, use "rbuild init"')
+
+        try:
+            stage = self.handle.productStore.getActiveStageName()
+        except errors.RbuildError:
+            raise errors.PluginError(
+                'Current directory is not a product stage.')
+        return (product, stage)
+
+    def registerCommands(self):
+        self.handle.Commands.registerCommand(LaunchCommand)
+
+    def deployImage(self, image, target, config=None):
+        '''
+        Deploys an image template to a target
+
+        @param image: name of image to deploy
+        @type image: str
+        @param target: name of target to deploy to
+        @type target: str
+        @param config: deploy configuration data
+        @type config: dict
+        @return: image deploy job
+        @rtype: rObj(job)
+        '''
+        return self._createJob(image, target, self.DEPLOY, config=config)
+
+    def launchImage(self, image, target, config=None):
+        '''
+        Launches an image to a target
+
+        @param image: name of image to deploy
+        @type image: str
+        @param target: name of target to launch to
+        @type target: str
+        @param config: deploy configuration data
+        @type config: dict
+        @return: image launch job
+        @rtype: rObj(job)
+        '''
+        return self._createJob(image, target, self.LAUNCH, config=config)
 
     def watchJob(self, job):
         last_status = None
@@ -159,7 +181,7 @@ class Launch(pluginapi.Plugin):
             job.refresh()
 
         if job.job_state.name == 'Failed':
-            raise errors.RbuildError(job.status_text)
+            raise errors.PluginError(job.status_text)
 
         if self.handle.ui.outStream.isatty():
             self.handle.ui.write()

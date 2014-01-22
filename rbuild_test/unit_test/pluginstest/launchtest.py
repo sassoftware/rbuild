@@ -182,7 +182,7 @@ class LaunchTest(rbuildhelp.RbuildHelper):
 
         handle.ui.input._mock.setDefaultReturn('foobar')
         self.assertRaises(
-            errors.RbuildError,
+            errors.PluginError,
             handle.Launch._createDescriptorData,
             descr,
             None,
@@ -201,7 +201,7 @@ class LaunchTest(rbuildhelp.RbuildHelper):
         self.assertEqual(ddata.getField('name'), 'bar')
 
         self.assertRaises(
-            errors.RbuildError,
+            errors.PluginError,
             handle.Launch._createDescriptorData,
             descr,
             {'imageId': 'foobar'},
@@ -226,7 +226,7 @@ class LaunchTest(rbuildhelp.RbuildHelper):
         _image._mock.set(actions=[_action1, _action2])
 
         self.assertRaises(
-            errors.RbuildError,
+            errors.PluginError,
             handle.Launch._getAction,
             _image,
             'baz',
@@ -245,6 +245,7 @@ class LaunchTest(rbuildhelp.RbuildHelper):
         handle.Launch.initialize()
 
         _jobs = []
+
         def _append(x):
             _jobs.append(x)
             return x
@@ -252,7 +253,7 @@ class LaunchTest(rbuildhelp.RbuildHelper):
         _image = mock.MockObject()
         _image._mock.set(jobs=mock.MockObject())
         _image.jobs._mock.set(append=_append)
-        mock.mockMethod(handle.facade.rbuilder.getImageByName, _image)
+        mock.mockMethod(handle.facade.rbuilder.getImage, _image)
 
         _action = mock.MockObject()
         _action._mock.set(descriptor=DESCRIPTOR_XML)
@@ -264,9 +265,15 @@ class LaunchTest(rbuildhelp.RbuildHelper):
         _ddata.toxml._mock.setDefaultReturn(DDATA_XML)
         mock.mockMethod(handle.Launch._createDescriptorData, _ddata)
 
+        mock.mockMethod(handle.Launch._getProductStage, ('product', 'stage'))
         rv = handle.Launch._createJob(
-            'foo', 'bar', {'name': 'baz'}, handle.Launch.DEPLOY)
-        handle.facade.rbuilder.getImageByName._mock.assertCalled('foo', '')
+            'foo', 'bar', handle.Launch.DEPLOY, config={'name': 'baz'})
+        handle.facade.rbuilder.getImage._mock.assertCalled(
+            'foo',
+            shortName='product',
+            stageName='stage',
+            trailingVersion='',
+            )
         handle.Launch._getAction._mock.assertCalled(
             _image, 'bar', handle.Launch.DEPLOY)
 
@@ -275,8 +282,13 @@ class LaunchTest(rbuildhelp.RbuildHelper):
         self.assertEqual(rv.toxml(), JOB_XML)
 
         rv = handle.Launch._createJob(
-            'foo=', 'bar', {'name': 'baz'}, handle.Launch.DEPLOY)
-        handle.facade.rbuilder.getImageByName._mock.assertCalled('foo', '')
+            'foo=', 'bar', handle.Launch.DEPLOY, config={'name': 'baz'})
+        handle.facade.rbuilder.getImage._mock.assertCalled(
+            'foo',
+            shortName='product',
+            stageName='stage',
+            trailingVersion='',
+            )
         handle.Launch._getAction._mock.assertCalled(
             _image, 'bar', handle.Launch.DEPLOY)
 
@@ -285,8 +297,13 @@ class LaunchTest(rbuildhelp.RbuildHelper):
         self.assertEqual(rv.toxml(), JOB_XML)
 
         rv = handle.Launch._createJob(
-            'foo=1', 'bar', {'name': 'baz'}, handle.Launch.DEPLOY)
-        handle.facade.rbuilder.getImageByName._mock.assertCalled('foo', '1')
+            'foo=1', 'bar', handle.Launch.DEPLOY, config={'name': 'baz'})
+        handle.facade.rbuilder.getImage._mock.assertCalled(
+            'foo',
+            shortName='product',
+            stageName='stage',
+            trailingVersion='1',
+            )
         handle.Launch._getAction._mock.assertCalled(
             _image, 'bar', handle.Launch.DEPLOY)
 
@@ -309,7 +326,7 @@ class LaunchTest(rbuildhelp.RbuildHelper):
         _job.job_state._mock.set(name='Failed')
         _job.job_type._mock.set(name='launch system on taraget')
 
-        self.assertRaises(errors.RbuildError, handle.Launch.watchJob, _job)
+        self.assertRaises(errors.PluginError, handle.Launch.watchJob, _job)
 
         _status_text = ['Text4', 'Text3 ', 'Text2  ', 'Text1   ']
         _network1 = mock.MockObject()

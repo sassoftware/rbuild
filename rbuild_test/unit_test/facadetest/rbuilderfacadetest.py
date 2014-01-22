@@ -318,30 +318,6 @@ class RbuilderFacadeTest(rbuildhelp.RbuildHelper):
         rv = facade.getEnabledTargets()
         self.assertEqual(rv, [_target1])
 
-    def testGetImageByName(self):
-        handle, facade = self.prep()
-        Image = namedtuple('Image', 'name time_created trailing_version')
-        mock.mockMethod(facade.getImages)
-        _foo2 = Image(name='foo', time_created=1, trailing_version=2)
-        _foo2_2 = Image(name='foo', time_created=2, trailing_version=2)
-        _foo1 = Image(name='foo', time_created=3, trailing_version=1)
-        facade.getImages._mock.setReturn([_foo2, _foo2_2, _foo1])
-
-        rv = facade.getImageByName('foo')
-        self.assertEqual(rv, _foo1)
-
-        rv = facade.getImageByName('foo', 2)
-        self.assertEqual(rv, _foo2_2)
-
-        self.assertRaises(errors.RbuildError, facade.getImageByName, 'bar')
-        self.assertRaises(errors.RbuildError, facade.getImageByName, 'foo', 3)
-
-    def testGetImages(self):
-        handle, facade = self.prep()
-        mock.mockMethod(facade._getRbuilderRESTClient)
-        facade._getRbuilderRESTClient().api._mock.set(images=['foo', 'bar'])
-        self.assertEqual(facade.getImages(), ['foo', 'bar'])
-
     def testGetTargetByName(self):
         handle, facade = self.prep()
         Target = namedtuple('Target', 'name')
@@ -960,3 +936,61 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
         mock.mock(client, '_api')
         client._api._mock.set(targets=['foo', 'bar'])
         self.assertEqual(client.getTargets(), ['foo', 'bar'])
+
+    def testGetImage(self):
+        client = rbuilderfacade.RbuilderRESTClient(
+            'http://localhost', 'foo', 'bar', mock.MockObject())
+        mock.mock(client, '_api')
+        client._api._mock.set(_uri='http://localhost')
+
+        _project = mock.MockObject()
+        _project._mock.set(id='http://localhost/projects/bar')
+        client._api._client.do_GET._mock.setReturn(
+            _project, 'http://localhost/projects/bar')
+        client._api._client.do_GET._mock.setReturn(
+            ['images'],
+            "http://localhost/images;filter_by=[name,EQUAL,foo]"
+                ";order_by=-time_created")
+        client._api._client.do_GET._mock.setReturn(
+            ['images_version'],
+            "http://localhost/images;filter_by=[name,EQUAL,foo]"
+                ";filter_by=[trailing_version,EQUAL,1-1-1]"
+                ";order_by=-time_created")
+        client._api._client.do_GET._mock.setReturn(
+            ['project'],
+            "http://localhost/projects/bar/images;filter_by=[name,EQUAL,foo]"
+                ";order_by=-time_created")
+        client._api._client.do_GET._mock.setReturn(
+            ['project_stage'],
+            "http://localhost/projects/bar/images;filter_by=[name,EQUAL,foo]"
+                ";filter_by=[stage_name,EQUAL,Release]"
+                ";order_by=-time_created")
+        client._api._client.do_GET._mock.setReturn(
+            ['project_stage_version'],
+            "http://localhost/projects/bar/images;filter_by=[name,EQUAL,foo]"
+                ";filter_by=[stage_name,EQUAL,Release]"
+                ";filter_by=[trailing_version,EQUAL,1-1-1]"
+                ";order_by=-time_created")
+        client._api._client.do_GET._mock.setReturn(
+            [],
+            "http://localhost/images;filter_by=[name,EQUAL,bar]"
+                ";order_by=-time_created")
+
+        self.assertEqual(client.getImage('foo'), 'images')
+        self.assertEqual(
+            client.getImage('foo', trailingVersion='1-1-1'), 'images_version')
+        self.assertEqual(client.getImage('foo', shortName='bar'), 'project')
+        self.assertEqual(
+            client.getImage('foo', shortName='bar', stageName='Release'),
+            'project_stage')
+        self.assertEqual(
+            client.getImage(
+                'foo',
+                shortName='bar',
+                stageName='Release',
+                trailingVersion='1-1-1',
+                ),
+            'project_stage_version')
+
+        err = self.assertRaises(errors.RbuildError, client.getImage, 'bar')
+        self.assertIn('not found', str(err))
