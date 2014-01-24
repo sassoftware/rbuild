@@ -16,14 +16,11 @@
 
 import time
 
-from smartform import descriptor, descriptor_errors
-import yaml
+from xobj import xobj
 
 from rbuild import errors
 from rbuild import pluginapi
-from rbuild.facade.rbuilderfacade import RbuilderCallback
 from rbuild.pluginapi import command
-from xobj import xobj
 
 
 class LaunchCommand(command.BaseCommand):
@@ -31,45 +28,47 @@ class LaunchCommand(command.BaseCommand):
     paramHelp = '<IMAGE> <TARGET>'
     commands = ['launch', 'deploy']
     docs = {'list': 'List available targets',
-            'from-file': 'Load launch/deploy descriptor from yaml file',
+            'from-file': 'Load launch/deploy descriptor from file',
+            'to-file': 'Write launch/deploy descriptor to file',
             'no-watch': 'Do not wait for job to complete',
-            'deploy-only': 'Deploy image template but do not launch system',
             }
 
     def addLocalParameters(self, argDef):
         argDef['list'] = '-l', command.NO_PARAM
         argDef['from-file'] = '-f', command.ONE_PARAM
+        argDef['to-file'] = '-o', command.ONE_PARAM
         argDef['no-watch'] = command.NO_PARAM
 
     def runCommand(self, handle, argSet, args):
         ui = handle.ui
         rb = handle.facade.rbuilder
 
-        list_targets = argSet.pop('list', False)
-        config_file = argSet.pop('from-file', None)
+        listTargets = argSet.pop('list', False)
+        fromFile = argSet.pop('from-file', None)
+        toFile = argSet.pop('to-file', None)
         watch = not argSet.pop('no-watch', False)
 
-        if list_targets:
+        if listTargets:
             ui.write('Available targets: %s' %
                      ', '.join(t.name for t in rb.getEnabledTargets()))
             return
 
-        if config_file:
-            with open(config_file) as fh:
-                config = yaml.safe_load(fh)
-        else:
-            config = {}
+        if fromFile:
+            handle.DescriptorConfig.readConfig(fromFile)
 
         command, image, target = self.requireParameters(
             args, expected=['IMAGE', 'TARGET'])
 
         if command == 'deploy':
-            job = handle.Launch.deployImage(image, target, config)
+            job = handle.Launch.deployImage(image, target)
         else:
-            job = handle.Launch.launchImage(image, target, config)
+            job = handle.Launch.launchImage(image, target)
 
         if watch:
             handle.Launch.watchJob(job)
+
+        if toFile:
+            handle.DescriptorConfig.writeConfig(toFile)
 
 
 class Launch(pluginapi.Plugin):
@@ -77,14 +76,7 @@ class Launch(pluginapi.Plugin):
     DEPLOY = 'deploy_image_on_target'
     LAUNCH = 'launch_system_on_target'
 
-    def _createDescriptorData(self, descriptor, config):
-        cb = RbuilderCallback(self.handle.ui, config)
-        try:
-            return descriptor.createDescriptorData(cb)
-        except descriptor_errors.ConstraintsValidationError as e:
-            raise errors.PluginError('\n'.join(m for m in e[0]))
-
-    def _createJob(self, image_name, target_name, action_type, config=None):
+    def _createJob(self, image_name, target_name, action_type):
         rb = self.handle.facade.rbuilder
 
         product, stage = self._getProductStage()
@@ -98,10 +90,8 @@ class Launch(pluginapi.Plugin):
 
         action = self._getAction(image, target_name, action_type)
 
-        ddata = self._createDescriptorData(
-            descriptor.ConfigurationDescriptor(fromStream=action.descriptor),
-            config=config,
-            )
+        ddata = self.handle.DescriptorConfig.createDescriptorData(
+            fromStream=action.descriptor)
 
         doc = xobj.Document()
         doc.job = job = xobj.XObj()
@@ -140,7 +130,7 @@ class Launch(pluginapi.Plugin):
     def registerCommands(self):
         self.handle.Commands.registerCommand(LaunchCommand)
 
-    def deployImage(self, image, target, config=None):
+    def deployImage(self, image, target):
         '''
         Deploys an image template to a target
 
@@ -153,9 +143,9 @@ class Launch(pluginapi.Plugin):
         @return: image deploy job
         @rtype: rObj(job)
         '''
-        return self._createJob(image, target, self.DEPLOY, config=config)
+        return self._createJob(image, target, self.DEPLOY)
 
-    def launchImage(self, image, target, config=None):
+    def launchImage(self, image, target):
         '''
         Launches an image to a target
 
@@ -168,7 +158,7 @@ class Launch(pluginapi.Plugin):
         @return: image launch job
         @rtype: rObj(job)
         '''
-        return self._createJob(image, target, self.LAUNCH, config=config)
+        return self._createJob(image, target, self.LAUNCH)
 
     def watchJob(self, job):
         last_status = None

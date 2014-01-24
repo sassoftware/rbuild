@@ -318,14 +318,12 @@ class RbuilderFacadeTest(rbuildhelp.RbuildHelper):
         rv = facade.getEnabledTargets()
         self.assertEqual(rv, [_target1])
 
-    def testGetTargetByName(self):
+    def testGetTarget(self):
         handle, facade = self.prep()
-        Target = namedtuple('Target', 'name')
-        mock.mockMethod(facade.getTargets)
-        facade.getTargets._mock.setReturn(
-            [Target(name='foo'), Target(name='bar')])
-        self.assertEqual(facade.getTargetByName('foo').name, 'foo')
-        self.assertRaises(errors.RbuildError, facade.getTargetByName, 'baz')
+        mock.mockMethod(facade._getRbuilderRESTClient)
+        facade._getRbuilderRESTClient().getTarget._mock.setReturn(
+            'target', 'foo')
+        self.assertEqual(facade.getTarget('foo'), 'target')
 
     def testGetTargets(self):
         handle, facade = self.prep()
@@ -333,6 +331,7 @@ class RbuilderFacadeTest(rbuildhelp.RbuildHelper):
         facade._getRbuilderRESTClient().getTargets._mock.setReturn(
             ['foo', 'bar'])
         self.assertEqual(facade.getTargets(), ['foo', 'bar'])
+
 
 class RbuilderRPCClientTest(rbuildhelp.RbuildHelper):
     def _getClient(self):
@@ -929,6 +928,23 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
             ])
         results = client.listPlatforms()
         self.assertEqual(results, [Platform('true', 'false', 'false', 'plat1', 'plat@1')])
+
+    def testGetTarget(self):
+        client = rbuilderfacade.RbuilderRESTClient(
+            'http://localhost', 'foo', 'bar', mock.MockObject())
+        mock.mock(client, '_api')
+        client._api._mock.set(_uri='http://localhost')
+        client._api._client.do_GET._mock.setReturn(
+            ['target'],
+            "http://localhost/targets;filter_by=[name,EQUAL,foo]")
+        client._api._client.do_GET._mock.setReturn(
+            [],
+            "http://localhost/targets;filter_by=[name,EQUAL,bar]")
+
+        self.assertEqual(client.getTarget('foo'), 'target')
+
+        err = self.assertRaises(errors.RbuildError, client.getTarget, 'bar')
+        self.assertIn('not found', str(err))
 
     def testGetTargets(self):
         client = rbuilderfacade.RbuilderRESTClient(

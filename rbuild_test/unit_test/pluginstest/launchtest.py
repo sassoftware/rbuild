@@ -70,18 +70,20 @@ class LaunchTest(rbuildhelp.RbuildHelper):
     def testLaunchArgParse(self):
         self.getRbuildHandle()
         self.checkRbuild(
-            'launch --list --from-file=file Image Target',
+            'launch --list --from-file=fromFile --to-file=toFile Image Target',
             'rbuild_plugins.launch.LaunchCommand.runCommand',
             [None, None, {
                 'list': True,
-                'from-file': 'file',
+                'from-file': 'fromFile',
+                'to-file': 'toFile',
                 }, ['rbuild', 'launch', 'Image', 'Target']])
         self.checkRbuild(
-            'deploy --list --from-file=file Image Target',
+            'deploy --list --from-file=fromFile --to-file=toFile Image Target',
             'rbuild_plugins.launch.LaunchCommand.runCommand',
             [None, None, {
                 'list': True,
-                'from-file': 'file',
+                'from-file': 'fromFile',
+                'to-file': 'toFile',
                 }, ['rbuild', 'deploy', 'Image', 'Target']])
 
     def testLaunchCmdlineList(self):
@@ -137,75 +139,13 @@ class LaunchTest(rbuildhelp.RbuildHelper):
         cmd = handle.Commands.getCommandClass('launch')()
         cmd.runCommand(handle, {}, ['rbuild', 'launch', 'foo', 'bar'])
         handle.Launch.deployImage._mock.assertNotCalled()
-        handle.Launch.launchImage._mock.assertCalled('foo', 'bar', {})
+        handle.Launch.launchImage._mock.assertCalled('foo', 'bar')
 
         cmd = handle.Commands.getCommandClass('launch')()
         cmd.runCommand(
             handle, {}, ['rbuild', 'deploy', 'foo', 'bar'])
-        handle.Launch.deployImage._mock.assertCalled('foo', 'bar', {})
+        handle.Launch.deployImage._mock.assertCalled('foo', 'bar')
         handle.Launch.launchImage._mock.assertNotCalled()
-
-    def testLaunchCmdlineConfig(self):
-        config_file = self.workDir + '/config.yml'
-        with open(config_file, 'w') as fh:
-            fh.write('---\nbaz: spam\n')
-
-        handle = self.getRbuildHandle(mock.MockObject())
-        handle.Launch.registerCommands()
-        handle.Launch.initialize()
-        mock.mockMethod(handle.Launch.deployImage)
-        mock.mockMethod(handle.Launch.launchImage)
-        mock.mockMethod(handle.Launch.watchJob)
-
-        cmd = handle.Commands.getCommandClass('launch')()
-        cmd.runCommand(
-            handle,
-            {'from-file': config_file},
-            ['rbuild', 'launch', 'foo', 'bar'],
-            )
-        handle.Launch.deployImage._mock.assertNotCalled()
-        handle.Launch.launchImage._mock.assertCalled(
-            'foo', 'bar', {'baz': 'spam'})
-
-    def testCreateDescriptorData(self):
-        handle = self.getRbuildHandle(mock.MockObject())
-        handle.Launch.registerCommands()
-        handle.Launch.initialize()
-        handle.ui = mock.MockObject()
-
-        descr = descriptor.ConfigurationDescriptor(fromStream=DESCRIPTOR_XML)
-
-        handle.ui.input._mock.setDefaultReturn('foo')
-        ddata = handle.Launch._createDescriptorData(descr, None)
-        handle.ui.input._mock.assertCalled('Enter Name [required] (type str): ')
-        self.assertEqual(ddata.getField('name'), 'foo')
-
-        handle.ui.input._mock.setDefaultReturn('foobar')
-        self.assertRaises(
-            errors.PluginError,
-            handle.Launch._createDescriptorData,
-            descr,
-            None,
-            )
-
-    def testCreateDescriptorDataConfig(self):
-        handle = self.getRbuildHandle(mock.MockObject())
-        handle.Launch.registerCommands()
-        handle.Launch.initialize()
-        handle.ui = mock.MockObject()
-
-        descr = descriptor.ConfigurationDescriptor(fromStream=DESCRIPTOR_XML)
-
-        ddata = handle.Launch._createDescriptorData(descr, {'name': 'bar'})
-        handle.ui.input._mock.assertNotCalled()
-        self.assertEqual(ddata.getField('name'), 'bar')
-
-        self.assertRaises(
-            errors.PluginError,
-            handle.Launch._createDescriptorData,
-            descr,
-            {'imageId': 'foobar'},
-            )
 
     def testGetAction(self):
         handle = self.getRbuildHandle(mock.MockObject())
@@ -263,11 +203,11 @@ class LaunchTest(rbuildhelp.RbuildHelper):
 
         _ddata = mock.MockObject()
         _ddata.toxml._mock.setDefaultReturn(DDATA_XML)
-        mock.mockMethod(handle.Launch._createDescriptorData, _ddata)
+        mock.mockMethod(handle.DescriptorConfig.createDescriptorData, _ddata)
 
         mock.mockMethod(handle.Launch._getProductStage, ('product', 'stage'))
         rv = handle.Launch._createJob(
-            'foo', 'bar', handle.Launch.DEPLOY, config={'name': 'baz'})
+            'foo', 'bar', handle.Launch.DEPLOY)
         handle.facade.rbuilder.getImage._mock.assertCalled(
             'foo',
             shortName='product',
@@ -282,7 +222,7 @@ class LaunchTest(rbuildhelp.RbuildHelper):
         self.assertEqual(rv.toxml(), JOB_XML)
 
         rv = handle.Launch._createJob(
-            'foo=', 'bar', handle.Launch.DEPLOY, config={'name': 'baz'})
+            'foo=', 'bar', handle.Launch.DEPLOY)
         handle.facade.rbuilder.getImage._mock.assertCalled(
             'foo',
             shortName='product',
@@ -297,7 +237,7 @@ class LaunchTest(rbuildhelp.RbuildHelper):
         self.assertEqual(rv.toxml(), JOB_XML)
 
         rv = handle.Launch._createJob(
-            'foo=1', 'bar', handle.Launch.DEPLOY, config={'name': 'baz'})
+            'foo=1', 'bar', handle.Launch.DEPLOY)
         handle.facade.rbuilder.getImage._mock.assertCalled(
             'foo',
             shortName='product',
