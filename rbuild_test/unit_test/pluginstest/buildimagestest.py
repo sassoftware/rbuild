@@ -16,6 +16,7 @@
 #
 
 import sys
+from rbuild import errors
 from rbuild_test import rbuildhelp
 from StringIO import StringIO
 from testutils import mock
@@ -31,7 +32,20 @@ class BuildImagesTest(rbuildhelp.RbuildHelper):
         mock.mockMethod(handle.BuildImages.buildImages, [1])
         mock.mockMethod(handle.facade.rbuilder.watchImages)
         mock.mockMethod(handle.BuildImages.printImageUrlsForBuild)
-        handle.productStore = mock.MockObject()
+
+        err = self.assertRaises(errors.PluginError, cmd.runCommand, handle, {},
+                                ['rbuild', 'build', 'images'])
+        self.assertIn('rbuild init', str(err))
+
+        mock.mock(handle, 'productStore')
+        handle.productStore._mock.set(_currentStage=None)
+
+        err = self.assertRaises(errors.PluginError, cmd.runCommand, handle, {},
+                                ['rbuild', 'build', 'images'])
+        self.assertIn('valid stage', str(err))
+
+        handle.productStore._mock.set(_currentStage='stage')
+
         handle.product = mock.MockObject()
         cmd.runCommand(handle, {}, ['rbuild', 'build', 'images'])
         handle.BuildImages.buildImages._mock.assertCalled(None)

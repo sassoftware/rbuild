@@ -32,6 +32,20 @@ class BuildPackagesTest(rbuildhelp.RbuildHelper):
         mock.mockMethod(handle.BuildPackages.buildAllPackages, 1)
         mock.mockMethod(handle.Build.watchAndCommitJob)
         mock.mockMethod(handle.BuildPackages.refreshAllPackages, 1)
+
+        err = self.assertRaises(errors.PluginError, cmd.runCommand, handle, {},
+                                ['rbuild', 'build', 'packages'])
+        self.assertIn('rbuild init', str(err))
+
+        mock.mock(handle, 'productStore')
+        handle.productStore._mock.set(_currentStage=None)
+
+        err = self.assertRaises(errors.PluginError, cmd.runCommand, handle, {},
+                                ['rbuild', 'build', 'packages'])
+        self.assertIn('valid stage', str(err))
+
+        handle.productStore._mock.set(_currentStage='stage')
+
         cmd.runCommand(handle, {}, ['rbuild', 'build', 'packages'])
         handle.BuildPackages.buildAllPackages._mock.assertCalled()
         handle.Build.watchAndCommitJob._mock.assertCalled(1, None)

@@ -64,6 +64,7 @@ class BuildPackagesCommand(command.BaseCommand):
         message = argSet.pop('message', None)
         success = True
         _, packageList, = self.requireParameters(args, allowExtra=True)
+        handle.Build.checkStage()
         if not packageList:
             if refreshArg:
                 handle.BuildPackages.refreshAllPackages()

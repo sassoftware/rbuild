@@ -17,6 +17,7 @@
 
 
 
+from rbuild import errors
 from rbuild_test import rbuildhelp
 from testutils import mock
 
@@ -28,6 +29,13 @@ class BuildPlatformTest(rbuildhelp.RbuildHelper):
         handle.BuildPlatform.initialize()
         cmd = handle.Commands.getCommandClass('build')()
         mock.mockMethod(handle.BuildPlatform.buildPlatform)
+
+        err = self.assertRaises(errors.PluginError, cmd.runCommand, handle, {},
+                                ['rbuild', 'build', 'platform'])
+        self.assertIn('rbuild init', str(err))
+
+        mock.mock(handle, 'productStore')
+
         cmd.runCommand(handle, {}, ['rbuild', 'build', 'platform'])
         handle.BuildPlatform.buildPlatform._mock.assertCalled()
 

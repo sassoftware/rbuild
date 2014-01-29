@@ -40,6 +40,8 @@ class BuildGroupsCommand(command.BaseCommand):
         message = argSet.pop('message', None)
         success = True
         _, groupList, = self.requireParameters(args, allowExtra=True)
+
+        handle.Build.checkStage()
         if not groupList:
             jobId = handle.BuildGroups.buildAllGroups()
         else:

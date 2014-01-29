@@ -40,6 +40,8 @@ class BuildImagesCommand(command.BaseCommand):
         _, imageNames = self.requireParameters(args, allowExtra=True)
         if imageNames == []:
             imageNames = None
+
+        handle.Build.checkStage()
         buildIds = handle.BuildImages.buildImages(imageNames)
         if watch:
             ok = handle.facade.rbuilder.watchImages(buildIds)

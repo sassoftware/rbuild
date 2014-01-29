@@ -26,6 +26,7 @@ class BuildPlatformCommand(command.BaseCommand):
     def runCommand(self, handle, _, args):
         # no allowed parameters
         self.requireParameters(args)
+        handle.Build.checkProductStore()
         handle.BuildPlatform.buildPlatform()
 
 
