@@ -970,7 +970,7 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
         client._api._client.do_GET._mock.setReturn(
             ['images_version'],
             "http://localhost/images;filter_by=[name,EQUAL,foo]"
-                ";filter_by=[trailing_version,EQUAL,1-1-1]"
+                ",[trailing_version,EQUAL,1-1-1]"
                 ";order_by=-time_created")
         client._api._client.do_GET._mock.setReturn(
             ['project'],
@@ -979,13 +979,13 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
         client._api._client.do_GET._mock.setReturn(
             ['project_stage'],
             "http://localhost/projects/bar/images;filter_by=[name,EQUAL,foo]"
-                ";filter_by=[stage_name,EQUAL,Release]"
+                ",[stage_name,EQUAL,Release]"
                 ";order_by=-time_created")
         client._api._client.do_GET._mock.setReturn(
             ['project_stage_version'],
             "http://localhost/projects/bar/images;filter_by=[name,EQUAL,foo]"
-                ";filter_by=[stage_name,EQUAL,Release]"
-                ";filter_by=[trailing_version,EQUAL,1-1-1]"
+                ",[stage_name,EQUAL,Release]"
+                ",[trailing_version,EQUAL,1-1-1]"
                 ";order_by=-time_created")
         client._api._client.do_GET._mock.setReturn(
             [],

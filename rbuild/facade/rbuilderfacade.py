@@ -427,12 +427,11 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
 
         if stageName:
             # filter stage
-            uri += ';filter_by=[stage_name,EQUAL,%s]' % (stageName,)
+            uri += ',[stage_name,EQUAL,%s]' % (stageName,)
 
         if trailingVersion:
             # filter by group trailing version
-            uri += ';filter_by=[trailing_version,EQUAL,%s]' % (
-                trailingVersion,)
+            uri += ',[trailing_version,EQUAL,%s]' % (trailingVersion,)
 
         # always sort by most recently created first
         uri += ';order_by=-time_created'
