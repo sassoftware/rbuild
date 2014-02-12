@@ -70,20 +70,27 @@ class LaunchTest(rbuildhelp.RbuildHelper):
     def testLaunchArgParse(self):
         self.getRbuildHandle()
         self.checkRbuild(
-            'launch --list --from-file=fromFile --to-file=toFile Image Target',
+            'launch --list --from-file=fromFile --to-file=toFile --no-launch'
+                ' --no-watch Image Target',
             'rbuild_plugins.launch.LaunchCommand.runCommand',
             [None, None, {
                 'list': True,
                 'from-file': 'fromFile',
                 'to-file': 'toFile',
+                'no-watch': True,
+                'no-launch': True,
+
                 }, ['rbuild', 'launch', 'Image', 'Target']])
         self.checkRbuild(
-            'deploy --list --from-file=fromFile --to-file=toFile Image Target',
+            'deploy --list --from-file=fromFile --to-file=toFile --no-launch'
+                ' --no-watch Image Target',
             'rbuild_plugins.launch.LaunchCommand.runCommand',
             [None, None, {
                 'list': True,
                 'from-file': 'fromFile',
                 'to-file': 'toFile',
+                'no-watch': True,
+                'no-launch': True,
                 }, ['rbuild', 'deploy', 'Image', 'Target']])
 
     def testLaunchCmdlineList(self):
@@ -139,12 +146,12 @@ class LaunchTest(rbuildhelp.RbuildHelper):
         cmd = handle.Commands.getCommandClass('launch')()
         cmd.runCommand(handle, {}, ['rbuild', 'launch', 'foo', 'bar'])
         handle.Launch.deployImage._mock.assertNotCalled()
-        handle.Launch.launchImage._mock.assertCalled('foo', 'bar')
+        handle.Launch.launchImage._mock.assertCalled('foo', 'bar', True)
 
         cmd = handle.Commands.getCommandClass('launch')()
         cmd.runCommand(
             handle, {}, ['rbuild', 'deploy', 'foo', 'bar'])
-        handle.Launch.deployImage._mock.assertCalled('foo', 'bar')
+        handle.Launch.deployImage._mock.assertCalled('foo', 'bar', True)
         handle.Launch.launchImage._mock.assertNotCalled()
 
     def testGetAction(self):
@@ -207,7 +214,7 @@ class LaunchTest(rbuildhelp.RbuildHelper):
 
         mock.mockMethod(handle.Launch._getProductStage, ('product', 'stage'))
         rv = handle.Launch._createJob(
-            'foo', 'bar', handle.Launch.DEPLOY)
+            handle.Launch.DEPLOY, 'foo', 'bar', True)
         handle.facade.rbuilder.getImage._mock.assertCalled(
             'foo',
             shortName='product',
@@ -222,7 +229,7 @@ class LaunchTest(rbuildhelp.RbuildHelper):
         self.assertEqual(rv.toxml(), JOB_XML)
 
         rv = handle.Launch._createJob(
-            'foo=', 'bar', handle.Launch.DEPLOY)
+            handle.Launch.DEPLOY, 'foo=', 'bar', True)
         handle.facade.rbuilder.getImage._mock.assertCalled(
             'foo',
             shortName='product',
@@ -237,7 +244,7 @@ class LaunchTest(rbuildhelp.RbuildHelper):
         self.assertEqual(rv.toxml(), JOB_XML)
 
         rv = handle.Launch._createJob(
-            'foo=1', 'bar', handle.Launch.DEPLOY)
+            handle.Launch.DEPLOY, 'foo=1', 'bar', True)
         handle.facade.rbuilder.getImage._mock.assertCalled(
             'foo',
             shortName='product',

@@ -19,8 +19,9 @@
 Plugin for reading and writing descriptor config files
 """
 
-import re
 import json
+import os
+import re
 
 from smartform.descriptor import ConfigurationDescriptor
 from smartform.descriptor_errors import ConstraintsValidationError
@@ -193,12 +194,12 @@ class DescriptorConfig(pluginapi.Plugin):
                                  for f in ddata._descriptor.getDataFields()))
 
     def _read(self, filename):
-        with open(filename) as fh:
+        with open(os.path.expanduser(filename)) as fh:
             return json.load(fh)
 
     def _write(self, filename, data, append=False):
         mode = 'a' if append else 'w'
-        with open(filename, mode) as fh:
+        with open(os.path.expanduser(filename), mode) as fh:
             json.dump(data, fh, sort_keys=True, indent=2)
 
     def clearConfig(self):

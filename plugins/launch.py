@@ -31,6 +31,7 @@ class LaunchCommand(command.BaseCommand):
             'from-file': 'Load launch/deploy descriptor from file',
             'to-file': 'Write launch/deploy descriptor to file',
             'no-watch': 'Do not wait for job to complete',
+            'no-launch': 'Do not launch an image',
             }
 
     def addLocalParameters(self, argDef):
@@ -38,6 +39,7 @@ class LaunchCommand(command.BaseCommand):
         argDef['from-file'] = '-f', command.ONE_PARAM
         argDef['to-file'] = '-o', command.ONE_PARAM
         argDef['no-watch'] = command.NO_PARAM
+        argDef['no-launch'] = command.NO_PARAM
 
     def runCommand(self, handle, argSet, args):
         ui = handle.ui
@@ -47,6 +49,7 @@ class LaunchCommand(command.BaseCommand):
         fromFile = argSet.pop('from-file', None)
         toFile = argSet.pop('to-file', None)
         watch = not argSet.pop('no-watch', False)
+        doLaunch = not argSet.pop('no-launch', False)
 
         if listTargets:
             ui.write('Available targets: %s' %
@@ -60,11 +63,11 @@ class LaunchCommand(command.BaseCommand):
             args, expected=['IMAGE', 'TARGET'])
 
         if command == 'deploy':
-            job = handle.Launch.deployImage(image, target)
+            job = handle.Launch.deployImage(image, target, doLaunch)
         else:
-            job = handle.Launch.launchImage(image, target)
+            job = handle.Launch.launchImage(image, target, doLaunch)
 
-        if watch:
+        if watch and doLaunch:
             handle.Launch.watchJob(job)
 
         if toFile:
@@ -76,7 +79,7 @@ class Launch(pluginapi.Plugin):
     DEPLOY = 'deploy_image_on_target'
     LAUNCH = 'launch_system_on_target'
 
-    def _createJob(self, image_name, target_name, action_type):
+    def _createJob(self, action_type, image_name, target_name, doLaunch):
         rb = self.handle.facade.rbuilder
 
         product, stage = self._getProductStage()
@@ -100,7 +103,8 @@ class Launch(pluginapi.Plugin):
         job.descriptor = action._root.descriptor
         job.descriptor_data = xobj.parse(ddata.toxml()).descriptor_data
 
-        return image.jobs.append(doc)
+        if doLaunch:
+            return image.jobs.append(doc)
 
     def _getAction(self, image, target, key):
         assert key in (self.DEPLOY, self.LAUNCH)
@@ -130,7 +134,7 @@ class Launch(pluginapi.Plugin):
     def registerCommands(self):
         self.handle.Commands.registerCommand(LaunchCommand)
 
-    def deployImage(self, image, target):
+    def deployImage(self, *args, **kwargs):
         '''
         Deploys an image template to a target
 
@@ -143,9 +147,9 @@ class Launch(pluginapi.Plugin):
         @return: image deploy job
         @rtype: rObj(job)
         '''
-        return self._createJob(image, target, self.DEPLOY)
+        return self._createJob(self.DEPLOY, *args, **kwargs)
 
-    def launchImage(self, image, target):
+    def launchImage(self, *args, **kwargs):
         '''
         Launches an image to a target
 
@@ -158,7 +162,7 @@ class Launch(pluginapi.Plugin):
         @return: image launch job
         @rtype: rObj(job)
         '''
-        return self._createJob(image, target, self.LAUNCH)
+        return self._createJob(self.LAUNCH, *args, **kwargs)
 
     def watchJob(self, job):
         last_status = None
