@@ -674,6 +674,48 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
         self.failIfEqual(client._api, None)
         self.failUnlessEqual(api, v1)
 
+    def testGetImageTypeDef(self):
+        client = rbuilderfacade.RbuilderRESTClient(
+            'http://localhost', 'foo', 'bar', mock.MockObject())
+        mock.mock(client, '_api')
+        client._api._mock.set(_uri='http://localhost')
+
+        _imageTypeDef1 = mock.MockObject()
+        _imageTypeDef1.container._mock.set(name='foo')
+        _imageTypeDef1.architecture._mock.set(name='bar')
+        _imageTypeDef2 = mock.MockObject()
+        _imageTypeDef2.container._mock.set(name='spam')
+        _imageTypeDef2.architecture._mock.set(name='eggs')
+
+        client._api._client.do_GET._mock.setReturn(
+            [_imageTypeDef2, _imageTypeDef1],
+            '/products/baz/versions/1/imageTypeDefinitions')
+        self.assertEqual(
+            client.getImageTypeDef('baz', '1', 'foo', 'bar'), _imageTypeDef1)
+
+        client._api._client.do_GET._mock.raiseErrorOnAccess(
+            robj.errors.HTTPNotFoundError(uri=None, status=None, reason=None,
+                                          response=None))
+        err = self.assertRaises(
+            errors.RbuildError,
+            client.getImageTypeDef,
+            'none',
+            'none',
+            'foo',
+            'bar',
+            )
+        self.assertIn('not found', str(err))
+
+        err = self.assertRaises(
+            errors.RbuildError,
+            client.getImageTypeDef,
+            'baz',
+            '1',
+            'none',
+            'none',
+            )
+        self.assertIn("No image type", str(err))
+
     def testGetProductDefinitionSchemaVersion(self):
         client = rbuilderfacade.RbuilderRESTClient('http://localhost', 'foo',
             'bar', mock.MockObject())

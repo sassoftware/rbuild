@@ -391,6 +391,21 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
             raise errors.RbuildError('Unable to set credentials')
         return target
 
+    def getImageDefDescriptor(self, imageType):
+        # image_type_definition_descriptors are not in a collection, and they
+        # have an xml header, which causes rObj to process them incorrectly
+        # thus this mess
+        client = self.api._client._client  # Ew
+        uri = self.api._uri + \
+            '/platforms/image_type_definition_descriptors/' + imageType
+
+        request = client.do_GET(uri)
+        request.wait()
+        response = request.response
+        if response.status >= 400:
+            raise errors.RbuildError(response.reason)
+        return response.content
+
     def getImage(self, name, shortName=None, stageName=None,
                  trailingVersion=None):
         '''
@@ -440,6 +455,22 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
         if images:
             return images[0]
         raise errors.RbuildError("Image '%s' not found." % (name,))
+
+    def getImageTypeDef(self, product, version, imageType, arch):
+        client = self.api._client
+        uri = ('/products/%s/versions/%s/imageTypeDefinitions' %
+               (product, version))
+        try:
+            for imageTypeDef in client.do_GET(uri):
+                if (imageTypeDef.container.name == imageType
+                        and imageTypeDef.architecture.name == arch):
+                    return imageTypeDef
+        except robj.errors.HTTPNotFoundError:
+            raise errors.RbuildError(
+                "Project '%s' and version '%s' not found" % (product, version))
+
+        raise errors.RbuildError("No image type definition with name '%s'"
+                                 " and architecture '%s'" % (imageType, arch))
 
     def getTarget(self, name):
         client = self.api._client
@@ -693,6 +724,12 @@ class RbuilderFacade(object):
         client = self._getRbuilderRESTClient()
         return client.createTarget(ddata, ttype)
 
+    def getImageTypeDef(self, imageType, arch):
+        client = self._getRbuilderRESTClient()
+        product = self._handle.product.getProductShortname()
+        version = self._handle.product.getProductVersion()
+        return client.getImageTypeDef(product, version, imageType, arch)
+
     def getProductLabelFromNameAndVersion(self, productName, versionName):
         client = self._getRbuilderRPCClient()
         return client.getProductLabelFromNameAndVersion(productName,
@@ -823,6 +860,10 @@ class RbuilderFacade(object):
         client = self._getRbuilderRESTClient()
         return client.getImage(name, shortName=shortName, stageName=stageName,
                                trailingVersion=trailingVersion)
+
+    def getImageDefDescriptor(self, imageType):
+        client = self._getRbuilderRESTClient()
+        return client.getImageDefDescriptor(imageType)
 
     def getTargetDescriptor(self, targetType):
         client = self._getRbuilderRESTClient()
