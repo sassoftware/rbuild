@@ -53,7 +53,7 @@ class UserInterfaceTest(rbuildhelp.RbuildHelper):
 
         h.ui.lineOutProgress('spam')
         h.ui.outStream.write._mock.assertCalled('\r[NOW] spam')
-        h.ui.outStream.write._mock.assertCalled('  \b\b')
+        h.ui.outStream.write._mock.assertCalled('   \b\b\b')
 
         h.ui.outStream.isatty._mock.setReturn(False)
         h.ui.lineOutProgress('foo %s', 'bar')

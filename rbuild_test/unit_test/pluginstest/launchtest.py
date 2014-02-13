@@ -300,13 +300,13 @@ class LaunchTest(rbuildhelp.RbuildHelper):
         expected_calls = [
             (('\r[] Text0    ',), ()),
             (('\r[] Text1   ',), ()),
-            ((' \b',), ()),
+            (('  \b\b',), ()),
             (('\r[] Text2  ',), ()),
-            ((' \b',), ()),
+            (('  \b\b',), ()),
             (('\r[] Text3 ',), ()),
-            ((' \b',), ()),
+            (('  \b\b',), ()),
             (('\r[] Text4',), ()),
-            ((' \b',), ()),
+            (('  \b\b',), ()),
             (('\n',), ()),
             (('Created system baz with addresses: foo, bar\n',), ()),
             ]

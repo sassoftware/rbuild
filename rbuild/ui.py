@@ -300,7 +300,7 @@ class UserInterface(object):
                 length = len(msg)
                 self.outStream.write('\r[%s] %s' % (timeStamp, msg % args, ))
                 if length < self._last_length:
-                    i = self._last_length - length
+                    i = (self._last_length - length) + 1
                     self.outStream.write(' ' * i + '\b' * i)
                 self.outStream.flush()
                 self._last_length = length
