@@ -82,16 +82,17 @@ class Launch(pluginapi.Plugin):
     def _createJob(self, action_type, image_name, target_name, doLaunch):
         rb = self.handle.facade.rbuilder
 
-        product, stage = self._getProductStage()
+        project, branch, stage = self._getProductStage()
         image_name, _, version = image_name.partition('=')
-        image = rb.getImage(
+        images = rb.getImages(
             image_name,
-            shortName=product,
-            stageName=stage,
+            project=project,
+            branch=branch,
+            stage=stage,
             trailingVersion=version,
             )
 
-        action = self._getAction(image, target_name, action_type)
+        image, action = self._getAction(images, target_name, action_type)
 
         ddata = self.handle.DescriptorConfig.createDescriptorData(
             fromStream=action.descriptor)
@@ -106,12 +107,13 @@ class Launch(pluginapi.Plugin):
         if doLaunch:
             return image.jobs.append(doc)
 
-    def _getAction(self, image, target, key):
+    def _getAction(self, images, target, key):
         assert key in (self.DEPLOY, self.LAUNCH)
 
-        for action in image.actions:
-            if key == action.key and target in action.name:
-                return action
+        for image in images:
+            for action in image.actions:
+                if key == action.key and target in action.name:
+                    return image, action
         raise errors.PluginError(
             'Image cannot be %s on this target' %
             ('deployed' if key == self.DEPLOY else 'launched'))
@@ -119,6 +121,7 @@ class Launch(pluginapi.Plugin):
     def _getProductStage(self):
         try:
             product = self.handle.product.getProductShortname()
+            baseLabel = self.handle.product.getBaseLabel()
         except AttributeError:
             raise errors.PluginError(
                 'Current directory is not part of a product.\n'
@@ -129,7 +132,7 @@ class Launch(pluginapi.Plugin):
         except errors.RbuildError:
             raise errors.PluginError(
                 'Current directory is not a product stage.')
-        return (product, stage)
+        return (product, baseLabel, stage)
 
     def registerCommands(self):
         self.handle.Commands.registerCommand(LaunchCommand)

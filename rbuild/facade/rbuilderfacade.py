@@ -406,55 +406,56 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
             raise errors.RbuildError(response.reason)
         return response.content
 
-    def getImage(self, name, shortName=None, stageName=None,
-                 trailingVersion=None):
+    def getImages(self, name, project=None, branch=None, stage=None,
+                  trailingVersion=None):
         '''
-        Get an image by name. shortName limits search to that project.
-        stageName limits search to that stage of shortName. trailingVersion
-        limits the image to ones built with that group trailingVersion. If the
-        query returns multiple images, return the most recently created.
+            Get an image by name. project limits search to that project.
+            branch limits search to that branch. stage limits serach to that stage.
+            trailingVersion limits the image to ones built with that group
+            trailingVersion. If the query returns multiple images, return the most
+            recently created.
 
-        @param name: name of image
-        @type name: str
-        @param shortName: short name of project
-        @type shortName: str
-        @param stageName: name of stage, requires shortName
-        @type stageName: str
-        @param trailingVersion: trailing version of product group
-        @type trailingVersion: str or None
-        @return: image or None
-        @rtype: rObj(image)
+            @param name: name of image
+            @type name: str
+            @param shortName: short name of project
+            @type shortName: str
+            @param stageName: name of stage, requires shortName
+            @type stageName: str
+            @param trailingVersion: trailing version of product group
+            @type trailingVersion: str or None
+            @return: image or None
+            @rtype: rObj(image)
         '''
-        # we only support stageName if we also got a shortName
-        assert not (stageName and not shortName), \
-            'stageName requires a shortName'
+        # we only support stage filter if we also got a project and branch
+        if stage and not (project and branch):
+            raise errors.RbuildError(
+                'Must provide project and branch if stage is provided')
 
         client = self.api._client
-        if shortName:
-            # filter by project
-            project = self.getProject(shortName)
-            uri = project.id
-        else:
-            uri = self.api._uri
+        uri = self.api._uri + '/images'
 
         # filter by image name
-        uri += '/images;filter_by=[name,EQUAL,%s]' % (name,)
+        filter_by = ';filter_by=AND(EQUAL(name,%s)' % name
 
-        if stageName:
-            # filter stage
-            uri += ',[stage_name,EQUAL,%s]' % (stageName,)
+        if project:
+            filter_by += ',EQUAL(project.short_name,%s)' % project
+            if stage:
+                filter_by += ',EQUAL(project_branch.label,%s)' % branch
+                filter_by += ',EQUAL(stage_name,%s)' % stage
 
         if trailingVersion:
             # filter by group trailing version
-            uri += ',[trailing_version,EQUAL,%s]' % (trailingVersion,)
+            filter_by += ',EQUAL(trailing_version,%s)' % trailingVersion
+
+        uri += filter_by + ')'
 
         # always sort by most recently created first
         uri += ';order_by=-time_created'
 
-        images = client.do_GET(uri)
-        if images:
-            return images[0]
-        raise errors.RbuildError("Image '%s' not found." % (name,))
+        try:
+            return client.do_GET(uri)
+        except robj.errors.HTTPNotFoundError:
+            raise errors.RbuildError("Unable to fetch images at '%s'" + uri)
 
     def getImageTypeDef(self, product, version, imageType, arch):
         client = self.api._client
@@ -855,11 +856,11 @@ class RbuilderFacade(object):
                 if x.is_configured == 'true'
                 and x.credentials_valid == 'true']
 
-    def getImage(self, name, shortName=None, stageName=None,
-                 trailingVersion=None):
+    def getImages(self, name, project=None, branch=None, stage=None,
+                  trailingVersion=None):
         client = self._getRbuilderRESTClient()
-        return client.getImage(name, shortName=shortName, stageName=stageName,
-                               trailingVersion=trailingVersion)
+        return client.getImages(name, project, branch, stage,
+                                trailingVersion=trailingVersion)
 
     def getImageDefDescriptor(self, imageType):
         client = self._getRbuilderRESTClient()

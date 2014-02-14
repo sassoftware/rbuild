@@ -995,60 +995,71 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
         client._api._mock.set(targets=['foo', 'bar'])
         self.assertEqual(client.getTargets(), ['foo', 'bar'])
 
-    def testGetImage(self):
+    def testGetImages(self):
         client = rbuilderfacade.RbuilderRESTClient(
             'http://localhost', 'foo', 'bar', mock.MockObject())
         mock.mock(client, '_api')
         client._api._mock.set(_uri='http://localhost')
 
+        err = self.assertRaises(
+            errors.RbuildError, client.getImages, 'foo', stage='bar')
+        self.assertIn('Must provide', str(err))
+
         _project = mock.MockObject()
         _project._mock.set(id='http://localhost/projects/bar')
+
         client._api._client.do_GET._mock.setReturn(
             _project, 'http://localhost/projects/bar')
         client._api._client.do_GET._mock.setReturn(
-            ['images'],
-            "http://localhost/images;filter_by=[name,EQUAL,foo]"
+            'image',
+            "http://localhost/images;filter_by=AND(EQUAL(name,foo))"
                 ";order_by=-time_created")
         client._api._client.do_GET._mock.setReturn(
-            ['images_version'],
-            "http://localhost/images;filter_by=[name,EQUAL,foo]"
-                ",[trailing_version,EQUAL,1-1-1]"
+            'image_version',
+            "http://localhost/images;filter_by=AND(EQUAL(name,foo)"
+                ",EQUAL(trailing_version,1-1-1))"
                 ";order_by=-time_created")
         client._api._client.do_GET._mock.setReturn(
-            ['project'],
-            "http://localhost/projects/bar/images;filter_by=[name,EQUAL,foo]"
+            'project',
+            "http://localhost/images;filter_by=AND(EQUAL(name,foo)"
+                ",EQUAL(project.short_name,bar))"
                 ";order_by=-time_created")
         client._api._client.do_GET._mock.setReturn(
-            ['project_stage'],
-            "http://localhost/projects/bar/images;filter_by=[name,EQUAL,foo]"
-                ",[stage_name,EQUAL,Release]"
+            'project_stage',
+            "http://localhost/images;filter_by=AND(EQUAL(name,foo)"
+                ",EQUAL(project.short_name,bar)"
+                ",EQUAL(project_branch.label,baz)"
+                ",EQUAL(stage_name,Release))"
                 ";order_by=-time_created")
         client._api._client.do_GET._mock.setReturn(
-            ['project_stage_version'],
-            "http://localhost/projects/bar/images;filter_by=[name,EQUAL,foo]"
-                ",[stage_name,EQUAL,Release]"
-                ",[trailing_version,EQUAL,1-1-1]"
+            'project_stage_version',
+            "http://localhost/images;filter_by=AND(EQUAL(name,foo)"
+                ",EQUAL(project.short_name,bar)"
+                ",EQUAL(project_branch.label,baz)"
+                ",EQUAL(stage_name,Release)"
+                ",EQUAL(trailing_version,1-1-1))"
                 ";order_by=-time_created")
         client._api._client.do_GET._mock.setReturn(
             [],
-            "http://localhost/images;filter_by=[name,EQUAL,bar]"
+            "http://localhost/images;filter_by=AND(EQUAL(name,bar))"
                 ";order_by=-time_created")
 
-        self.assertEqual(client.getImage('foo'), 'images')
+        self.assertEqual(client.getImages('foo'), 'image')
         self.assertEqual(
-            client.getImage('foo', trailingVersion='1-1-1'), 'images_version')
-        self.assertEqual(client.getImage('foo', shortName='bar'), 'project')
+            client.getImages('foo', trailingVersion='1-1-1'), 'image_version')
+        self.assertEqual(client.getImages('foo', project='bar'), 'project')
         self.assertEqual(
-            client.getImage('foo', shortName='bar', stageName='Release'),
+            client.getImages('foo', project='bar', branch='baz',
+                             stage='Release'),
             'project_stage')
         self.assertEqual(
-            client.getImage(
+            client.getImages(
                 'foo',
-                shortName='bar',
-                stageName='Release',
+                project='bar',
+                branch='baz',
+                stage='Release',
                 trailingVersion='1-1-1',
                 ),
             'project_stage_version')
 
-        err = self.assertRaises(errors.RbuildError, client.getImage, 'bar')
-        self.assertIn('not found', str(err))
+        self.assertEqual(client.getImages('bar'), [])

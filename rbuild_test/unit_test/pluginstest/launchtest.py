@@ -180,11 +180,11 @@ class LaunchTest(rbuildhelp.RbuildHelper):
             handle.Launch.DEPLOY,
             )
 
-        rv = handle.Launch._getAction(_image, 'foo', handle.Launch.DEPLOY)
-        self.assertEqual(rv, _action1)
+        rv = handle.Launch._getAction([_image], 'foo', handle.Launch.DEPLOY)
+        self.assertEqual(rv, (_image, _action1))
 
-        rv = handle.Launch._getAction(_image, 'bar', handle.Launch.DEPLOY)
-        self.assertEqual(rv, _action2)
+        rv = handle.Launch._getAction([_image], 'bar', handle.Launch.DEPLOY)
+        self.assertEqual(rv, (_image, _action2))
 
     def testCreateJob(self):
         handle = self.getRbuildHandle(mock.MockObject())
@@ -200,25 +200,27 @@ class LaunchTest(rbuildhelp.RbuildHelper):
         _image = mock.MockObject()
         _image._mock.set(jobs=mock.MockObject())
         _image.jobs._mock.set(append=_append)
-        mock.mockMethod(handle.facade.rbuilder.getImage, _image)
+        mock.mockMethod(handle.facade.rbuilder.getImages, _image)
 
         _action = mock.MockObject()
         _action._mock.set(descriptor=DESCRIPTOR_XML)
         _action._root._mock.set(job_type='job_type')
         _action._root._mock.set(descriptor='descriptor')
-        mock.mockMethod(handle.Launch._getAction, _action)
+        mock.mockMethod(handle.Launch._getAction, (_image, _action))
 
         _ddata = mock.MockObject()
         _ddata.toxml._mock.setDefaultReturn(DDATA_XML)
         mock.mockMethod(handle.DescriptorConfig.createDescriptorData, _ddata)
 
-        mock.mockMethod(handle.Launch._getProductStage, ('product', 'stage'))
+        mock.mockMethod(
+            handle.Launch._getProductStage, ('product', 'branch', 'stage'))
         rv = handle.Launch._createJob(
             handle.Launch.DEPLOY, 'foo', 'bar', True)
-        handle.facade.rbuilder.getImage._mock.assertCalled(
+        handle.facade.rbuilder.getImages._mock.assertCalled(
             'foo',
-            shortName='product',
-            stageName='stage',
+            project='product',
+            branch='branch',
+            stage='stage',
             trailingVersion='',
             )
         handle.Launch._getAction._mock.assertCalled(
@@ -230,10 +232,11 @@ class LaunchTest(rbuildhelp.RbuildHelper):
 
         rv = handle.Launch._createJob(
             handle.Launch.DEPLOY, 'foo=', 'bar', True)
-        handle.facade.rbuilder.getImage._mock.assertCalled(
+        handle.facade.rbuilder.getImages._mock.assertCalled(
             'foo',
-            shortName='product',
-            stageName='stage',
+            project='product',
+            branch='branch',
+            stage='stage',
             trailingVersion='',
             )
         handle.Launch._getAction._mock.assertCalled(
@@ -245,10 +248,11 @@ class LaunchTest(rbuildhelp.RbuildHelper):
 
         rv = handle.Launch._createJob(
             handle.Launch.DEPLOY, 'foo=1', 'bar', True)
-        handle.facade.rbuilder.getImage._mock.assertCalled(
+        handle.facade.rbuilder.getImages._mock.assertCalled(
             'foo',
-            shortName='product',
-            stageName='stage',
+            project='product',
+            branch='branch',
+            stage='stage',
             trailingVersion='1',
             )
         handle.Launch._getAction._mock.assertCalled(
