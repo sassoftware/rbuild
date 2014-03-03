@@ -44,12 +44,12 @@ class DescriptorConfigTest(rbuildhelp.RbuildHelper):
 
         self.assertEqual(
             dc.createDescriptorData(fromStream='bar'), _ddata)
-        dc.callbackClass._mock.assertCalled(handle.ui, {})
+        dc.callbackClass._mock.assertCalled(handle.ui, {}, None)
         dc._parseDescriptorData._mock.assertCalled(_ddata)
 
         dc._config = {'foo': 'FOO'}
         dc.createDescriptorData(fromStream='bar'),
-        dc.callbackClass._mock.assertCalled(handle.ui, {'foo': 'FOO'})
+        dc.callbackClass._mock.assertCalled(handle.ui, {'foo': 'FOO'}, None)
         dc._parseDescriptorData._mock.assertCalled(_ddata)
 
         _descr.createDescriptorData._mock.raiseErrorOnAccess(

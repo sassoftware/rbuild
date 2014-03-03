@@ -31,9 +31,10 @@ from rbuild import pluginapi
 
 
 class RbuilderCallback(object):
-    def __init__(self, ui, config=None):
+    def __init__(self, ui, config=None, defaults=None):
         self.ui = ui
         self._config = config or {}
+        self._defaults = defaults or {}
 
     def start(self, descriptor, name=None):
         pass
@@ -67,6 +68,20 @@ class RbuilderCallback(object):
         defmsg = ""  # message about the default value, if there is one
         reqmsg = ""  # message about whether the field is required, if so
         typmsg = " (type %s)" % field.type
+
+        if field.name in self._defaults:
+            # override the field's default value with ours
+            if field.multiple:
+                defaults = []
+                for value in self._defaults[field.name]:
+                    default = self.reverse_cast(value, field.type)
+                    if default:
+                        defaults.append(default)
+                field.default = defaults
+            else:
+                default = self.reverse_cast(
+                    self._defaults[field.name], field.type)
+                field.default = [default] if default else []
 
         if field.required and field.hidden and field.default:
             # return the default value and don't ask the user for input
@@ -181,6 +196,15 @@ class RbuilderCallback(object):
         else:
             return value
 
+    def reverse_cast(self, value, typename):
+        if typename == 'bool':
+            if value is True:
+                return 'yes'
+            else:
+                return 'no'
+        else:
+            return str(value)
+
 
 class DescriptorConfig(pluginapi.Plugin):
     name = 'descriptor_config'
@@ -205,9 +229,9 @@ class DescriptorConfig(pluginapi.Plugin):
     def clearConfig(self):
         self.initialize()
 
-    def createDescriptorData(self, fromStream=None):
+    def createDescriptorData(self, fromStream=None, defaults=None):
         descr = self.descriptorClass(fromStream=fromStream)
-        cb = self.callbackClass(self.handle.ui, self._config)
+        cb = self.callbackClass(self.handle.ui, self._config, defaults)
         try:
             ddata = descr.createDescriptorData(cb)
         except ConstraintsValidationError as e:
