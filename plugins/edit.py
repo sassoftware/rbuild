@@ -159,7 +159,7 @@ class Edit(pluginapi.Plugin):
             fromStream=descriptor, defaults=currentValues)
 
         for field in ddata.getFields():
-            fname = field.getName().strip('options.')
+            fname = field.getName().replace('options.', '')
             fvalue = field.getValue()
             if fname == 'displayName':
                 fname = 'name'
