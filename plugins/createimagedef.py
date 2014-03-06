@@ -24,6 +24,8 @@ from rbuild import pluginapi
 from rbuild.pluginapi import command
 
 
+DESCRIPTOR_PREFIX = 'options.'
+
 DEFERRED = 'deferredImage'
 ISO = 'applianceIsoImage'
 AMI = 'amiImage'
@@ -165,8 +167,9 @@ class CreateImageDef(pluginapi.Plugin):
             imageFields[field] = getattr(imageTypeDef.options, field)
 
         for field in ddata.getFields():
-            if field.getName().startswith('options.'):
-                name = field.getName().strip('options.')
+            name = field.getName()
+            if name.startswith(DESCRIPTOR_PREFIX):
+                name = name.replace(DESCRIPTOR_PREFIX, '')
                 imageFields[name] = field.getValue()
 
         stages = [s.name for s in pd.getStages()]
