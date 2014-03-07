@@ -57,7 +57,6 @@ IMAGEDEF_SPECS = {
     'fusion': VMWARE,
 }
 
-
 class CreateImageDefCommand(command.BaseCommand):
     help = 'Create a image defintion on a SAS App Engine'
     commands = ['imagedef']
@@ -152,6 +151,7 @@ class CreateImageDef(pluginapi.Plugin):
         pd = self.handle.product
         ps = self.handle.productStore
 
+        import epdb; epdb.st()
         imageTypeDef = rb.getImageTypeDef(imageType, arch)
         containerRef = imageTypeDef.container.name
         flavorSetRef = imageTypeDef.flavorSet.name
@@ -170,6 +170,9 @@ class CreateImageDef(pluginapi.Plugin):
             name = field.getName()
             if name.startswith(DESCRIPTOR_PREFIX):
                 name = name.replace(DESCRIPTOR_PREFIX, '')
+                if name == 'allowSnapshots':
+                    # hack because options don't match
+                    name = 'vmSnapshots'
                 imageFields[name] = field.getValue()
 
         stages = [s.name for s in pd.getStages()]
