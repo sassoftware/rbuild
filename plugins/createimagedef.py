@@ -151,7 +151,6 @@ class CreateImageDef(pluginapi.Plugin):
         pd = self.handle.product
         ps = self.handle.productStore
 
-        import epdb; epdb.st()
         imageTypeDef = rb.getImageTypeDef(imageType, arch)
         containerRef = imageTypeDef.container.name
         flavorSetRef = imageTypeDef.flavorSet.name
