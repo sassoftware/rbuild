@@ -166,8 +166,12 @@ class CreateImageDef(pluginapi.Plugin):
 
         for field in ddata.getFields():
             if field.getName().startswith('options.'):
-                name = field.getName().strip('options.')
+                name = field.getName().lstrip('options').lstrip('.')
                 imageFields[name] = field.getValue()
+
+        # FIXME: Map allowSnapshots -> vmSnapshots since the smartform and
+        #        proddef differ. (RCE-2743)
+        imageFields['vmSnapshots'] = imageFields.pop('allowSnapshots')
 
         stages = [s.name for s in pd.getStages()]
 
