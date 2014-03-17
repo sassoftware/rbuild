@@ -731,6 +731,12 @@ class RbuilderFacade(object):
         version = self._handle.product.getProductVersion()
         return client.getImageTypeDef(product, version, imageType, arch)
 
+    def getPlatform(self, label):
+        client = self._getRbuilderRESTClient()
+        for platform in client.api.platforms:
+            if platform.label == label:
+                return platform
+
     def getProductLabelFromNameAndVersion(self, productName, versionName):
         client = self._getRbuilderRPCClient()
         return client.getProductLabelFromNameAndVersion(productName,

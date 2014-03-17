@@ -89,6 +89,7 @@ class RbuilderFacadeTest(rbuildhelp.RbuildHelper):
         rbuilderfacade.RbuilderRPCClient._mock.assertCalled('http://localhost',
                                                          'foo', 'bar',
                                                          facade._handle)
+
     def test_getRbuilderRPCClient(self):
         _, facade = self.prep()
         mock.mock(rbuilderfacade, 'RbuilderRPCClient')
@@ -135,7 +136,6 @@ class RbuilderFacadeTest(rbuildhelp.RbuildHelper):
         facade._getBaseServerUrl._mock.setDefaultReturn(serverUrl)
         self.assertEquals(facade._getBaseServerUrlData(),
                           ('https://host/path', None, None))
-
 
     def testBuildAllImagesForStage(self):
         handle, facade = self.prep()
@@ -331,6 +331,18 @@ class RbuilderFacadeTest(rbuildhelp.RbuildHelper):
         facade._getRbuilderRESTClient().getTargets._mock.setReturn(
             ['foo', 'bar'])
         self.assertEqual(facade.getTargets(), ['foo', 'bar'])
+
+    def testGetPlatform(self):
+        handle, facade = self.prep()
+        mock.mockMethod(facade._getRbuilderRESTClient)
+        _platform1 = mock.MockObject()
+        _platform1._mock.set(label='label1')
+        _platform2 = mock.MockObject()
+        _platform2._mock.set(label='label2')
+        facade._getRbuilderRESTClient().api._mock.set(
+            platforms=[_platform1, _platform2])
+        self.assertEqual(facade.getPlatform('label2'), _platform2)
+        self.assertEqual(facade.getPlatform('no label'), None)
 
 
 class RbuilderRPCClientTest(rbuildhelp.RbuildHelper):
