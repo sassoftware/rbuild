@@ -50,7 +50,6 @@ class StatusTest(rbuildhelp.RbuildHelper):
             [None, None, {'repository' : True},
             ['rbuild', 'status']])
 
-
     def testStatusCommandParsing(self):
         handle = self.getRbuildHandle()
         from rbuild_plugins import status
@@ -105,7 +104,6 @@ class StatusTest(rbuildhelp.RbuildHelper):
             verbosity=status.DEFAULT, product=False,
             local=False, repository=True)
 
-
     def testPrintDirectoryStatus(self):
         handle = self.getRbuildHandle()
         from rbuild_plugins import status
@@ -143,7 +141,6 @@ class StatusTest(rbuildhelp.RbuildHelper):
         self.assertRaises(ValueError, handle.Status.printDirectoryStatus,
             'bogus', product=True, local=False, repository=False)
 
-
     def testPrintOneDirectoryStatus(self):
         self.initProductDirectory(self.workDir)
         os.chdir(self.workDir)
@@ -157,7 +154,7 @@ class StatusTest(rbuildhelp.RbuildHelper):
         def captureOutput(k, msg, *args):
             outputList.append('%s' % (msg % args, ))
         self.mock(ui.UserInterface, 'write', captureOutput)
-        
+
         # No changes, no product, no noise
         handle.facade.conary.isConaryCheckoutDirectory._mock.setDefaultReturn(
             False)
@@ -227,3 +224,44 @@ class StatusTest(rbuildhelp.RbuildHelper):
         ]
         self.assertEquals(outputList, expectedTxt)
 
+    def testMacroInComment(self):
+        self.initProductDirectory(self.workDir)
+        os.chdir(self.workDir)
+        handle = self.getRbuildHandle()
+        from rbuild_plugins import status
+        mock.mockMethod(handle.facade.conary.getCheckoutLog)
+        mock.mock(dirstore, 'getStageNameFromDirectory')
+        mock.mock(handle.facade.conary, 'isConaryCheckoutDirectory')
+        dirstore.getStageNameFromDirectory._mock.setDefaultReturn('devel')
+
+        outputList = []
+        def captureOutput(k, msg, *args):
+            outputList.append('%s' % (msg % args, ))
+        self.mock(ui.UserInterface, 'write', captureOutput)
+
+        os.chdir('devel')
+        self.newpkg('NewPackage')
+        os.chdir(self.workDir)
+        handle.facade.conary.isConaryCheckoutDirectory._mock.setDefaultReturn(
+            True)
+        mock.mockMethod(handle.facade.conary.getCheckoutStatus)
+        mock.mockMethod(handle.facade.conary.iterCheckoutDiff)
+        handle.facade.conary.getCheckoutStatus._mock.setDefaultReturn(
+            [('A', 'NewPackage.recipe')])
+        handle.facade.conary.iterCheckoutDiff._mock.setDefaultReturn(
+            ['+++ NewPackage.recipe', '--- /dev/null', '+the %(recipe)s text'])
+        pendingAnnounce = handle.Status._printOneDirectoryStatus('.',
+            'NewPackage', status.VERBOSE, pendingAnnounce='', repository=False)
+        expectedTxt = [
+            '\n',
+            'devel stage status:\n===================',
+            'L-  NewPackage',
+            '  * Local changes not committed to repository:',
+            'L-  A   NewPackage/NewPackage.recipe',
+            '+++ NewPackage.recipe',
+            '--- /dev/null',
+            '+the %(recipe)s text',
+        ]
+        self.assertEquals(outputList, expectedTxt)
+        del outputList[:]
+        self.assertEquals(pendingAnnounce, 'devel')

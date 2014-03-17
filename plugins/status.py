@@ -31,7 +31,7 @@ class StatusCommand(command.BaseCommand):
     """
     Prints summary of differences between the local checkout and
     the repository.  New B{l}ocal changes that have not been committed
-    to the repository are marked with a leading C{L} character; 
+    to the repository are marked with a leading C{L} character;
     New changes that have been committed to the B{r}epository but
     not yet applied to the local checkout are marked with a leading
     C{R] character.  If the C{--concise} options is specified, prints
@@ -215,7 +215,7 @@ class Status(pluginapi.Plugin):
 
             def writeHeader(header):
                 ui.write('%s\n%s', header, '='*len(header))
-                
+
             thisStage = dirstore.getStageNameFromDirectory(dirName)
             if localChanges or repositoryChanges:
                 if pendingAnnounce is not None and pendingAnnounce != thisStage:
@@ -230,7 +230,7 @@ class Status(pluginapi.Plugin):
                 ui.write('%s%s  %s', localChanges and 'L' or '-',
                                      repositoryChanges and 'R' or '-',
                                      displayName)
-                
+
                 if verbosity >= DEFAULT:
                     if localChanges and status:
                         ui.write('  * Local changes not committed'
@@ -239,7 +239,7 @@ class Status(pluginapi.Plugin):
                             ui.write('L-  %s   %s/%s' % (x, displayName, y))
                         if verbosity >= VERBOSE:
                             for line in conaryfacade.iterCheckoutDiff(dirName):
-                                ui.write(line)
+                                ui.write(line.replace('%', '%%'))
                     if repositoryChanges:
                         ui.write('  * Remote repository commit messages'
                                     ' for newer versions:')
@@ -249,6 +249,6 @@ class Status(pluginapi.Plugin):
                         if verbosity >= VERBOSE:
                             for line in conaryfacade.iterRepositoryDiff(
                                 dirName, newerVersions[-1]):
-                                ui.write(line)
+                                ui.write(line.replace('%', '%%'))
 
         return pendingAnnounce
