@@ -80,7 +80,7 @@ class UserInterface(object):
             return
 
         self._log = logger.Logger(logRoot + '/log')
-        
+
     def write(self, msg='', *args):
         self.outStream.write('%s\n' % (msg % args, ))
         self.outStream.flush()
@@ -308,3 +308,44 @@ class UserInterface(object):
                     self._log(msg, *args)
             else:
                 self.progress(msg, *args)
+
+    def writeTable(self, rows, headers=None, padded=True):
+        '''
+        Writes a table; used to display data that is best displayed in rows and
+        columns. If 'headers' is not provided, then we assume the first row is
+        the header. Regardless, only the columns listed in the header will be
+        displayed, any other elements in the rows will be ignored.
+
+        @param rows: the data to be displayed
+        @type rows: list of tuples
+        @param headers: table headers
+        @type headers: tuple of strings
+        @param padded: pad each row element so columns are aligned
+        @type padded: bool
+        '''
+        if headers is None:
+            headers = rows.pop(0)
+
+        columns = len(headers)
+        padding = ('',) * columns
+        if padded:
+            padding = [len(h) for h in headers]
+            for row in rows:
+                for idx, elem in enumerate(row[:columns]):
+                    padding[idx] = max(padding[idx], len(elem))
+
+        format_string = '  '.join(
+            '{%d:%s}' % x for x in zip(range(columns), padding))
+
+        output = format_string.format(*headers)
+        self.outStream.write('%s\n' % output)
+        self._log(output)
+
+        for row in rows:
+            if len(row) < columns:
+                # extend row with empty strings
+                row = row + ('',) * (columns - len(row))
+            output = format_string.format(*row[:columns])
+            self.outStream.write('%s\n' % output)
+            self._log(output)
+        self.outStream.flush()

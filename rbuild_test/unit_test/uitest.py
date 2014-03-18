@@ -31,6 +31,69 @@ from rbuild.internal import logger
 
 class UserInterfaceTest(rbuildhelp.RbuildHelper):
 
+    def testWriteTable(self):
+        h = self.getRbuildHandle()
+        h.ui._log = mock.MockObject()
+
+        # test basic table output with implicit headers
+        h.ui.writeTable(
+            [('H1', 'H2', 'H3'), ('data1', 'data200', 'data3', 'ignored')])
+        h.ui.outStream.write._mock.assertCalled(('H1     H2       H3   \n'))
+        h.ui.outStream.write._mock.assertCalled(('data1  data200  data3\n'))
+        h.ui._log._mock.assertCalled(('H1     H2       H3   '))
+        h.ui._log._mock.assertCalled(('data1  data200  data3'))
+
+        # test basic table output with explicit headers
+        h.ui.writeTable(
+            [('data1', 'data200', 'data3', 'ignored')],
+            headers=('H1', 'H2', 'H3'),
+            )
+        h.ui.outStream.write._mock.assertCalled(('H1     H2       H3   \n'))
+        h.ui.outStream.write._mock.assertCalled(('data1  data200  data3\n'))
+        h.ui._log._mock.assertCalled(('H1     H2       H3   '))
+        h.ui._log._mock.assertCalled(('data1  data200  data3'))
+
+        # validated padding
+        h.ui.writeTable(
+            [('data1', 'data200', 'data3', 'ignored'),
+             ('data4',),
+             ('', 'data5',),
+             ('', '', 'data6'),
+             ],
+            headers=('H1', 'H2', 'H3'),
+            )
+        h.ui.outStream.write._mock.assertCalled(('H1     H2       H3   \n'))
+        h.ui.outStream.write._mock.assertCalled(('data1  data200  data3\n'))
+        h.ui.outStream.write._mock.assertCalled(('data4                \n'))
+        h.ui.outStream.write._mock.assertCalled(('       data5         \n'))
+        h.ui.outStream.write._mock.assertCalled(('                data6\n'))
+        h.ui._log._mock.assertCalled(('H1     H2       H3   '))
+        h.ui._log._mock.assertCalled(('data1  data200  data3'))
+        h.ui._log._mock.assertCalled(('data4                '))
+        h.ui._log._mock.assertCalled(('       data5         '))
+        h.ui._log._mock.assertCalled(('                data6'))
+
+        # validate no padding
+        h.ui.writeTable(
+            [('data1', 'data200', 'data3', 'ignored'),
+             ('data4',),
+             ('', 'data5',),
+             ('', '', 'data6'),
+             ],
+            headers=('H1', 'H2', 'H3'),
+            padded=False,
+            )
+        h.ui.outStream.write._mock.assertCalled(('H1  H2  H3\n'))
+        h.ui.outStream.write._mock.assertCalled(('data1  data200  data3\n'))
+        h.ui.outStream.write._mock.assertCalled(('data4    \n'))
+        h.ui.outStream.write._mock.assertCalled(('  data5  \n'))
+        h.ui.outStream.write._mock.assertCalled(('    data6\n'))
+        h.ui._log._mock.assertCalled(('H1  H2  H3'))
+        h.ui._log._mock.assertCalled(('data1  data200  data3'))
+        h.ui._log._mock.assertCalled(('data4    '))
+        h.ui._log._mock.assertCalled(('  data5  '))
+        h.ui._log._mock.assertCalled(('    data6'))
+
     def testUserInterface(self):
         h = self.getRbuildHandle()
         h.ui._log = mock.MockObject()
@@ -199,7 +262,6 @@ class UserInterfaceTest(rbuildhelp.RbuildHelper):
         for i in range(2):
             rc, txt = self.captureOutput(h.ui.getYn, 'prompt', default=False)
             self.assertEquals(rc, True)
-
 
     def testGetResponse(self):
         h = self.getRbuildHandle(mockOutput=False)
