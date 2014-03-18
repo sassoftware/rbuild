@@ -406,7 +406,7 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
             raise errors.RbuildError(response.reason)
         return response.content
 
-    def getImages(self, name, project=None, branch=None, stage=None,
+    def getImages(self, name=None, project=None, branch=None, stage=None,
                   trailingVersion=None):
         '''
             Get an image by name. project limits search to that project.
@@ -432,22 +432,30 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
                 'Must provide project and branch if stage is provided')
 
         client = self.api._client
-        uri = self.api._uri + '/images'
-
-        # filter by image name
-        filter_by = ';filter_by=AND(EQUAL(name,%s)' % name
-
         if project:
-            filter_by += ',EQUAL(project.short_name,%s)' % project
+            uri = self.api._uri + '/projects/' + project
             if stage:
-                filter_by += ',EQUAL(project_branch.label,%s)' % branch
-                filter_by += ',EQUAL(stage_name,%s)' % stage
+                uri += '/project_branches/' + branch + \
+                    '/project_branch_stages/' + stage
+        else:
+            uri = self.api._uri
+        uri += '/images'
+
+        filter_by = []
+        # filter by image name
+        if name:
+            filter_by.append('EQUAL(name,%s)' % name)
 
         if trailingVersion:
             # filter by group trailing version
-            filter_by += ',EQUAL(trailing_version,%s)' % trailingVersion
+            filter_by.append('EQUAL(trailing_version,%s)' % trailingVersion)
 
-        uri += filter_by + ')'
+        if filter_by:
+            filter_by = ';filter_by=AND(' + ','.join(filter_by) + ')'
+        else:
+            filter_by = ''
+
+        uri += filter_by
 
         # always sort by most recently created first
         uri += ';order_by=-time_created'
@@ -862,7 +870,7 @@ class RbuilderFacade(object):
                 if x.is_configured == 'true'
                 and x.credentials_valid == 'true']
 
-    def getImages(self, name, project=None, branch=None, stage=None,
+    def getImages(self, name=None, project=None, branch=None, stage=None,
                   trailingVersion=None):
         client = self._getRbuilderRESTClient()
         return client.getImages(name, project, branch, stage,

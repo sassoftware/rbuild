@@ -111,12 +111,13 @@ class Launch(pluginapi.Plugin):
         assert key in (self.DEPLOY, self.LAUNCH)
 
         for image in images:
+            if image.status != '300':
+                continue
             for action in image.actions:
                 if key == action.key and target in action.name:
                     return image, action
         raise errors.PluginError(
-            'Image cannot be %s on this target' %
-            ('deployed' if key == self.DEPLOY else 'launched'))
+            "cannot %s %s" % (key.replace('_', ' '), target))
 
     def _getProductStage(self):
         try:

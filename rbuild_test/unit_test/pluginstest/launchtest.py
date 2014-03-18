@@ -175,10 +175,20 @@ class LaunchTest(rbuildhelp.RbuildHelper):
         self.assertRaises(
             errors.PluginError,
             handle.Launch._getAction,
-            _image,
+            [_image],
+            'foo',
+            handle.Launch.DEPLOY,
+            )
+
+        _image._mock.set(status='300')
+        self.assertRaises(
+            errors.PluginError,
+            handle.Launch._getAction,
+            [_image],
             'baz',
             handle.Launch.DEPLOY,
             )
+
 
         rv = handle.Launch._getAction([_image], 'foo', handle.Launch.DEPLOY)
         self.assertEqual(rv, (_image, _action1))
