@@ -49,7 +49,6 @@ class WatchImagesCommand(command.BaseCommand):
         handle.Watch.watchImages()
 
 
-
 class Watch(pluginapi.Plugin):
     name = 'watch'
 
@@ -72,5 +71,5 @@ class Watch(pluginapi.Plugin):
         self.handle.Build.watchJob(jobId)
 
     def watchImages(self):
-        jobId = self.handle.productStore.getImageJobId()
-        self.handle.Build.watchJob(jobId)
+        jobIds = self.handle.productStore.getImageJobIds()
+        self.handle.facade.rbuilder.watchImages(jobIds)
