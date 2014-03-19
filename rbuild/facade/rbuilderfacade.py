@@ -439,26 +439,28 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
             raise errors.RbuildError(response.reason)
         return response.content
 
-    def getImages(self, name=None, project=None, branch=None, stage=None,
-                  trailingVersion=None):
+    def getImages(self, *args, **kwargs):
         '''
-            Get an image by name. project limits search to that project.
-            branch limits search to that branch. stage limits serach to that stage.
-            trailingVersion limits the image to ones built with that group
-            trailingVersion. If the query returns multiple images, return the most
-            recently created.
+            Get a list images. The images returned can be filtered by
+            keyword arguments matching the API fields.
 
-            @param name: name of image
-            @type name: str
-            @param shortName: short name of project
-            @type shortName: str
-            @param stageName: name of stage, requires shortName
-            @type stageName: str
-            @param trailingVersion: trailing version of product group
-            @type trailingVersion: str or None
             @return: image or None
             @rtype: rObj(image)
         '''
+        # for backwards compatibility, we accept image
+        # name as a positional arguement
+        if args:
+            kwargs['name'] = args[0]
+
+        # for backwards compatibility, we transform the
+        # keyword 'trailingVersion' into 'trailing_version'
+        if 'trailingVersion' in kwargs:
+            kwargs['trailing_version'] = kwargs.pop('trailingVersion')
+
+        project = kwargs.pop('project', None)
+        branch = kwargs.pop('branch', None)
+        stage = kwargs.pop('stage', None)
+
         # we only support stage filter if we also got a project and branch
         if stage and not (project and branch):
             raise errors.RbuildError(
@@ -475,20 +477,11 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
         uri += '/images'
 
         filter_by = []
-        # filter by image name
-        if name:
-            filter_by.append('EQUAL(name,%s)' % name)
-
-        if trailingVersion:
-            # filter by group trailing version
-            filter_by.append('EQUAL(trailing_version,%s)' % trailingVersion)
+        for item in kwargs.items():
+            filter_by.append('EQUAL(%s,%s)' % item)
 
         if filter_by:
-            filter_by = ';filter_by=AND(' + ','.join(filter_by) + ')'
-        else:
-            filter_by = ''
-
-        uri += filter_by
+            uri += ';filter_by=AND(%s)' % ','.join(filter_by)
 
         # always sort by most recently created first
         uri += ';order_by=-time_created'
@@ -903,11 +896,9 @@ class RbuilderFacade(object):
                 if x.is_configured == 'true'
                 and x.credentials_valid == 'true']
 
-    def getImages(self, name=None, project=None, branch=None, stage=None,
-                  trailingVersion=None):
+    def getImages(self, *args, **kwargs):
         client = self._getRbuilderRESTClient()
-        return client.getImages(name, project, branch, stage,
-                                trailingVersion=trailingVersion)
+        return client.getImages(*args, **kwargs)
 
     def getImageDefDescriptor(self, imageType):
         client = self._getRbuilderRESTClient()
