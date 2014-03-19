@@ -440,7 +440,7 @@ class RbuilderRPCClientTest(rbuildhelp.RbuildHelper):
                 [True, ['ErrorClass', 'message']],
                 2, 'devel', False, None)
         err = self.assertRaises(errors.RbuildError,
-                                client.startProductBuilds, 
+                                client.startProductBuilds,
                                 'foo.rpath.org', '2.0', 'devel')
         self.failUnlessEqual(str(err), "rBuilder error ErrorClass: 'message'")
 
@@ -451,7 +451,7 @@ class RbuilderRPCClientTest(rbuildhelp.RbuildHelper):
             ",~!xen,~!xfce is: x86(~cmov,~i486,~i586,~i686,~mmx,~sse,~sse2)'"]]]),
                                     2, 'devel', False)
         err = self.assertRaises(errors.RbuildError,
-                                client.startProductBuilds, 
+                                client.startProductBuilds,
                                 'foo.rpath.org', '2.0', 'devel')
 
     def testWatchImages(self):
@@ -484,10 +484,9 @@ class RbuilderRPCClientTest(rbuildhelp.RbuildHelper):
         server.getBuildStatus._mock.setReturns(
                             [(False, {'message' : 'bam', 'status' : 200}),
                              (True, ('Error', ''))], 1)
-        err = self.assertRaises(errors.RbuildError, self.captureOutput, 
+        err = self.assertRaises(errors.RbuildError, self.captureOutput,
                                 client.watchImages, [1])
         self.assertEqual(str(err), "rBuilder error Error: ''")
-
 
     def testWatchImagesSocketTimeout(self):
         client = self._getClient()
@@ -617,14 +616,14 @@ class RbuilderRPCClientTest(rbuildhelp.RbuildHelper):
         server.getProjectIdByHostname._mock.setDefaultReturn((False, 42))
         rc = client.getProductId('testproduct')
         assert(rc==42)
-    
+
         server.getProjectIdByHostname._mock.setDefaultReturn((True, (42,'')))
         self.assertRaises(errors.RbuildError, client.getProductId,
             'testproduct')
 
         server.getProjectIdByHostname._mock.setDefaultReturn(
             (True, ('ItemNotFound',)))
-        self.assertRaises(errors.RbuildError, client.getProductId, 
+        self.assertRaises(errors.RbuildError, client.getProductId,
             'testproduct')
 
     def testCheckAuth(self):
@@ -635,6 +634,41 @@ class RbuilderRPCClientTest(rbuildhelp.RbuildHelper):
         assert(rc==1)
         server.checkAuth._mock.setDefaultReturn((True, (1, '')))
         self.assertRaises(errors.RbuilderError, client.checkAuth)
+
+    def testShowImageStatus(self):
+        client = self._getClient()
+        server = client.server
+        mock.mock(time, 'sleep')
+        server.getBuildStatus._mock.setReturn(
+            (False, {'message' : 'foo', 'status' : 0}), 1)
+        server.getBuildStatus._mock.setReturn(
+            (False, {'message' : 'bam', 'status' : 200}), 2)
+        client.showImageStatus([1, 2])
+        client._handle.ui.info._mock.assertNotCalled()
+        client._handle.ui.warning._mock.assertNotCalled()
+        client._handle.ui.error._mock.assertNotCalled()
+        self.assertEquals(
+            [x[0][0]%x[0][1:] for x in client._handle.ui.write._mock.calls],
+            ['1: Waiting "foo"',
+             '2: Built "bam"',
+             ])
+
+        server.getBuildStatus._mock.setReturn((True, ('Error', '')), 1)
+        err = self.assertRaises(errors.RbuildError, self.captureOutput,
+            client.watchImages, [1])
+        self.assertEqual(str(err), "rBuilder error Error: ''")
+
+    def testPollBuildSocketTimeout(self):
+        client = self._getClient()
+        server = client.server
+        mock.mock(time, 'sleep')
+        import socket
+        def foo(*a, **k):
+            raise socket.timeout()
+        server._mock.set(getBuildStatus=foo)
+        err = self.assertRaises(errors.RbuildError, client._pollBuild, 1)
+        self.assertEquals('rBuilder connection timed out after 3 attempts',
+                          err.msg)
 
 
 class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):

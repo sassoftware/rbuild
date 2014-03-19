@@ -29,7 +29,6 @@ class BuildImagesCommand(command.BaseCommand):
     docs = {'no-watch' : 'do not wait for the job to complete',
            }
 
-
     def addLocalParameters(self, argDef):
         argDef['no-watch'] = command.NO_PARAM
 
@@ -43,6 +42,7 @@ class BuildImagesCommand(command.BaseCommand):
 
         handle.Build.checkStage()
         buildIds = handle.BuildImages.buildImages(imageNames)
+        handle.productStore.setImageJobIds(buildIds)
         if watch:
             ok = handle.facade.rbuilder.watchImages(buildIds)
             if not ok:

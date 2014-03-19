@@ -299,6 +299,7 @@ class _FileStatusStore(cfg.ConfigFile):
     packageJobId  = cfgtypes.CfgInt
     groupJobId  = cfgtypes.CfgInt
     imageJobId  = cfgtypes.CfgInt
+    imageJobIds = cfgtypes.CfgList(cfgtypes.CfgInt)
 
     def __init__(self, baseFile):
         cfg.ConfigFile.__init__(self)

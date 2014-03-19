@@ -19,6 +19,7 @@ from rbuild import errors
 from rbuild import pluginapi
 from rbuild.pluginapi import command
 
+
 class ShowImagesCommand(command.BaseCommand):
     help = 'show latest image build'
 
@@ -28,17 +29,18 @@ class ShowImagesCommand(command.BaseCommand):
         self.requireParameters(args)
         handle.ShowImages.showImageStatus()
 
+
 class ShowImages(pluginapi.Plugin):
     name = 'showimages'
 
     def initialize(self):
         self.handle.Commands.getCommandClass('show').registerSubCommand(
-                                            'images', ShowImagesCommand)
+            'images', ShowImagesCommand)
 
     def showImageStatus(self):
-        jobId = self.handle.productStore.getImageJobId()
-        if not jobId:
+        jobIds = self.handle.productStore.getImageJobIds()
+        if not jobIds:
             raise errors.PluginError('No images have been built'
                                      ' in this environment')
-        self.handle.Show.showJobStatus(jobId)
-        return jobId
+        self.handle.facade.rbuilder.showImageStatus(jobIds)
+        return jobIds

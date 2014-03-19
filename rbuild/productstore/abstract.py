@@ -185,8 +185,8 @@ class ProductStore(object):
     def getGroupJobId(self):
         return self.getStatus('groupJobId')
 
-    def getImageJobId(self):
-        return self.getStatus('imageJobId')
+    def getImageJobIds(self):
+        return self.getStatus('imageJobIds')
 
     def setPackageJobId(self, jobId):
         self.setStatus('packageJobId', jobId)
@@ -194,8 +194,10 @@ class ProductStore(object):
     def setGroupJobId(self, jobId):
         self.setStatus('groupJobId', jobId)
 
-    def setImageJobId(self, jobId):
-        self.setStatus('imageJobId', jobId)
+    def setImageJobIds(self, jobIds):
+        if not isinstance(jobIds, list):
+            jobIds = [jobIds]
+        self.setStatus('imageJobIds', jobIds)
 
     def getStatus(self, key):
         raise errors.IncompleteInterfaceError(

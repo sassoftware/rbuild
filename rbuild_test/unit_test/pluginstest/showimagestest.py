@@ -36,13 +36,11 @@ class ShowImagesTest(rbuildhelp.RbuildHelper):
 
     def testShowImageStatus(self):
         handle = self.getRbuildHandle(mock.MockObject())
-        handle.productStore.getImageJobId._mock.setReturn(10)
-        mock.mockMethod(handle.Show.showJobStatus)
-        assert(handle.ShowImages.showImageStatus() == 10)
-        handle.Show.showJobStatus._mock.assertCalled(10)
-        handle.productStore.getImageJobId._mock.setReturn(None)
-        err = self.assertRaises(errors.PluginError, 
+        handle.productStore.getImageJobIds._mock.setReturn([10])
+        mock.mockMethod(handle.facade.rbuilder.showImageStatus)
+        self.assertEqual(handle.ShowImages.showImageStatus(), [10])
+        handle.facade.rbuilder.showImageStatus._mock.assertCalled([10])
+        handle.productStore.getImageJobIds._mock.setReturn(None)
+        err = self.assertRaises(errors.PluginError,
                                 handle.ShowImages.showImageStatus)
-        assert(str(err) == 'No images have been built in this environment')
-
-
+        self.assertEqual(str(err), 'No images have been built in this environment')

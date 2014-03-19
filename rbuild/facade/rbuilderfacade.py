@@ -76,6 +76,26 @@ class RbuilderRPCClient(_AbstractRbuilderClient):
         self.server = facade.ServerProxy(rpcUrl, username=user, password=pw,
                 allow_none=True)
 
+    def _pollBuild(self, buildId, interval=10, max_dropped=3):
+        dropped = 0
+        buildStatus = None
+        while buildStatus is None:
+            try:
+                error, buildStatus = self.server.getBuildStatus(buildId)
+            except socket.timeout:
+                dropped += 1
+                if dropped >= max_dropped:
+                    raise errors.RbuildError(
+                        'rBuilder connection timed out after 3 attempts')
+                self._handle.ui.info(
+                    'Status request timed out, trying again')
+                time.sleep(interval)
+                continue
+
+        if error:
+            raise errors.RbuilderError(*buildStatus)
+        return buildStatus
+
     def getBranchIdFromName(self, productName, versionName):
         #pylint: disable-msg=R0914
         # not a great candidate for refactoring
@@ -261,7 +281,6 @@ class RbuilderRPCClient(_AbstractRbuilderClient):
 
         return buildFileList
 
-
     def getProductId(self, productName):
         error, productId = self.server.getProjectIdByHostname(productName)
         if error:
@@ -278,8 +297,22 @@ class RbuilderRPCClient(_AbstractRbuilderClient):
             raise errors.RbuilderError(*result)
         return result
 
+    def showImageStatus(self, buildIds):
+        for buildId in buildIds:
+            buildStatus = self._pollBuild(buildId)
+            self._handle.ui.write(
+                '%s: %s "%s"',
+                buildId,
+                self.statusNames.get(
+                    buildStatus['status'],
+                    self.statusNames[-1],
+                    ),
+                buildStatus['message'],
+                )
+
 # For backwards compatibility, rbuilder-client used it (SUP-2356)
 RbuilderClient = RbuilderRPCClient
+
 
 class RbuilderRESTClient(_AbstractRbuilderClient):
     """
@@ -908,3 +941,6 @@ class RbuilderFacade(object):
 
     def getTargetTypes(self):
         return self._getRbuilderRESTClient().getTargetTypes()
+
+    def showImageStatus(self, buildIds):
+        return self._getRbuilderRPCClient().showImageStatus(buildIds)
