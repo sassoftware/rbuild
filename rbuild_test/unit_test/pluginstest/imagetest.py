@@ -88,3 +88,20 @@ class ImagesPluginTest(rbuildhelp.RbuildHelper):
         handle.Images.delete(10)
         handle.facade.rbuilder.getImages._mock.assertCalled(
             image_id=10, project='project', branch='branch', stage='stage')
+
+    def testDeleteMissing(self):
+        handle = self.getRbuildHandle()
+
+        mock.mock(handle, 'productStore')
+        mock.mock(handle, 'product')
+        mock.mock(handle, 'ui')
+        handle.product.getProductShortname._mock.setReturn('project')
+        handle.productStore.getActiveStageName._mock.raiseErrorOnAccess(
+            errors.RbuildError('foo'))
+
+        mock.mockMethod(handle.facade.rbuilder.getImages, None)
+
+        handle.Images.delete(10)
+        handle.facade.rbuilder.getImages._mock.assertCalled(
+            image_id=10, project='project')
+        handle.ui.write._mock.assertCalled("No image found with id '10'")

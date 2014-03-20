@@ -54,4 +54,8 @@ class Images(pluginapi.Plugin):
         except errors.RbuildError:
             pass
 
-        self.handle.facade.rbuilder.getImages(**kwargs)[0].delete()
+        images = self.handle.facade.rbuilder.getImages(**kwargs)
+        if images:
+            images[0].delete()
+        else:
+            self.handle.ui.write("No image found with id '%s'" % imageId)
