@@ -28,8 +28,8 @@ class CreateCommand(command.CommandWithSubCommands):
     """
     Commands for creating projects, branches, and other objects
     """
-    help = 'Create projects and branches'
-    commands = ['create']
+    help = 'Create or add new resources'
+    commands = ['create', 'add']
 
 
 class Create(pluginapi.Plugin):
