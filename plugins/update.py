@@ -132,14 +132,13 @@ class Update(pluginapi.Plugin):
         Register the command-line handling portion of the update plugin.
         """
         self.handle.Commands.registerCommand(UpdateCommand)
-        self.handle.Commands.getCommandClass('update').registerSubCommand(
-                                             'product', UpdateProductCommand)
-        self.handle.Commands.getCommandClass('update').registerSubCommand(
-                                             'packages', UpdatePackagesCommand)
-        self.handle.Commands.getCommandClass('update').registerSubCommand(
-                                             'stage', UpdateStageCommand)
-        self.handle.Commands.getCommandClass('update').registerSubCommand(
-                                             'all', UpdateAllCommand)
+
+    def initialize(self):
+        cmd = self.handle.Commands.getCommandClass('update')
+        cmd.registerSubCommand('product', UpdateProductCommand)
+        cmd.registerSubCommand('packages', UpdatePackagesCommand)
+        cmd.registerSubCommand('stage', UpdateStageCommand)
+        cmd.registerSubCommand('all', UpdateAllCommand)
 
     def updateByCurrentDirectory(self):
         """

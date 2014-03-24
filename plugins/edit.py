@@ -134,10 +134,11 @@ class Edit(pluginapi.Plugin):
         Register the command-line handling portion of the update plugin.
         """
         self.handle.Commands.registerCommand(EditCommand)
-        self.handle.Commands.getCommandClass('edit').registerSubCommand(
-            'product', EditProductCommand)
-        self.handle.Commands.getCommandClass('edit').registerSubCommand(
-            'imagedef', EditImageDefCommand)
+
+    def initialize(self):
+        cmd = self.handle.Commands.getCommandClass('edit')
+        cmd.registerSubCommand('product', EditProductCommand)
+        cmd.registerSubCommand('imagedef', EditImageDefCommand)
 
     def editImageDefinition(self, buildDef, message):
         dc = self.handle.DescriptorConfig
