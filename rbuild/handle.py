@@ -169,6 +169,9 @@ class RbuildHandle(_PluginProxy):
         """
         return self._cfg
 
+    def getPlugin(self, name):
+        return self._pluginManager.getPlugin(name)
+
     def installPrehook(self, apiMethod, hookFunction):
         """
         Installs a hook that will be called before the given apiMethod

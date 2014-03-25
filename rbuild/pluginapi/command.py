@@ -275,3 +275,39 @@ class CommandWithSubCommands(BaseCommand):
         if log.getVerbosity() > log.INFO:
             print '(Use --verbose to get a full option listing)'
         return errNo
+
+
+class ListCommand(BaseCommand):
+    """
+        Inherit for commands/sub-commands that list things. Requires two class
+        variables: fieldMap and resource. 'fieldMap' is a list of tuples
+        associating a column header with a lambda function. The lambda function
+        is used to get the data off the model and apply any formatting or
+        transformations needed. 'resource' is the name of plugin that
+        implements a list function that returns a collection of the appropriate
+        resource.
+
+        class FooListCommand(ListCommand):
+            help = 'list foos'
+            fieldMap = (("Name", lambda f: f.name),
+                        ("Eman": lambda f: n[::-1]),
+                        )
+            resource = 'foos'
+    """
+
+    def runCommand(self, handle, argSet, args):
+        self.requireParameters(args)
+        self._list(handle)
+
+    def _list(self, handle, *args, **kwargs):
+        headers, lambdas = zip(*self.fieldMap)
+
+        resources = handle.getPlugin(self.resource).list(*args, **kwargs)
+        if resources:
+            data = []
+            for resource in resources:
+                data.append(
+                    tuple(l(resource) for l in lambdas))
+            handle.ui.writeTable(data, headers)
+        else:
+            handle.ui.write('No %s found' % self.resource)

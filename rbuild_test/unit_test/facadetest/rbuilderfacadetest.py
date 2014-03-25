@@ -344,6 +344,74 @@ class RbuilderFacadeTest(rbuildhelp.RbuildHelper):
         self.assertEqual(facade.getPlatform('label2'), _platform2)
         self.assertEqual(facade.getPlatform('no label'), None)
 
+    def testGetProjectBranches(self):
+        handle, facade = self.prep()
+        mock.mockMethod(facade.getProject)
+
+        _branch1 = mock.MockObject()
+        _branch1._mock.set(name='1')
+        _branch1._mock.set(label='foo.com@foo:foo-1')
+        _branch1._mock.enable('non_field')
+
+        _branch2 = mock.MockObject()
+        _branch2._mock.set(name='2')
+        _branch2._mock.set(label='foo.com@bar:foo-2')
+        _branch2._mock.enable('non_field')
+
+        _project = mock.MockObject()
+        _project._mock.set(name='foo')
+        _project._mock.set(domain_name='com')
+        _project._mock.set(project_branches=[_branch1, _branch2])
+
+        facade.getProject._mock.setReturn(_project, 'foo')
+        facade.getProject._mock.setReturn(_project, 'foo.com')
+
+        err = self.assertRaises(
+            TypeError,
+            facade.getProjectBranches
+            )
+        self.assertIn('Required argument', str(err))
+
+        # get branches by project short name
+        rv = facade.getProjectBranches('foo')
+        self.assertEqual(rv, [_branch1, _branch2])
+
+        # get branches by project hostname
+        rv = facade.getProjectBranches('foo.com')
+        self.assertEqual(rv, [_branch1, _branch2])
+
+        # order by name, descending
+        rv = facade.getProjectBranches('foo', order_by='-name')
+        self.assertEqual(rv, [_branch2, _branch1])
+
+        # explicitly order by label ascending
+        rv = facade.getProjectBranches('foo', order_by='+label')
+        self.assertEqual(rv, [_branch2, _branch1])
+
+        # implicitly order by label ascending
+        rv = facade.getProjectBranches('foo', order_by='label')
+        self.assertEqual(rv, [_branch2, _branch1])
+
+        # ordering by a field that doesn't exist
+        self.assertRaises(
+            AttributeError,
+            facade.getProjectBranches,
+            'foo',
+            order_by='non_field',
+            )
+        self.assertRaises(
+            AttributeError,
+            facade.getProjectBranches,
+            'foo',
+            order_by='+non_field',
+            )
+        self.assertRaises(
+            AttributeError,
+            facade.getProjectBranches,
+            'foo',
+            order_by='-non_field',
+            )
+
 
 class RbuilderRPCClientTest(rbuildhelp.RbuildHelper):
     def _getClient(self):
@@ -1107,3 +1175,70 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
             'project_stage_version')
 
         self.assertEqual(client.getImages('bar'), [])
+
+    def test_getResources(self):
+        client = rbuilderfacade.RbuilderRESTClient(
+            'http://localhost', 'foo', 'bar', mock.MockObject())
+        mock.mock(client, '_api')
+        client._api._mock.set(_uri='http://localhost')
+
+        client._api._client.do_GET._mock.setReturn(
+            'projects', 'http://localhost/projects')
+
+        client._api._client.do_GET._mock.setReturn(
+            'projects_filtered',
+            "http://localhost/projects"
+                ";filter_by=AND(EQUAL(name,foo))",
+            )
+        client._api._client.do_GET._mock.setReturn(
+            'projects_ordered',
+            "http://localhost/projects"
+                ";order_by=name",
+            )
+        client._api._client.do_GET._mock.setReturn(
+            'projects_ordered_filtered',
+            "http://localhost/projects"
+                ";filter_by=AND(EQUAL(name,foo))"
+                ";order_by=name",
+            )
+        client._api._client.do_GET._mock.setReturn(
+            'custom_uri',
+            "http://localhost/foo/bar/projects",
+            )
+
+        self.assertEqual(client._getResources('projects'), 'projects')
+
+        self.assertEqual(
+            client._getResources('projects', order_by='name'),
+            'projects_ordered',
+            )
+        self.assertEqual(
+            client._getResources('projects', name='foo'),
+            'projects_filtered',
+            )
+        self.assertEquals(
+            client._getResources('projects', name='foo', order_by='name'),
+            'projects_ordered_filtered',
+            )
+
+        self.assertEquals(
+            client._getResources('projects', uri='/foo/bar/'),
+            'custom_uri',
+            )
+
+        self.assertEquals(
+            client._getResources('projects', uri='foo/bar/'),
+            'custom_uri',
+            )
+
+        self.assertEquals(
+            client._getResources('projects', uri='/foo/bar'),
+            'custom_uri',
+            )
+
+        client._api._client.do_GET._mock.raiseErrorOnAccess(
+            robj.errors.HTTPNotFoundError(uri='foo', status='404',
+                                          reason='', response=''))
+        err = self.assertRaises(
+            errors.RbuildError, client._getResources, 'projects')
+        self.assertIn('Unable to fetch', str(err))

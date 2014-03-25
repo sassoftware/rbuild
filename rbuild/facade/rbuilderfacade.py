@@ -30,6 +30,7 @@ import socket
 import random
 import urllib
 import urllib2
+import urlparse
 
 import robj
 from xobj import xobj
@@ -328,6 +329,39 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
                 (scheme, user, pw, host, port, path, None, None))
         self._api = None
 
+    def _getResources(self, resource, **kwargs):
+        '''
+            Get a fitlered and ordered list of resoruces
+
+            @param resource: resource collection name
+            @param order_by: field and direction to order results
+            @param uri: alternative uri
+        '''
+        uri = kwargs.pop('uri', None)
+        order_by = kwargs.pop('order_by', None)
+
+        if uri is not None:
+            resource = uri.strip('/') + '/' + resource
+        fullUri = self.api._uri + '/' + resource
+
+        filter_by = []
+        for item in kwargs.items():
+            filter_by.append('EQUAL(%s,%s)' % item)
+
+        if filter_by:
+            fullUri += ';filter_by=AND(%s)' % ','.join(filter_by)
+
+        # always sort by most recently created first
+        if order_by:
+            fullUri += ';order_by=%s' % order_by
+
+        client = self.api._client
+        try:
+            return client.do_GET(fullUri)
+        except robj.errors.HTTPNotFoundError:
+            raise errors.RbuildError("Unable to fetch images at '%s'" %
+                                     fullUri)
+
     @property
     def api(self):
         if self._api is None:
@@ -457,6 +491,10 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
         if 'trailingVersion' in kwargs:
             kwargs['trailing_version'] = kwargs.pop('trailingVersion')
 
+        # default ordering is by creation time, newest first
+        if 'order_by' not in kwargs:
+            kwargs['order_by'] = '-time_created'
+
         project = kwargs.pop('project', None)
         branch = kwargs.pop('branch', None)
         stage = kwargs.pop('stage', None)
@@ -466,30 +504,14 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
             raise errors.RbuildError(
                 'Must provide project and branch if stage is provided')
 
-        client = self.api._client
         if project:
-            uri = self.api._uri + '/projects/' + project
+            # use the images resource on the project or stage
+            uri = '/projects/' + project
             if stage:
                 uri += '/project_branches/' + branch + \
                     '/project_branch_stages/' + stage
-        else:
-            uri = self.api._uri
-        uri += '/images'
-
-        filter_by = []
-        for item in kwargs.items():
-            filter_by.append('EQUAL(%s,%s)' % item)
-
-        if filter_by:
-            uri += ';filter_by=AND(%s)' % ','.join(filter_by)
-
-        # always sort by most recently created first
-        uri += ';order_by=-time_created'
-
-        try:
-            return client.do_GET(uri)
-        except robj.errors.HTTPNotFoundError:
-            raise errors.RbuildError("Unable to fetch images at '%s'" + uri)
+            return self._getResources('images', uri=uri, **kwargs)
+        return self._getResources('images', **kwargs)
 
     def getImageTypeDef(self, product, version, imageType, arch):
         client = self.api._client
@@ -545,7 +567,7 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
             raise errors.RbuildError(
                 msg='Target types url not found: %s' % uri)
 
-    def getTargets(self):
+    def getTargets(self, **kwargs):
         '''
         Get all configured targets
 
@@ -771,10 +793,57 @@ class RbuilderFacade(object):
             if platform.label == label:
                 return platform
 
+    def getPlatforms(self):
+        return self._getRbuilderRESTClient().api.platforms
+
     def getProductLabelFromNameAndVersion(self, productName, versionName):
         client = self._getRbuilderRPCClient()
         return client.getProductLabelFromNameAndVersion(productName,
                                                         versionName)
+
+    def getProjects(self, **kwargs):
+        '''
+            Get a list projects. The projects returned can be filtered by
+            keyword arguments matching the API fields.
+
+            @return: project or None
+            @rtype: rObj(project)
+        '''
+        client = self._getRbuilderRESTClient()
+        return client._getResources('projects', **kwargs)
+
+    def getProjectBranches(self, *args, **kwargs):
+        '''
+            Get a list of branches for a project
+        '''
+        try:
+            project = kwargs.pop('project', args[0])
+        except IndexError:
+            raise TypeError("Required argument 'project' (pos 1) noti found")
+        order_by = kwargs.pop('order_by', None)
+
+        # name might be a label
+        shortName, _, domainName = project.partition('.')
+        project = self.getProject(shortName)
+
+        # if the user gave us full repo hostname make
+        # sure they gave us the right one
+        if (domainName and project.domain_name != domainName):
+            raise errors.RbuildError(
+                "could not find a project matching '%s'" %
+                '.'.join((shortName, domainName)))
+
+        if order_by:
+            reverse = (order_by[0] == '-')
+            if order_by[0] in ('-', '+'):
+                order_by = order_by[1:]
+            return sorted(
+                project.project_branches,
+                key=lambda b: getattr(b, order_by),
+                reverse=reverse,
+                )
+        else:
+            return project.project_branches
 
     def watchImages(self, buildIds, timeout=0, interval = 5, quiet = False):
         client = self._getRbuilderRPCClient()
