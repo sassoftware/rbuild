@@ -28,7 +28,6 @@ class DeleteImagesCommand(command.BaseCommand):
     paramHelp = '<job id>+'
 
     def runCommand(self, handle, argSet, args):
-        handle.Build.checkProductStore()
         _, imageIds = self.requireParameters(
             args, expected=['IMAGEID'], appendExtra=True)
         for imageId in imageIds:
@@ -59,33 +58,23 @@ class Images(pluginapi.Plugin):
             'images', ListImagesCommand)
 
     def delete(self, imageId):
-        kwargs = {
-            'image_id': imageId,
-            'project': self.handle.product.getProductShortname(),
-            }
+        self.handle.Build.checkStage()
 
-        try:
-            kwargs['stage'] = self.handle.productStore.getActiveStageName()
-            kwargs['branch'] = self.handle.product.getBaseLabel()
-        except errors.RbuildError:
-            pass
-
-        images = self.handle.facade.rbuilder.getImages(**kwargs)
+        images = self.handle.facade.rbuilder.getImages(
+            image_id=imageId,
+            project=self.handle.product.getProductShortname(),
+            branch=self.handle.product.getBaseLabel(),
+            stage=self.handle.productStore.getActiveStageName(),
+            )
         if images:
             images[0].delete()
         else:
             self.handle.ui.write("No image found with id '%s'" % imageId)
 
-    def list(self, *args, **kwargs):
-        self.handle.Build.checkProductStore()
-        kwargs['project'] = self.handle.product.getProductShortname()
-
-        try:
-            kwargs['stage'] = self.handle.productStore.getActiveStageName()
-        except errors.RbuildError as err:
-            if 'No current stage' not in str(err):
-                raise
-        else:
-            kwargs['branch'] = self.handle.product.getBaseLabel()
-
-        return self.handle.facade.rbuilder.getImages(**kwargs)
+    def list(self):
+        self.handle.Build.checkStage()
+        return self.handle.facade.rbuilder.getImages(
+            project=self.handle.product.getProductShortname(),
+            stage=self.handle.productStore.getActiveStageName(),
+            branch=self.handle.product.getBaseLabel(),
+            )

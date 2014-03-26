@@ -14,7 +14,6 @@
 # limitations under the License.
 #
 
-
 from rbuild import errors
 from testutils import mock
 
@@ -31,14 +30,6 @@ class DeleteImagesTest(rbuildhelp.RbuildHelper):
         cmd = handle.Commands.getCommandClass('delete')()
 
         mock.mockMethod(handle.Images.delete)
-
-        err = self.assertRaises(
-            errors.PluginError, cmd.runCommand, handle, {},
-            ['rbuild', 'delete', 'images'])
-        self.assertIn('rbuild init', str(err))
-
-        mock.mock(handle, 'productStore')
-        handle.productStore._mock.set(_currentStage=None)
 
         err = self.assertRaises(
             errors.ParseError, cmd.runCommand, handle, {},
@@ -81,20 +72,36 @@ class ListImagesTest(rbuildhelp.RbuildHelper):
 
 
 class ImagesPluginTest(rbuildhelp.RbuildHelper):
+    def testDeleteNoProduct(self):
+        handle = self.getRbuildHandle()
+
+        mock.mockMethod(handle.facade.rbuilder.getImages)
+
+        err = self.assertRaises(
+            errors.PluginError,
+            handle.Images.delete,
+            10,
+            )
+        self.assertIn('rbuild init', str(err))
+        handle.facade.rbuilder.getImages._mock.assertNotCalled()
+
     def testDeleteNoStage(self):
         handle = self.getRbuildHandle()
 
         mock.mock(handle, 'productStore')
         mock.mock(handle, 'product')
         handle.product.getProductShortname._mock.setReturn('project')
-        handle.productStore.getActiveStageName._mock.raiseErrorOnAccess(
-            errors.RbuildError('foo'))
+        handle.productStore._mock.set(_currentStage=None)
 
         mock.mockMethod(handle.facade.rbuilder.getImages)
 
-        handle.Images.delete(10)
-        handle.facade.rbuilder.getImages._mock.assertCalled(
-            image_id=10, project='project')
+        err = self.assertRaises(
+            errors.PluginError,
+            handle.Images.delete,
+            10,
+            )
+        self.assertIn('not a valid stage', str(err))
+        handle.facade.rbuilder.getImages._mock.assertNotCalled()
 
     def testDeleteStage(self):
         handle = self.getRbuildHandle()
@@ -104,7 +111,6 @@ class ImagesPluginTest(rbuildhelp.RbuildHelper):
         handle.product.getProductShortname._mock.setReturn('project')
         handle.productStore.getActiveStageName._mock.setReturn('stage')
         handle.product.getBaseLabel._mock.setReturn('branch')
-
         mock.mockMethod(handle.facade.rbuilder.getImages)
 
         handle.Images.delete(10)
@@ -118,19 +124,17 @@ class ImagesPluginTest(rbuildhelp.RbuildHelper):
         mock.mock(handle, 'product')
         mock.mock(handle, 'ui')
         handle.product.getProductShortname._mock.setReturn('project')
-        handle.productStore.getActiveStageName._mock.raiseErrorOnAccess(
-            errors.RbuildError('foo'))
-
+        handle.product.getBaseLabel._mock.setReturn('branch')
+        handle.productStore.getActiveStageName._mock.setReturn('stage')
         mock.mockMethod(handle.facade.rbuilder.getImages, None)
 
         handle.Images.delete(10)
         handle.facade.rbuilder.getImages._mock.assertCalled(
-            image_id=10, project='project')
+            image_id=10, project='project', branch='branch', stage='stage')
         handle.ui.write._mock.assertCalled("No image found with id '10'")
 
-    def testListCheckout(self):
+    def testListNoProduct(self):
         handle = self.getRbuildHandle()
-
         mock.mockMethod(handle.facade.rbuilder.getImages)
 
         err = self.assertRaises(
@@ -139,38 +143,31 @@ class ImagesPluginTest(rbuildhelp.RbuildHelper):
             )
         self.assertIn('rbuild init', str(err))
 
+    def testListNoStage(self):
+        handle = self.getRbuildHandle()
+        mock.mockMethod(handle.facade.rbuilder.getImages)
         mock.mock(handle, 'product')
         mock.mock(handle, 'productStore')
         handle.product.getProductShortname._mock.setReturn('project')
         handle.productStore.getActiveStageName._mock.raiseErrorOnAccess(
-            errors.RbuildError('do not catch'))
+            errors.RbuildError('No current stage'))
 
         err = self.assertRaises(
             errors.RbuildError,
             handle.Images.list,
             )
-        self.assertEqual('do not catch', str(err))
+        self.assertEqual('No current stage', str(err))
+        handle.facade.rbuilder.getImages._mock.assertNotCalled()
 
-        handle.productStore.getActiveStageName._mock.raiseErrorOnAccess(
-            errors.RbuildError('No current stage'))
-
-        handle.Images.list()
-        handle.facade.rbuilder.getImages._mock.assertCalled(project='project')
-
-        handle.productStore.getActiveStageName._mock.raiseErrorOnAccess(
-            errors.RbuildError('No current stage'))
-
-        handle.Images.list(project='not my project')
-        handle.facade.rbuilder.getImages._mock.assertCalled(project='project')
-
+    def testList(self):
+        handle = self.getRbuildHandle()
+        mock.mockMethod(handle.facade.rbuilder.getImages)
+        mock.mock(handle, 'product')
+        mock.mock(handle, 'productStore')
+        handle.product.getProductShortname._mock.setReturn('project')
         handle.productStore.getActiveStageName._mock.setReturn('stage')
         handle.product.getBaseLabel._mock.setReturn('branch')
 
         handle.Images.list()
-        handle.facade.rbuilder.getImages._mock.assertCalled(
-            project='project', branch='branch', stage='stage')
-
-        handle.Images.list(project='not project', branch='not branch',
-                           stage='not stage')
         handle.facade.rbuilder.getImages._mock.assertCalled(
             project='project', branch='branch', stage='stage')
