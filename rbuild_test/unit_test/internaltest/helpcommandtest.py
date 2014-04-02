@@ -81,3 +81,26 @@ Options:
                           cmd.runCommand, None, {}, 
                           ['rbuild', 'help', 'foo', 'bam'])
 
+    def testNoSubCommandHelp(self):
+        '''
+        Regression test for APPENG-2736
+        '''
+        mainHandler = main.RbuildMain()
+        mainHandler.registerCommand(FooCommand)
+        cmd = helpcommand.HelpCommand()
+        cmd.setMainHandler(mainHandler)
+
+        rc, txt = self.captureOutput(cmd.runCommand, None, {}, 
+                                     ['rbuild', 'help', 'foo', 'bar'])
+        self.assertEquals(rc, 0)
+        txt = txt.replace('usage', 'Usage')  # difference between 2.4/2.5
+        txt = txt.replace('options', 'Options')  # difference between 2.4/2.5
+        assert(txt == '''\
+Usage: rbuild foo 
+
+Long help text goes here
+
+Options:
+
+(Use --verbose to get a full option listing)
+''')

@@ -52,7 +52,8 @@ class HelpCommand(BaseCommand):
                 print "%s: no such command: '%s'" % (self.mainHandler.name,
                                                      command)
                 sys.exit(1)
-            if len(subCommands) == 2:
+            if (len(subCommands) == 2
+                    and hasattr(commands[command], 'subCommandUsage')):
                 commands[command].subCommandUsage(subCommands[1])
             else:
                 commands[command].usage()
