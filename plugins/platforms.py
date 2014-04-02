@@ -25,9 +25,7 @@ from rbuild.pluginapi import command
 class ListPlatformsCommand(command.ListCommand):
     help = 'list platforms'
     resource = 'platforms'
-    fieldMap = (('Label', lambda p: p.label),
-                ('Enabled', lambda p: p.enabled),
-                )
+    listFields = ('label', 'enabled')
 
 
 class Platforms(pluginapi.Plugin):

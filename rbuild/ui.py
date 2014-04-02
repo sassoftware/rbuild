@@ -327,15 +327,17 @@ class UserInterface(object):
             headers = rows.pop(0)
 
         columns = len(headers)
-        padding = ('',) * columns
+        padding = [''] * (columns - 1)
         if padded:
-            padding = [len(h) for h in headers]
+            padding = [len(h) for h in headers[:-1]]
             for row in rows:
-                for idx, elem in enumerate(row[:columns]):
+                for idx, elem in enumerate(row[:columns - 1]):
                     padding[idx] = max(padding[idx], len(elem))
 
+        # create a padded format string, but do not pad the last column
         format_string = '  '.join(
-            '{%d:%s}' % x for x in zip(range(columns), padding))
+            ['{%d:%s}' % x for x in zip(range(columns - 1), padding)]
+            + ['{%d:%s}' % (columns - 1, '')])
 
         output = format_string.format(*headers)
         self.outStream.write('%s\n' % output)

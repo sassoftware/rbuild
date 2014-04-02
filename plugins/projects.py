@@ -24,9 +24,8 @@ from rbuild.pluginapi import command
 
 class ListProjectsCommand(command.ListCommand):
     help = 'list projects'
-    fieldMap = (('Hostname', lambda p: p.repository_hostname),
-                )
     resource = 'projects'
+    listFields = ('repository_hostname',)
 
 
 class Projects(pluginapi.Plugin):

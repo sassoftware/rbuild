@@ -41,6 +41,8 @@ from conary.lib import options
 import optparse
 import sys
 
+from rbuild import errors
+
 
 (NO_PARAM,  ONE_PARAM)  = (options.NO_PARAM, options.ONE_PARAM)
 (OPT_PARAM, MULT_PARAM) = (options.OPT_PARAM, options.MULT_PARAM)
@@ -279,35 +281,98 @@ class CommandWithSubCommands(BaseCommand):
 
 class ListCommand(BaseCommand):
     """
-        Inherit for commands/sub-commands that list things. Requires two class
-        variables: fieldMap and resource. 'fieldMap' is a list of tuples
-        associating a column header with a lambda function. The lambda function
-        is used to get the data off the model and apply any formatting or
-        transformations needed. 'resource' is the name of plugin that
-        implements a list function that returns a collection of the appropriate
-        resource.
+        Inherit for commands/sub-commands that lists or show things. Must
+        include three class variables, and an optional fourth.
 
-        class FooListCommand(ListCommand):
-            help = 'list foos'
-            fieldMap = (("Name", lambda f: f.name),
-                        ("Eman": lambda f: n[::-1]),
-                        )
-            resource = 'foos'
+        Required:
+            resource: name of the resource to list or showFieldMap
+            listFields: tuple of fields to display in list
+            listFieldMap: dictionary mapping fields to display options
+
+        Optional:
+            showFieldMap: dictionary mapping fields to display options
+
+        Display options:
+            display_name: alternative name to display for field, defaults to
+                the field name. Eg. field_name_foo -> Field Name Foo
+            accessor: a lambda that returns the value for field, defaults to
+                lambda x: x.field_name
+            hidden: never display this field, defaults to False
+            verbose: do not display this field unless verbose is on, defaults
+                to False
+
+        Example:
+            class FooListCommand(ListCommand):
+                help = 'list foos'
+                resource = 'foos'
+                listFields = ('name', 'reversed_name')
+                listFieldMap = dict(
+                    reversed_name=dict(
+                        display_name="Eman", accessor=lambda f: f.name[::-1]),
+                    )
+                showFieldMap = dict()
     """
+    paramHelp = '[options] [id]*'
+    listFieldMap = dict()
 
     def runCommand(self, handle, argSet, args):
-        self.requireParameters(args)
-        self._list(handle)
+        _, idList = self.requireParameters(args, allowExtra=True)
+        if idList:
+            self._show(handle, idList)
+        else:
+            self._list(handle)
+
+    def _fieldNameToDisplayName(self, field, mapping):
+            fdict = mapping.get(field, dict())
+            display_name = fdict.get('display_name')
+            if display_name is None:
+                # use the element name
+                display_name = ' '.join(
+                    w[0].upper() + w[1:] for w in field.split('_'))
+            return display_name
+
+    def _getResourceData(self, resource, fields, mapping, row_major=True):
+        for field in fields:
+            fdict = mapping.get(field, dict())
+            if fdict.get('hidden', False) or fdict.get('verbose', False):
+                continue
+            accessor = fdict.get('accessor', lambda i: getattr(i, field))
+            if row_major:
+                yield accessor(resource)
+            else:
+                display_name = self._fieldNameToDisplayName(field, mapping)
+                yield (display_name, accessor(resource))
 
     def _list(self, handle, *args, **kwargs):
-        headers, lambdas = zip(*self.fieldMap)
+        headers = tuple(self._fieldNameToDisplayName(field, self.listFieldMap)
+                        for field in self.listFields)
 
         resources = handle.getPlugin(self.resource).list(*args, **kwargs)
         if resources:
             data = []
             for resource in resources:
-                data.append(
-                    tuple(l(resource) for l in lambdas))
+                data.append(tuple(self._getResourceData(
+                    resource, self.listFields, self.listFieldMap)))
             handle.ui.writeTable(data, headers)
         else:
             handle.ui.write('No %s found' % self.resource)
+        return resources
+
+    def _show(self, handle, idList):
+        if not hasattr(self, 'showFieldMap'):
+            raise errors.PluginError(
+                "'%s' does not support showing specific resources" %
+                self.resource)
+        for resourceId in idList:
+            resource = handle.getPlugin(self.resource).show(resourceId)
+            if resource:
+                handle.ui.writeTable(list(self._getResourceData(
+                    resource,
+                    resource.elements,
+                    self.showFieldMap,
+                    row_major=False,
+                    )))
+                handle.ui.write()
+            else:
+                handle.ui.write(
+                    "No %s found with id '%s'", self.resource, resourceId)

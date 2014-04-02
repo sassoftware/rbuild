@@ -24,10 +24,8 @@ from rbuild.pluginapi import command
 
 class ListBranchesCommand(command.ListCommand):
     help = 'list branches'
-    fieldMap = (('Name', lambda b: b.name),
-                ('Label', lambda b: b.label),
-                )
     resource = 'branches'
+    listFields = ('name', 'label')
 
     def runCommand(self, handle, argSet, args):
         _, project = self.requireParameters(args, expected="PROJECT")

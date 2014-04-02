@@ -18,7 +18,6 @@
 '''
 images
 '''
-from rbuild import errors
 from rbuild import pluginapi
 from rbuild.pluginapi import command
 
@@ -37,15 +36,28 @@ class DeleteImagesCommand(command.BaseCommand):
 class ListImagesCommand(command.ListCommand):
     help = 'list images'
     resource = 'images'
-    fieldMap = (('ID', lambda i: i.image_id),
-                ('Name', lambda i: i.name),
-                ('Type', lambda i: i.image_type.name),
-                ('Status', lambda i: i.status),
-                ('Status Message', lambda i: (
-                    i.status_message
-                    if len(i.status_message) < 30
-                    else i.status_message[:27] + '...')),
-                )
+    listFields = ('image_id', 'name', 'image_type', 'status', 'status_message')
+    listFieldMap = dict(
+        image_type=dict(accessor=lambda i: i.image_type.name),
+        )
+    showFieldMap = dict(
+        actions=dict(hidden=True),
+        build_log=dict(accessor=lambda i: i._root.build_log.id),
+        created_by=dict(accessor=lambda i: i.created_by.full_name),
+        files=dict(accessor=lambda i: ', '.join('%s: %s' % (f.title, f.url) for f in i.files)),
+        jobs=dict(accessor=lambda i: i._root.jobs.id),
+        project=dict(accessor=lambda i: i.project.name),
+        project_branch=dict(accessor=lambda i: i.project_branch.name[0]),
+        ).update(listFieldMap)
+
+    def _list(self, handle, *args, **kwargs):
+        resources = super(ListImagesCommand, self)._list(
+            handle, *args, **kwargs)
+        if resources:
+            handle.ui.write('\nLatest:')
+            for latest in resources._node.latest_files:
+                handle.ui.write(latest.id)
+        return resources
 
 
 class Images(pluginapi.Plugin):
@@ -73,8 +85,26 @@ class Images(pluginapi.Plugin):
 
     def list(self):
         self.handle.Build.checkStage()
-        return self.handle.facade.rbuilder.getImages(
+        images = self.handle.facade.rbuilder.getImages(
             project=self.handle.product.getProductShortname(),
             stage=self.handle.productStore.getActiveStageName(),
             branch=self.handle.product.getBaseLabel(),
             )
+        return images
+
+    def show(self, imageId):
+        '''
+            Show details of a specific image
+
+            @param imageId: id of image
+            @type imageId: str or int
+        '''
+        self.handle.Build.checkStage()
+        image = self.handle.facade.rbuilder.getImages(
+            image_id=imageId,
+            project=self.handle.product.getProductShortname(),
+            branch=self.handle.product.getBaseLabel(),
+            stage=self.handle.productStore.getActiveStageName(),
+            )
+        if image:
+            return image[0]

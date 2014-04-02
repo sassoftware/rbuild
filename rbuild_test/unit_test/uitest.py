@@ -35,12 +35,20 @@ class UserInterfaceTest(rbuildhelp.RbuildHelper):
         h = self.getRbuildHandle()
         h.ui._log = mock.MockObject()
 
+        # test single column table
+        h.ui.writeTable(
+            [('H1',), ('data1',)])
+        h.ui.outStream.write._mock.assertCalled(('H1\n'))
+        h.ui.outStream.write._mock.assertCalled(('data1\n'))
+        h.ui._log._mock.assertCalled(('H1'))
+        h.ui._log._mock.assertCalled(('data1'))
+
         # test basic table output with implicit headers
         h.ui.writeTable(
             [('H1', 'H2', 'H3'), ('data1', 'data200', 'data3', 'ignored')])
-        h.ui.outStream.write._mock.assertCalled(('H1     H2       H3   \n'))
+        h.ui.outStream.write._mock.assertCalled(('H1     H2       H3\n'))
         h.ui.outStream.write._mock.assertCalled(('data1  data200  data3\n'))
-        h.ui._log._mock.assertCalled(('H1     H2       H3   '))
+        h.ui._log._mock.assertCalled(('H1     H2       H3'))
         h.ui._log._mock.assertCalled(('data1  data200  data3'))
 
         # test basic table output with explicit headers
@@ -48,9 +56,9 @@ class UserInterfaceTest(rbuildhelp.RbuildHelper):
             [('data1', 'data200', 'data3', 'ignored')],
             headers=('H1', 'H2', 'H3'),
             )
-        h.ui.outStream.write._mock.assertCalled(('H1     H2       H3   \n'))
+        h.ui.outStream.write._mock.assertCalled(('H1     H2       H3\n'))
         h.ui.outStream.write._mock.assertCalled(('data1  data200  data3\n'))
-        h.ui._log._mock.assertCalled(('H1     H2       H3   '))
+        h.ui._log._mock.assertCalled(('H1     H2       H3'))
         h.ui._log._mock.assertCalled(('data1  data200  data3'))
 
         # validated padding
@@ -62,15 +70,15 @@ class UserInterfaceTest(rbuildhelp.RbuildHelper):
              ],
             headers=('H1', 'H2', 'H3'),
             )
-        h.ui.outStream.write._mock.assertCalled(('H1     H2       H3   \n'))
+        h.ui.outStream.write._mock.assertCalled(('H1     H2       H3\n'))
         h.ui.outStream.write._mock.assertCalled(('data1  data200  data3\n'))
-        h.ui.outStream.write._mock.assertCalled(('data4                \n'))
-        h.ui.outStream.write._mock.assertCalled(('       data5         \n'))
+        h.ui.outStream.write._mock.assertCalled(('data4           \n'))
+        h.ui.outStream.write._mock.assertCalled(('       data5    \n'))
         h.ui.outStream.write._mock.assertCalled(('                data6\n'))
-        h.ui._log._mock.assertCalled(('H1     H2       H3   '))
+        h.ui._log._mock.assertCalled(('H1     H2       H3'))
         h.ui._log._mock.assertCalled(('data1  data200  data3'))
-        h.ui._log._mock.assertCalled(('data4                '))
-        h.ui._log._mock.assertCalled(('       data5         '))
+        h.ui._log._mock.assertCalled(('data4           '))
+        h.ui._log._mock.assertCalled(('       data5    '))
         h.ui._log._mock.assertCalled(('                data6'))
 
         # validate no padding
