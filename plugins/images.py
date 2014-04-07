@@ -44,11 +44,16 @@ class ListImagesCommand(command.ListCommand):
         actions=dict(hidden=True),
         build_log=dict(accessor=lambda i: i._root.build_log.id),
         created_by=dict(accessor=lambda i: i.created_by.full_name),
-        files=dict(accessor=lambda i: ', '.join('%s: %s' % (f.title, f.url) for f in i.files)),
+        files=dict(
+            accessor=lambda i: ', '.join('%s: %s' % (f.title, f.url)
+                                         for f in i.files),
+            ),
         jobs=dict(accessor=lambda i: i._root.jobs.id),
         project=dict(accessor=lambda i: i.project.name),
         project_branch=dict(accessor=lambda i: i.project_branch.name[0]),
-        ).update(listFieldMap)
+        # add in fields definied in listFieldMap
+        **listFieldMap
+        )
 
     def _list(self, handle, *args, **kwargs):
         resources = super(ListImagesCommand, self)._list(
