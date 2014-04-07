@@ -57,6 +57,7 @@ IMAGEDEF_SPECS = {
     'fusion': VMWARE,
 }
 
+
 class CreateImageDefCommand(command.BaseCommand):
     help = 'Create a image defintion on a SAS App Engine'
     commands = ['imagedef']
@@ -169,10 +170,11 @@ class CreateImageDef(pluginapi.Plugin):
             name = field.getName()
             if name.startswith(DESCRIPTOR_PREFIX):
                 name = name.replace(DESCRIPTOR_PREFIX, '')
-                if name == 'allowSnapshots':
-                    # hack because options don't match
-                    name = 'vmSnapshots'
                 imageFields[name] = field.getValue()
+
+        # FIXME: Map allowSnapshots -> vmSnapshots since the smartform and
+        #        proddef differ. (RCE-2743)
+        imageFields['vmSnapshots'] = imageFields.pop('allowSnapshots')
 
         stages = [s.name for s in pd.getStages()]
 
