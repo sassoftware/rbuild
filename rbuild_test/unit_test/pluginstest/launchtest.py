@@ -227,11 +227,11 @@ class LaunchTest(rbuildhelp.RbuildHelper):
         rv = handle.Launch._createJob(
             handle.Launch.DEPLOY, 'foo', 'bar', True)
         handle.facade.rbuilder.getImages._mock.assertCalled(
-            'foo',
+            name='foo',
             project='product',
             branch='branch',
             stage='stage',
-            trailingVersion='',
+            order_by='-time_created',
             )
         handle.Launch._getAction._mock.assertCalled(
             _image, 'bar', handle.Launch.DEPLOY)
@@ -243,11 +243,11 @@ class LaunchTest(rbuildhelp.RbuildHelper):
         rv = handle.Launch._createJob(
             handle.Launch.DEPLOY, 'foo=', 'bar', True)
         handle.facade.rbuilder.getImages._mock.assertCalled(
-            'foo',
+            name='foo',
             project='product',
             branch='branch',
             stage='stage',
-            trailingVersion='',
+            order_by='-time_created',
             )
         handle.Launch._getAction._mock.assertCalled(
             _image, 'bar', handle.Launch.DEPLOY)
@@ -259,11 +259,12 @@ class LaunchTest(rbuildhelp.RbuildHelper):
         rv = handle.Launch._createJob(
             handle.Launch.DEPLOY, 'foo=1', 'bar', True)
         handle.facade.rbuilder.getImages._mock.assertCalled(
-            'foo',
+            name='foo',
             project='product',
             branch='branch',
             stage='stage',
-            trailingVersion='1',
+            order_by='-time_created',
+            trailing_version='1',
             )
         handle.Launch._getAction._mock.assertCalled(
             _image, 'bar', handle.Launch.DEPLOY)

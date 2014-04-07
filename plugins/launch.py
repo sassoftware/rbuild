@@ -84,13 +84,16 @@ class Launch(pluginapi.Plugin):
 
         project, branch, stage = self._getProductStage()
         image_name, _, version = image_name.partition('=')
-        images = rb.getImages(
-            image_name,
+        query_params = dict(
+            name=image_name,
             project=project,
             branch=branch,
             stage=stage,
-            trailingVersion=version,
+            order_by='-time_created',
             )
+        if version:
+            query_params['trailing_version'] = version
+        images = rb.getImages(**query_params)
 
         image, action = self._getAction(images, target_name, action_type)
 
