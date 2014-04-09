@@ -365,10 +365,12 @@ class ListCommand(BaseCommand):
                 self.resource)
         for resourceId in idList:
             resource = handle.getPlugin(self.resource).show(resourceId)
+            showFieldList = list(set(resource.elements + self.showFieldMap.keys()))
+            showFieldList.sort()
             if resource:
                 handle.ui.writeTable(list(self._getResourceData(
                     resource,
-                    resource.elements,
+                    showFieldList,
                     self.showFieldMap,
                     row_major=False,
                     )))

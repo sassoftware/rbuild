@@ -830,6 +830,41 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
             )
         self.assertIn("No image type", str(err))
 
+    def testGetImageDefs(self):
+        client = rbuilderfacade.RbuilderRESTClient(
+            'http://localhost', 'foo', 'bar', mock.MockObject())
+        mock.mock(client, '_api')
+        client._api._mock.set(_uri='http://localhost')
+
+        _imageDef1 = mock.MockObject()
+        _imageDef1._mock.set(id='foo')
+        _imageDef1._mock.set(name='bar')
+        _imageDef2 = mock.MockObject()
+        _imageDef2._mock.set(id='spam')
+        _imageDef2._mock.set(name='eggs')
+
+        client._api._client.do_GET._mock.setReturn(
+            [_imageDef2, _imageDef1],
+            '/products/baz/versions/1/imageDefinitions')
+
+        self.assertEqual(
+            client.getImageDefs('baz', '1'), [_imageDef2, _imageDef1])
+        self.assertEqual(
+            client.getImageDefs('baz', '1', id='foo'), [_imageDef1])
+        self.assertEqual(
+            client.getImageDefs('baz', '1', name='eggs'), [_imageDef2])
+
+        client._api._client.do_GET._mock.raiseErrorOnAccess(
+            robj.errors.HTTPNotFoundError(uri=None, status=None, reason=None,
+                                          response=None))
+        err = self.assertRaises(
+            errors.RbuildError,
+            client.getImageDefs,
+            'none',
+            'none',
+            )
+        self.assertIn('not found', str(err))
+
     def testGetProductDefinitionSchemaVersion(self):
         client = rbuilderfacade.RbuilderRESTClient('http://localhost', 'foo',
             'bar', mock.MockObject())

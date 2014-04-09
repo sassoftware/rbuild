@@ -513,6 +513,31 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
             return self._getResources('images', uri=uri, **kwargs)
         return self._getResources('images', **kwargs)
 
+    def getImageDefs(self, product, version, **kwargs):
+        # image defs are on the old api, so we have to construct our own url
+        client = self.api._client
+
+        uri = ('/products/%s/versions/%s/imageDefinitions' %
+               (product, version))
+        try:
+            imageDefs = []
+            for imageDef in client.do_GET(uri):
+                add = True
+                for key, value in kwargs.items():
+                    if key == 'id':
+                        add = value in imageDef.id
+                    else:
+                        add = getattr(imageDef, key) == value
+                    if not add:
+                        break
+                if add:
+                    imageDefs.append(imageDef)
+            return imageDefs
+        except robj.errors.HTTPNotFoundError:
+            raise errors.RbuildError(
+                "Project '%s' and version '%s' not found" % (product, version))
+
+
     def getImageTypeDef(self, product, version, imageType, arch):
         client = self.api._client
         uri = ('/products/%s/versions/%s/imageTypeDefinitions' %
@@ -968,6 +993,10 @@ class RbuilderFacade(object):
     def getImages(self, *args, **kwargs):
         client = self._getRbuilderRESTClient()
         return client.getImages(*args, **kwargs)
+
+    def getImageDefs(self, *args, **kwargs):
+        client = self._getRbuilderRESTClient()
+        return client.getImageDefs(*args, **kwargs)
 
     def getImageDefDescriptor(self, imageType):
         client = self._getRbuilderRESTClient()
