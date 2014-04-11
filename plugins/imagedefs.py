@@ -21,7 +21,6 @@ image definitions
 from rbuild import pluginapi
 from rbuild.pluginapi import command
 
-import epdb
 
 class ListImageDefsCommand(command.ListCommand):
     help = 'list image definitions'
