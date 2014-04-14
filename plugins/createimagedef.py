@@ -174,7 +174,8 @@ class CreateImageDef(pluginapi.Plugin):
 
         # FIXME: Map allowSnapshots -> vmSnapshots since the smartform and
         #        proddef differ. (RCE-2743)
-        imageFields['vmSnapshots'] = imageFields.pop('allowSnapshots')
+        if 'allowSnapshots' in imageFields:
+            imageFields['vmSnapshots'] = imageFields.pop('allowSnapshots')
 
         stages = [s.name for s in pd.getStages()]
 
