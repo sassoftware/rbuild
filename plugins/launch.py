@@ -94,6 +94,8 @@ class Launch(pluginapi.Plugin):
         if version:
             query_params['trailing_version'] = version
         images = rb.getImages(**query_params)
+        if not images:
+            raise errors.PluginError("No image matching '%s'" % image_name)
 
         image, action = self._getAction(images, target_name, action_type)
 

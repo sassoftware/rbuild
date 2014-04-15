@@ -342,3 +342,23 @@ class LaunchTest(rbuildhelp.RbuildHelper):
             (('Created system baz with addresses: foo, bar\n',), ()),
             ]
         self.assertEqual(handle.ui.outStream.write._mock.calls, expected_calls)
+
+    def testCreateJobNoImages(self):
+        '''Regression test for APPENG-2803'''
+        handle = self.getRbuildHandle(mock.MockObject())
+        handle.Launch.registerCommands()
+        handle.Launch.initialize()
+
+        mock.mockMethod(
+            handle.Launch._getProductStage, ('product', 'branch', 'stage'))
+        mock.mockMethod(handle.facade.rbuilder.getImages, None)
+
+        err = self.assertRaises(
+            errors.PluginError,
+            handle.Launch._createJob,
+            handle.Launch.DEPLOY,
+            'none',
+            'bar',
+            True,
+            )
+        self.assertIn('image matching', str(err))
