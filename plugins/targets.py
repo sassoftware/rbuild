@@ -25,7 +25,7 @@ from rbuild.pluginapi import command
 class ListTargetsCommand(command.ListCommand):
     help = 'list targets'
     resource = 'targets'
-    listFields = ('name', 'is_configured', 'credentials_valid')
+    listFields = ('name', 'description', 'is_configured', 'credentials_valid')
     listFieldMap = dict(
         is_configured=dict(display_name='Configred'),
         credentials_valid=dict(display_name='Credentials'),
