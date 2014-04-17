@@ -61,7 +61,7 @@ class ListImagesCommand(command.ListCommand):
         if resources:
             handle.ui.write('\nLatest:')
             for latest in resources._node.latest_files:
-                handle.ui.write(latest.id)
+                handle.ui.write(latest.id.replace('%', '%%'))
         return resources
 
 

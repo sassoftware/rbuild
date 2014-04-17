@@ -60,6 +60,31 @@ class ListImagesTest(rbuildhelp.RbuildHelper):
             'rbuild_plugins.images.ListImagesCommand.runCommand',
             [None, None, {}, ['list', 'images', '1', '2']])
 
+    def testLatestImages(self):
+        '''Regression test for APPENG-2788'''
+        from rbuild.pluginapi import command
+        handle = self.getRbuildHandle(mock.MockObject())
+        handle.List.registerCommands()
+        handle.Delete.registerCommands()
+        handle.Images.initialize()
+
+        mock.mock(handle, 'ui')
+
+        _latest = mock.MockObject()
+        _latest._mock.set(id='http://localhost/latest')
+        _resource = mock.MockObject()
+        _resource._node._mock.set(latest_files=[_latest])
+        mock.mock(command.ListCommand, '_list', _resource)
+
+        cmd = handle.Commands.getCommandClass('list')()
+        cmd.runCommand(handle, {}, ['rbuild', 'list', 'images'])
+        handle.ui.write._mock.assertCalled('http://localhost/latest')
+
+        _latest._mock.set(id='http://localhost/latest%20image')
+        cmd.runCommand(handle, {}, ['rbuild', 'list', 'images'])
+        handle.ui.write._mock.assertCalled(
+            'http://localhost/latest%%20image')
+
 
 class ImagesPluginTest(rbuildhelp.RbuildHelper):
     def testDelete(self):
