@@ -20,13 +20,66 @@ from testutils import mock
 from rbuild_test import rbuildhelp
 
 
-class DeleteImagesTest(rbuildhelp.RbuildHelper):
+DESCRIPTOR_XML = '''\
+<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.1.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.1.xsd descriptor-1.1.xsd" version="1.1">
+    <metadata>
+        <displayName>VMware Image Upload Parameters</displayName>
+        <rootElement>descriptor_data</rootElement>
+        <descriptions>
+            <desc>VMware Image Upload Parameters</desc>
+        </descriptions>
+    </metadata>
+    <dataFields>
+        <field>
+            <name>name</name>
+            <descriptions>
+                <desc>Name</desc>
+            </descriptions>
+            <type>str</type>
+            <constraints>
+                <length>4</length>
+            </constraints>
+            <required>true</required>
+            <hidden>false</hidden>
+        </field>
+    </dataFields>
+</descriptor>
+'''
+
+DDATA_XML = '''\
+<?xml version='1.0' encoding='UTF-8'?>
+<descriptor_data>
+    <tag>foo</tag>
+</descriptor_data>
+'''
+
+JOB_XML = '''\
+<?xml version='1.0' encoding='UTF-8'?>
+<job>
+  <descriptor>descriptor</descriptor>
+  <descriptor_data>
+    <tag>foo</tag>
+  </descriptor_data>
+  <job_type>job_type</job_type>
+</job>
+'''
+
+
+class AbstractImagesTest(rbuildhelp.RbuildHelper):
+    def setUp(self):
+        rbuildhelp.RbuildHelper.setUp(self)
+        self.handle = self.getRbuildHandle()
+        self.handle.Delete.registerCommands()
+        self.handle.List.registerCommands()
+        self.handle.Images.registerCommands()
+        self.handle.Delete.initialize()
+        self.handle.List.initialize()
+        self.handle.Images.initialize()
+
+
+class DeleteImagesTest(AbstractImagesTest):
     def testCommandParsing(self):
-        handle = self.getRbuildHandle()
-        handle.Delete.registerCommands()
-        handle.List.registerCommands()
-        handle.Delete.initialize()
-        handle.Images.initialize()
+        handle = self.handle
         cmd = handle.Commands.getCommandClass('delete')()
 
         mock.mockMethod(handle.Images.delete)
@@ -41,7 +94,6 @@ class DeleteImagesTest(rbuildhelp.RbuildHelper):
         handle.Images.delete._mock.assertCalled('11')
 
     def testCommand(self):
-        self.getRbuildHandle()
         self.checkRbuild('delete images',
             'rbuild_plugins.images.DeleteImagesCommand.runCommand',
             [None, None, {}, ['delete', 'images']])
@@ -50,7 +102,91 @@ class DeleteImagesTest(rbuildhelp.RbuildHelper):
             [None, None, {}, ['delete', 'images', '1', '2']])
 
 
-class ListImagesTest(rbuildhelp.RbuildHelper):
+class LaunchTest(AbstractImagesTest):
+    def testLaunchArgParse(self):
+        self.checkRbuild(
+            'launch --list --from-file=fromFile --to-file=toFile --no-launch'
+                ' --no-watch Image Target',
+            'rbuild_plugins.images.LaunchCommand.runCommand',
+            [None, None, {
+                'list': True,
+                'from-file': 'fromFile',
+                'to-file': 'toFile',
+                'no-watch': True,
+                'no-launch': True,
+
+                }, ['rbuild', 'launch', 'Image', 'Target']])
+        self.checkRbuild(
+            'deploy --list --from-file=fromFile --to-file=toFile --no-launch'
+                ' --no-watch Image Target',
+            'rbuild_plugins.images.LaunchCommand.runCommand',
+            [None, None, {
+                'list': True,
+                'from-file': 'fromFile',
+                'to-file': 'toFile',
+                'no-watch': True,
+                'no-launch': True,
+                }, ['rbuild', 'deploy', 'Image', 'Target']])
+
+    def testLaunchCmdlineList(self):
+        handle = self.handle
+        handle.Images.registerCommands()
+        handle.Images.initialize()
+        handle.ui = mock.MockObject()
+
+        _target_1 = mock.MockObject()
+        _target_1._mock.set(name='foo')
+
+        _target_2 = mock.MockObject()
+        _target_2._mock.set(name='bar')
+
+        _targets = [_target_1, _target_2]
+        mock.mockMethod(handle.facade.rbuilder.getEnabledTargets, _targets)
+
+        cmd = handle.Commands.getCommandClass('launch')()
+        cmd.runCommand(handle, {'list': True}, ['rbuild', 'launch'])
+
+        handle.ui.write._mock.assertCalled('Available targets: foo, bar')
+
+    def testLaunchCmdlineNoArgs(self):
+        handle = self.handle
+
+        cmd = handle.Commands.getCommandClass('launch')()
+
+        self.assertRaises(
+            errors.ParseError,
+            cmd.runCommand,
+            handle,
+            {},
+            ['rbuild', 'launch'],
+            )
+        self.assertRaises(
+            errors.ParseError,
+            cmd.runCommand,
+            handle,
+            {},
+            ['rbuild', 'launch', 'foo'],
+            )
+
+    def testLaunchCmdline(self):
+        handle = self.handle
+        mock.mockMethod(handle.Images.deployImage)
+        mock.mockMethod(handle.Images.launchImage)
+        mock.mockMethod(handle.Images.watchJob)
+
+        cmd = handle.Commands.getCommandClass('launch')()
+        cmd.runCommand(handle, {}, ['rbuild', 'launch', 'foo', 'bar'])
+        handle.Images.deployImage._mock.assertNotCalled()
+        handle.Images.launchImage._mock.assertCalled('foo', 'bar', True)
+
+        cmd = handle.Commands.getCommandClass('launch')()
+        cmd.runCommand(
+            handle, {}, ['rbuild', 'deploy', 'foo', 'bar'])
+        handle.Images.deployImage._mock.assertCalled('foo', 'bar', True)
+        handle.Images.launchImage._mock.assertNotCalled()
+
+
+class ListImagesTest(AbstractImagesTest):
     def testCommand(self):
         self.getRbuildHandle()
         self.checkRbuild('list images',
@@ -63,7 +199,7 @@ class ListImagesTest(rbuildhelp.RbuildHelper):
     def testLatestImages(self):
         '''Regression test for APPENG-2788'''
         from rbuild.pluginapi import command
-        handle = self.getRbuildHandle(mock.MockObject())
+        handle = self.handle
         handle.List.registerCommands()
         handle.Delete.registerCommands()
         handle.Images.initialize()
@@ -86,9 +222,104 @@ class ListImagesTest(rbuildhelp.RbuildHelper):
             'http://localhost/latest%%20image')
 
 
-class ImagesPluginTest(rbuildhelp.RbuildHelper):
+class ImagesPluginTest(AbstractImagesTest):
+    def testCreateJob(self):
+        handle = self.handle
+
+        _jobs = []
+
+        def _append(x):
+            _jobs.append(x)
+            return x
+
+        _image = mock.MockObject()
+        _image._mock.set(jobs=mock.MockObject())
+        _image.jobs._mock.set(append=_append)
+        mock.mockMethod(handle.facade.rbuilder.getImages, _image)
+
+        _action = mock.MockObject()
+        _action._mock.set(descriptor=DESCRIPTOR_XML)
+        _action._root._mock.set(job_type='job_type')
+        _action._root._mock.set(descriptor='descriptor')
+        mock.mockMethod(handle.Images._getAction, (_image, _action))
+
+        _ddata = mock.MockObject()
+        _ddata.toxml._mock.setDefaultReturn(DDATA_XML)
+        mock.mockMethod(handle.DescriptorConfig.createDescriptorData, _ddata)
+
+        mock.mockMethod(
+            handle.Images._getProductStage, ('product', 'branch', 'stage'))
+        rv = handle.Images._createJob(
+            handle.Images.DEPLOY, 'foo', 'bar', True)
+        handle.facade.rbuilder.getImages._mock.assertCalled(
+            name='foo',
+            project='product',
+            branch='branch',
+            stage='stage',
+            order_by='-time_created',
+            )
+        handle.Images._getAction._mock.assertCalled(
+            _image, 'bar', handle.Images.DEPLOY)
+
+        self.assertEqual(len(_jobs), 1)
+        self.assertEqual(rv, _jobs[0])
+        self.assertEqual(rv.toxml(), JOB_XML)
+
+        rv = handle.Images._createJob(
+            handle.Images.DEPLOY, 'foo=', 'bar', True)
+        handle.facade.rbuilder.getImages._mock.assertCalled(
+            name='foo',
+            project='product',
+            branch='branch',
+            stage='stage',
+            order_by='-time_created',
+            )
+        handle.Images._getAction._mock.assertCalled(
+            _image, 'bar', handle.Images.DEPLOY)
+
+        self.assertEqual(len(_jobs), 2)
+        self.assertEqual(rv, _jobs[1])
+        self.assertEqual(rv.toxml(), JOB_XML)
+
+        rv = handle.Images._createJob(
+            handle.Images.DEPLOY, 'foo=1', 'bar', True)
+        handle.facade.rbuilder.getImages._mock.assertCalled(
+            name='foo',
+            project='product',
+            branch='branch',
+            stage='stage',
+            order_by='-time_created',
+            trailing_version='1',
+            )
+        handle.Images._getAction._mock.assertCalled(
+            _image, 'bar', handle.Images.DEPLOY)
+
+        self.assertEqual(len(_jobs), 3)
+        self.assertEqual(rv, _jobs[2])
+        self.assertEqual(rv.toxml(), JOB_XML)
+
+    def testCreateJobNoImages(self):
+        '''Regression test for APPENG-2803'''
+        handle = self.handle
+        handle.Images.registerCommands()
+        handle.Images.initialize()
+
+        mock.mockMethod(
+            handle.Images._getProductStage, ('product', 'branch', 'stage'))
+        mock.mockMethod(handle.facade.rbuilder.getImages, None)
+
+        err = self.assertRaises(
+            errors.PluginError,
+            handle.Images._createJob,
+            handle.Images.DEPLOY,
+            'none',
+            'bar',
+            True,
+            )
+        self.assertIn('image matching', str(err))
+
     def testDelete(self):
-        handle = self.getRbuildHandle()
+        handle = self.handle
 
         mock.mock(handle, 'productStore')
         mock.mock(handle, 'product')
@@ -102,7 +333,7 @@ class ImagesPluginTest(rbuildhelp.RbuildHelper):
             image_id=10, project='project', branch='branch', stage='stage')
 
     def testDeleteMissing(self):
-        handle = self.getRbuildHandle()
+        handle = self.handle
 
         mock.mock(handle, 'productStore')
         mock.mock(handle, 'product')
@@ -118,7 +349,7 @@ class ImagesPluginTest(rbuildhelp.RbuildHelper):
         handle.ui.write._mock.assertCalled("No image found with id '10'")
 
     def testDeleteNoProduct(self):
-        handle = self.getRbuildHandle()
+        handle = self.handle
 
         mock.mockMethod(handle.facade.rbuilder.getImages)
 
@@ -131,7 +362,7 @@ class ImagesPluginTest(rbuildhelp.RbuildHelper):
         handle.facade.rbuilder.getImages._mock.assertNotCalled()
 
     def testDeleteNoStage(self):
-        handle = self.getRbuildHandle()
+        handle = self.handle
 
         mock.mock(handle, 'productStore')
         mock.mock(handle, 'product')
@@ -148,8 +379,50 @@ class ImagesPluginTest(rbuildhelp.RbuildHelper):
         self.assertIn('not a valid stage', str(err))
         handle.facade.rbuilder.getImages._mock.assertNotCalled()
 
+    def testGetAction(self):
+        handle = self.handle
+        handle.Images.registerCommands()
+        handle.Images.initialize()
+
+        self.assertRaises(
+            AssertionError, handle.Images._getAction, None, None, 'foo')
+
+        _action1 = mock.MockObject()
+        _action1._mock.set(key=handle.Images.DEPLOY)
+        _action1._mock.set(name="Deploy image on 'foo' (vmware)")
+        _action2 = mock.MockObject()
+        _action2._mock.set(key=handle.Images.DEPLOY)
+        _action2._mock.set(name="Deploy image on 'bar' (vmware)")
+
+        _image = mock.MockObject()
+        _image._mock.set(actions=[_action1, _action2])
+
+        self.assertRaises(
+            errors.PluginError,
+            handle.Images._getAction,
+            [_image],
+            'foo',
+            handle.Images.DEPLOY,
+            )
+
+        _image._mock.set(status='300')
+        self.assertRaises(
+            errors.PluginError,
+            handle.Images._getAction,
+            [_image],
+            'baz',
+            handle.Images.DEPLOY,
+            )
+
+
+        rv = handle.Images._getAction([_image], 'foo', handle.Images.DEPLOY)
+        self.assertEqual(rv, (_image, _action1))
+
+        rv = handle.Images._getAction([_image], 'bar', handle.Images.DEPLOY)
+        self.assertEqual(rv, (_image, _action2))
+
     def testList(self):
-        handle = self.getRbuildHandle()
+        handle = self.handle
         mock.mockMethod(handle.facade.rbuilder.getImages)
         mock.mock(handle, 'product')
         mock.mock(handle, 'productStore')
@@ -162,7 +435,7 @@ class ImagesPluginTest(rbuildhelp.RbuildHelper):
             project='project', branch='branch', stage='stage')
 
     def testListNoProduct(self):
-        handle = self.getRbuildHandle()
+        handle = self.handle
         mock.mockMethod(handle.facade.rbuilder.getImages)
 
         err = self.assertRaises(
@@ -172,7 +445,7 @@ class ImagesPluginTest(rbuildhelp.RbuildHelper):
         self.assertIn('rbuild init', str(err))
 
     def testListNoStage(self):
-        handle = self.getRbuildHandle()
+        handle = self.handle
         mock.mockMethod(handle.facade.rbuilder.getImages)
         mock.mock(handle, 'product')
         mock.mock(handle, 'productStore')
@@ -188,7 +461,7 @@ class ImagesPluginTest(rbuildhelp.RbuildHelper):
         handle.facade.rbuilder.getImages._mock.assertNotCalled()
 
     def testShow(self):
-        handle = self.getRbuildHandle()
+        handle = self.handle
 
         mock.mock(handle, 'productStore')
         mock.mock(handle, 'product')
@@ -203,7 +476,7 @@ class ImagesPluginTest(rbuildhelp.RbuildHelper):
             image_id=10, project='project', branch='branch', stage='stage')
 
     def testShowMissing(self):
-        handle = self.getRbuildHandle()
+        handle = self.handle
 
         mock.mock(handle, 'productStore')
         mock.mock(handle, 'product')
@@ -218,7 +491,7 @@ class ImagesPluginTest(rbuildhelp.RbuildHelper):
             image_id=10, project='project', branch='branch', stage='stage')
 
     def testShowNoProduct(self):
-        handle = self.getRbuildHandle()
+        handle = self.handle
 
         mock.mockMethod(handle.facade.rbuilder.getImages)
 
@@ -231,7 +504,7 @@ class ImagesPluginTest(rbuildhelp.RbuildHelper):
         handle.facade.rbuilder.getImages._mock.assertNotCalled()
 
     def testShowNoStage(self):
-        handle = self.getRbuildHandle()
+        handle = self.handle
 
         mock.mock(handle, 'productStore')
         mock.mock(handle, 'product')
@@ -247,3 +520,71 @@ class ImagesPluginTest(rbuildhelp.RbuildHelper):
             )
         self.assertIn('not a valid stage', str(err))
         handle.facade.rbuilder.getImages._mock.assertNotCalled()
+
+    def testWatchJob(self):
+        from rbuild_plugins.images import time
+        handle = self.handle
+
+        mock.mock(handle.ui, 'outStream')
+
+        mock.mock(time, 'ctime', '')
+        mock.mock(time, 'sleep')
+
+        _job = mock.MockObject()
+        _job.job_state._mock.set(name='Failed')
+        _job.job_type._mock.set(name='launch system on taraget')
+
+        self.assertRaises(errors.PluginError, handle.Images.watchJob, _job)
+
+        _status_text = ['Text4', 'Text3 ', 'Text2  ', 'Text1   ']
+        _network1 = mock.MockObject()
+        _network1._mock.set(dns_name='foo')
+        _network2 = mock.MockObject()
+        _network2._mock.set(dns_name='bar')
+        _resource = mock.MockObject()
+        _resource._mock.set(name='baz')
+        _resource._mock.set(networks=[_network1, _network2])
+
+        def _refresh():
+            try:
+                _job._mock.set(status_text=_status_text.pop())
+            except IndexError:
+                _job.job_state._mock.set(name='Completed')
+                _job._mock.set(created_resources=[_resource])
+
+        _job._mock.set(refresh=_refresh)
+        _job.job_state._mock.set(name='Running')
+        _job._mock.set(status_text='Text0    ')
+
+        handle.ui.outStream.isatty._mock.setDefaultReturn(True)
+        handle.Images.watchJob(_job)
+        expected_calls = [
+            (('\r[] Text0    ',), ()),
+            (('\r[] Text1   ',), ()),
+            (('  \b\b',), ()),
+            (('\r[] Text2  ',), ()),
+            (('  \b\b',), ()),
+            (('\r[] Text3 ',), ()),
+            (('  \b\b',), ()),
+            (('\r[] Text4',), ()),
+            (('  \b\b',), ()),
+            (('\n',), ()),
+            (('Created system baz with addresses: foo, bar\n',), ()),
+            ]
+        self.assertEqual(handle.ui.outStream.write._mock.calls, expected_calls)
+
+        _status_text = ['Text4', 'Text3 ', 'Text2  ', 'Text1   ']
+        _job.job_state._mock.set(name='Running')
+        _job._mock.set(status_text='Text0    ')
+        handle.ui.outStream.write._mock.calls = []
+        handle.ui.outStream.isatty._mock.setDefaultReturn(False)
+        handle.Images.watchJob(_job)
+        expected_calls = [
+            (('[] Text0    \n',), ()),
+            (('[] Text1   \n',), ()),
+            (('[] Text2  \n',), ()),
+            (('[] Text3 \n',), ()),
+            (('[] Text4\n',), ()),
+            (('Created system baz with addresses: foo, bar\n',), ()),
+            ]
+        self.assertEqual(handle.ui.outStream.write._mock.calls, expected_calls)
