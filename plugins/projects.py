@@ -25,7 +25,20 @@ from rbuild.pluginapi import command
 class ListProjectsCommand(command.ListCommand):
     help = 'list projects'
     resource = 'projects'
-    listFields = ('repository_hostname',)
+    listFields = ('short_name', 'description', 'repository_hostname',)
+    showFieldMap = dict(
+        members=dict(hidden=True),
+        images=dict(hidden=True),
+        created_by=dict(accessor=lambda p: p.created_by.full_name),
+        modified_by=dict(accessor=lambda p: p.created_by.full_name),
+        project_branches=dict(
+            accessor=lambda p: ', '.join(b.name for b in p.project_branches),
+            ),
+        project_branch_stages=dict(
+            accessor=lambda p: ', '.join(
+                s.name for s in p.project_branch_stages),
+            ),
+        )
 
 
 class Projects(pluginapi.Plugin):
@@ -50,3 +63,6 @@ class Projects(pluginapi.Plugin):
 
         return self.handle.facade.rbuilder.getProjects(
             disabled=disabled, hidden=hidden, **kwargs)
+
+    def show(self, projectName):
+        return self.handle.facade.rbuilder.getProject(projectName)
