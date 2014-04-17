@@ -298,6 +298,22 @@ class ImagesPluginTest(AbstractImagesTest):
         self.assertEqual(rv, _jobs[2])
         self.assertEqual(rv.toxml(), JOB_XML)
 
+        rv = handle.Images._createJob(
+            handle.Images.DEPLOY, '1', 'bar', True)
+        handle.facade.rbuilder.getImages._mock.assertCalled(
+            image_id='1',
+            project='product',
+            branch='branch',
+            stage='stage',
+            order_by='-time_created',
+            )
+        handle.Images._getAction._mock.assertCalled(
+            _image, 'bar', handle.Images.DEPLOY)
+
+        self.assertEqual(len(_jobs), 4)
+        self.assertEqual(rv, _jobs[3])
+        self.assertEqual(rv.toxml(), JOB_XML)
+
     def testCreateJobNoImages(self):
         '''Regression test for APPENG-2803'''
         handle = self.handle
