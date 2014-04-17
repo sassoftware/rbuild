@@ -166,7 +166,6 @@ class Images(pluginapi.Plugin):
     def _getAction(self, images, target, key):
         assert key in (self.DEPLOY, self.LAUNCH)
 
-        import epdb; epdb.st()
         for image in images:
             if image.status != '300':
                 continue
