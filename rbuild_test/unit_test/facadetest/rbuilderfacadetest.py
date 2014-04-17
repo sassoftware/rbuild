@@ -1105,6 +1105,26 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
         self.assertEqual(xml.namespace, 'nsp')
         self.assertEqual(xml.project.id, 'id')
 
+    def testCreateExistingBranch(self):
+        '''Regression test for APPENG-2790'''
+        client = rbuilderfacade.RbuilderRESTClient('http://localhost', 'foo',
+            'bar', mock.MockObject())
+        mock.mock(client, '_api')
+        br = mock.MockObject()
+        br._mock.set(name='branch')
+        proj = mock.MockObject()
+        proj._mock.set(id='id', name='proj', short_name='short',
+                domain_name='dom', project_branches=[br])
+        mock.mockMethod(client.getProject)
+        client.getProject._mock.setReturn(proj, 'proj')
+
+        err = self.assertRaises(
+            errors.RbuildError,
+            client.createBranch,
+            'proj', 'branch', 'plat', 'nsp', 'desc',
+            )
+        self.assertIn('already exists', str(err))
+
     def testListPlatforms(self):
         client = rbuilderfacade.RbuilderRESTClient('http://localhost', 'foo',
             'bar', mock.MockObject())
