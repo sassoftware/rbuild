@@ -15,6 +15,8 @@
 #
 
 
+import robj
+
 from rbuild import errors
 from rbuild import pluginapi
 from rbuild.pluginapi import command
@@ -43,7 +45,11 @@ class EnablePlatform(pluginapi.Plugin):
             raise errors.PluginError(
                 "No platform with label matching: '%s'" % label)
         platform.enabled = enabled
-        platform.persist()
+        try:
+            platform.persist()
+        except robj.errors.HTTPUnauthorizedError:
+            raise errors.PluginError(
+                "You are not authorized to do this")
 
     def disable(self, label):
         self._updatePlatform(label, enabled=False)

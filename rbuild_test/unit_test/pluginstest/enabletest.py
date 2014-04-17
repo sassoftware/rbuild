@@ -16,6 +16,7 @@
 
 from rbuild import errors
 from testutils import mock
+import robj
 
 from rbuild_test import rbuildhelp
 
@@ -89,3 +90,36 @@ class EnableTest(rbuildhelp.RbuildHelper):
         _platform._mock.set(enabled=None)
         handle.EnablePlatform._updatePlatform('label', False)
         self.assertEqual(_platform.enabled, False)
+
+    def testUnauthorizedAccess(self):
+        '''Regression test for APPENG-2791'''
+        handle = self.getRbuildHandle(mock.MockObject())
+        handle.Launch.registerCommands()
+        handle.Launch.initialize()
+
+        mock.mockMethod(handle.facade.rbuilder.getPlatform)
+        handle.facade.rbuilder.getPlatform._mock.setReturn(None, 'no label')
+        self.assertRaises(
+            errors.PluginError,
+            handle.EnablePlatform._updatePlatform,
+            'no label',
+            True,
+            )
+
+        _platform = mock.MockObject()
+        _platform._mock.set(enabled=None)
+        _platform.persist._mock.raiseErrorOnAccess(
+            robj.errors.HTTPUnauthorizedError(
+                uri='http://localhost',
+                status='401',
+                reason='Unauthorized',
+                response=None,
+                ))
+        handle.facade.rbuilder.getPlatform._mock.setReturn(_platform, 'label')
+        err = self.assertRaises(
+            errors.PluginError,
+            handle.EnablePlatform._updatePlatform
+            ,'label',
+            True,
+            )
+        self.assertIn('not authorized', str(err))
