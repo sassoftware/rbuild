@@ -1112,6 +1112,10 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
         mock.mock(client, '_api')
         br = mock.MockObject()
         br._mock.set(name='branch')
+        _project_branches = mock.MockObject()
+        _project_branches._mock.disable('__iter__')
+        _project_branches.__iter__._mock.raiseErrorOnAccess(
+            TypeError("A list type is required for this method."))
         proj = mock.MockObject()
         proj._mock.set(id='id', name='proj', short_name='short',
                 domain_name='dom', project_branches=[br])
@@ -1124,6 +1128,29 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
             'proj', 'branch', 'plat', 'nsp', 'desc',
             )
         self.assertIn('already exists', str(err))
+
+    def testCreateFirstBranch(self):
+        '''Regression test for APPENG-2790: no existing branches'''
+        client = rbuilderfacade.RbuilderRESTClient('http://localhost', 'foo',
+            'bar', mock.MockObject())
+        mock.mock(client, '_api')
+        _project_branches = mock.MockObject()
+        _project_branches._mock.disable('__iter__')
+        _project_branches.__iter__._mock.raiseErrorOnAccess(
+            TypeError("A list type is required for this method."))
+        proj = mock.MockObject()
+        proj._mock.set(id='id', name='proj', short_name='short',
+                domain_name='dom', project_branches=_project_branches)
+        mock.mockMethod(client.getProject)
+        client.getProject._mock.setReturn(proj, 'proj')
+
+        client.createBranch('proj', 'branch', 'plat', 'nsp', 'desc')
+        xml = proj.project_branches.append._mock.popCall()[0][0].project_branch
+        self.assertEqual(xml.name, 'branch')
+        self.assertEqual(xml.platform_label, 'plat')
+        self.assertEqual(xml.description, 'desc')
+        self.assertEqual(xml.namespace, 'nsp')
+        self.assertEqual(xml.project.id, 'id')
 
     def testListPlatforms(self):
         client = rbuilderfacade.RbuilderRESTClient('http://localhost', 'foo',

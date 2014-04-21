@@ -670,7 +670,8 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
     def createBranch(self, project, name, platformLabel, namespace=None,
             description=''):
         project = self.getProject(project)
-        if name in [b.name for b in project.project_branches]:
+        if project.project_branches and \
+                name in [b.name for b in project.project_branches]:
             raise errors.RbuildError("Branch named '%s' already exists" % name)
         doc = xobj.Document()
         doc.project_branch = br = xobj.XObj()
