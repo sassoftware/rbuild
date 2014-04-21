@@ -22,8 +22,13 @@ from rbuild_test import rbuildhelp
 
 
 class EnableTest(rbuildhelp.RbuildHelper):
+    def setUp(self):
+        rbuildhelp.RbuildHelper.setUp(self)
+        self.handle = self.getRbuildHandle(mock.MockObject())
+        self.handle.EnablePlatform.registerCommands()
+        self.handle.EnablePlatform.initialize()
+
     def testEnableArgParse(self):
-        self.getRbuildHandle()
         self.checkRbuild(
             'enable label',
             'rbuild_plugins.enable.EnablePlatformCommand.runCommand',
@@ -36,9 +41,7 @@ class EnableTest(rbuildhelp.RbuildHelper):
             )
 
     def testEnableCmdline(self):
-        handle = self.getRbuildHandle(mock.MockObject())
-        handle.EnablePlatform.registerCommands()
-        handle.EnablePlatform.initialize()
+        handle = self.handle
         mock.mockMethod(handle.EnablePlatform.enable)
         mock.mockMethod(handle.EnablePlatform.disable)
 
@@ -68,9 +71,7 @@ class EnableTest(rbuildhelp.RbuildHelper):
         handle.EnablePlatform.enable._mock.assertCalled('label')
 
     def testUpdatePlatform(self):
-        handle = self.getRbuildHandle(mock.MockObject())
-        handle.Launch.registerCommands()
-        handle.Launch.initialize()
+        handle = self.handle
 
         mock.mockMethod(handle.facade.rbuilder.getPlatform)
         handle.facade.rbuilder.getPlatform._mock.setReturn(None, 'no label')
@@ -93,9 +94,7 @@ class EnableTest(rbuildhelp.RbuildHelper):
 
     def testUnauthorizedAccess(self):
         '''Regression test for APPENG-2791'''
-        handle = self.getRbuildHandle(mock.MockObject())
-        handle.Launch.registerCommands()
-        handle.Launch.initialize()
+        handle = self.handle
 
         mock.mockMethod(handle.facade.rbuilder.getPlatform)
         handle.facade.rbuilder.getPlatform._mock.setReturn(None, 'no label')
@@ -118,8 +117,8 @@ class EnableTest(rbuildhelp.RbuildHelper):
         handle.facade.rbuilder.getPlatform._mock.setReturn(_platform, 'label')
         err = self.assertRaises(
             errors.PluginError,
-            handle.EnablePlatform._updatePlatform
-            ,'label',
+            handle.EnablePlatform._updatePlatform,
+            'label',
             True,
             )
         self.assertIn('not authorized', str(err))
