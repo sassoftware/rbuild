@@ -945,8 +945,10 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
         self.assertTrue(len(_jobs) == 1)
 
         job.job_state._mock.set(name='Failed')
-        self.assertRaises(
+        job._mock.set(status_text='failed for some reason')
+        err = self.assertRaises(
             errors.RbuildError, client.configureTarget, target, ddata)
+        self.assertEqual('failed for some reason', str(err))
         self.assertTrue(len(_jobs) == 2)
 
     def testConfigureTargetCredentials(self):

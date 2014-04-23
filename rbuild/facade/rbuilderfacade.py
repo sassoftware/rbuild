@@ -427,7 +427,7 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
             jobObj.refresh()
 
         if jobObj.job_state.name == 'Failed':
-            raise errors.RbuildError('Target creation failed')
+            raise errors.RbuildError(jobObj.status_text)
         return target
 
     def configureTargetCredentials(self, target, ddata):
