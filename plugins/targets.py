@@ -62,7 +62,8 @@ class CreateTargetCommand(command.BaseCommand):
 class ListTargetsCommand(command.ListCommand):
     help = 'list targets'
     resource = 'targets'
-    listFields = ('name', 'description', 'is_configured', 'credentials_valid')
+    listFields = ('target_id', 'name', 'description', 'is_configured',
+                  'credentials_valid')
     listFieldMap = dict(
         is_configured=dict(display_name='Configred'),
         credentials_valid=dict(display_name='Credentials'),
