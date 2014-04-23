@@ -59,6 +59,17 @@ class CreateTargetCommand(command.BaseCommand):
             handle.DescriptorConfig.writeConfig(toFile)
 
 
+class DeleteTargetsCommand(command.BaseCommand):
+    help = 'Delete targets'
+    paramHelp = '<target id>+'
+
+    def runCommand(self, handle, argSet, args):
+        _, targetIds = self.requireParameters(
+            args, expected=['ID'], appendExtra=True)
+        for targetId in targetIds:
+            handle.Targets.delete(targetId)
+
+
 class ListTargetsCommand(command.ListCommand):
     help = 'list targets'
     resource = 'targets'
@@ -76,6 +87,8 @@ class Targets(pluginapi.Plugin):
     def initialize(self):
         self.handle.Commands.getCommandClass('create').registerSubCommand(
             'target', CreateTargetCommand)
+        self.handle.Commands.getCommandClass('delete').registerSubCommand(
+            'targets', DeleteTargetsCommand)
         self.handle.Commands.getCommandClass('list').registerSubCommand(
             'targets', ListTargetsCommand)
 
@@ -119,6 +132,13 @@ class Targets(pluginapi.Plugin):
             rb.configureTargetCredentials(target, creds_ddata)
         except errors.RbuildError as e:
             self.handle.ui.warning(str(e))
+
+    def delete(self, targetId):
+        target = self.handle.facade.rbuilder.getTargets(target_id=targetId)
+        if target:
+            target[0].delete()
+        else:
+            self.handle.ui.write("No target found with id '%s'" % targetId)
 
     def list(self, *args, **kwargs):
         return self.handle.facade.rbuilder.getTargets()

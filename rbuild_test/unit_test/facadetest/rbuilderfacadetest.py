@@ -1189,9 +1189,12 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
     def testGetTargets(self):
         client = rbuilderfacade.RbuilderRESTClient(
             'http://localhost', 'foo', 'bar', mock.MockObject())
-        mock.mock(client, '_api')
-        client._api._mock.set(targets=['foo', 'bar'])
+        mock.mock(client, '_getResources')
+        client._getResources._mock.setReturn(['foo', 'bar'], 'targets')
+        client._getResources._mock.setReturn(['foo'], 'targets', name='foo')
+        client._getResources._mock.setReturn(['foo'], 'targets', name='foo')
         self.assertEqual(client.getTargets(), ['foo', 'bar'])
+        self.assertEqual(client.getTargets(name='foo'), ['foo'])
 
     def testGetImages(self):
         client = rbuilderfacade.RbuilderRESTClient(

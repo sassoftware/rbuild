@@ -599,7 +599,7 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
         @return: list of configured targets
         @rtype: list of rObj(target)
         '''
-        return self.api.targets
+        return self._getResources('targets', **kwargs)
 
     def getProductDefinitionSchemaVersion(self):
         # rBuilder 5.2.3 <= version < rBuilder 6.1.0
@@ -1021,7 +1021,7 @@ class RbuilderFacade(object):
         client = self._getRbuilderRESTClient()
         return client.getTarget(name)
 
-    def getTargets(self):
+    def getTargets(self, **kwargs):
         '''
         Get all targets
 
@@ -1029,7 +1029,7 @@ class RbuilderFacade(object):
         @rtype: list of rObj
         '''
         client = self._getRbuilderRESTClient()
-        return client.getTargets()
+        return client.getTargets(**kwargs)
 
     def getTargetTypes(self):
         return self._getRbuilderRESTClient().getTargetTypes()

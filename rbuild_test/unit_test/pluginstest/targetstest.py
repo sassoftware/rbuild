@@ -26,9 +26,11 @@ class AbstractTargetTest(rbuildhelp.RbuildHelper):
         rbuildhelp.RbuildHelper.setUp(self)
         self.handle = self.getRbuildHandle(mock.MockObject())
         self.handle.Create.registerCommands()
+        self.handle.Delete.registerCommands()
         self.handle.List.registerCommands()
         self.handle.Targets.registerCommands()
         self.handle.Create.initialize()
+        self.handle.Delete.initialize()
         self.handle.List.initialize()
         self.handle.Targets.initialize()
 
