@@ -89,7 +89,7 @@ class EditImageDefCommand(pluginapi.command.BaseCommand):
         message = argSet.pop('message', None)
         listImageDefs = argSet.pop('list', False)
         fromFile = argSet.pop('from-file', None)
-        toFile = argSet.pop('toFile', None)
+        toFile = argSet.pop('to-file', None)
 
         stageName = handle.productStore._currentStage
         if stageName:
