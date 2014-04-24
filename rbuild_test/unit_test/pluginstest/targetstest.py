@@ -27,10 +27,12 @@ class AbstractTargetTest(rbuildhelp.RbuildHelper):
         self.handle = self.getRbuildHandle(mock.MockObject())
         self.handle.Create.registerCommands()
         self.handle.Delete.registerCommands()
+        self.handle.Edit.registerCommands()
         self.handle.List.registerCommands()
         self.handle.Targets.registerCommands()
         self.handle.Create.initialize()
         self.handle.Delete.initialize()
+        self.handle.Edit.initialize()
         self.handle.List.initialize()
         self.handle.Targets.initialize()
 
@@ -97,6 +99,63 @@ class CreateTargetTest(AbstractTargetTest):
         handle.Targets.createTarget._mock.assertCalled('vmware')
         handle.Targets.configureTargetCredentials\
             ._mock.assertCalled('target')
+        handle.DescriptorConfig.writeConfig._mock.assertCalled('foo')
+
+
+class EditTargetTest(AbstractTargetTest):
+    def testEditTargetArgParse(self):
+        self.checkRbuild(
+            'edit target --from-file=file --to-file=toFile foo',
+            'rbuild_plugins.targets.EditTargetCommand.runCommand',
+            [None, None, {
+                'from-file': 'file',
+                'to-file': 'toFile',
+                }, ['edit', 'target', 'foo']])
+
+    def testEditTargetCmdLine(self):
+        handle = self.handle
+
+        mock.mockMethod(handle.DescriptorConfig.readConfig)
+        mock.mockMethod(handle.DescriptorConfig.writeConfig)
+        mock.mockMethod(handle.Targets.edit)
+        handle.Targets.edit
+
+        cmd = handle.Commands.getCommandClass('edit')()
+
+        err = self.assertRaises(
+            errors.ParseError,
+            cmd.runCommand,
+            handle,
+            dict(),
+            ['rbuild', 'edit', 'target'],
+            )
+        self.assertEqual(
+            str(err), "'target' missing 1 command parameter(s): ID")
+
+        cmd.runCommand(
+            handle,
+            dict(),
+            ['rbuild', 'edit', 'target', '1'],
+            )
+        handle.DescriptorConfig.readConfig._mock.assertNotCalled()
+        handle.Targets.edit._mock.assertCalled('1')
+
+        cmd.runCommand(
+            handle,
+            {'from-file': 'foo'},
+            ['rbuild', 'edit', 'target', '1'],
+            )
+        handle.DescriptorConfig.readConfig._mock.assertCalled('foo')
+        handle.Targets.edit._mock.assertCalled('1')
+        handle.DescriptorConfig.writeConfig._mock.assertNotCalled()
+
+        cmd.runCommand(
+            handle,
+            {'to-file': 'foo'},
+            ['rbuild', 'edit', 'target', '1'],
+            )
+        handle.DescriptorConfig.readConfig._mock.assertNotCalled()
+        handle.Targets.edit._mock.assertCalled('1')
         handle.DescriptorConfig.writeConfig._mock.assertCalled('foo')
 
 

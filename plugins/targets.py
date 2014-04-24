@@ -18,6 +18,7 @@
 '''
 targets
 '''
+from rbuild import errors
 from rbuild import pluginapi
 from rbuild.pluginapi import command
 
@@ -70,6 +71,37 @@ class DeleteTargetsCommand(command.BaseCommand):
             handle.Targets.delete(targetId)
 
 
+class EditTargetCommand(command.BaseCommand):
+    '''
+    Edit targets
+    '''
+    help = 'Edit target configuration'
+    commands = ['target']
+    paramHelp = '<target id>'
+    docs = {
+        'from-file': 'Load target config from a file',
+        'to-file': 'Write target config to a file',
+        }
+
+    def addLocalParameters(self, argDef):
+        argDef['from-file'] = '-f', pluginapi.command.ONE_PARAM
+        argDef['to-file'] = '-o', pluginapi.command.ONE_PARAM
+
+    def runCommand(self, handle, argSet, args):
+        fromFile = argSet.pop('from-file', None)
+        toFile = argSet.pop('to-file', None)
+
+        _, targetId = self.requireParameters(args, expected='ID')
+
+        if fromFile:
+            handle.DescriptorConfig.readConfig(fromFile)
+
+        handle.Targets.edit(targetId)
+
+        if toFile:
+            handle.DescriptorConfig.writeConfig(toFile)
+
+
 class ListTargetsCommand(command.ListCommand):
     help = 'list targets'
     resource = 'targets'
@@ -89,6 +121,8 @@ class Targets(pluginapi.Plugin):
             'target', CreateTargetCommand)
         self.handle.Commands.getCommandClass('delete').registerSubCommand(
             'targets', DeleteTargetsCommand)
+        self.handle.Commands.getCommandClass('edit').registerSubCommand(
+            'target', EditTargetCommand)
         self.handle.Commands.getCommandClass('list').registerSubCommand(
             'targets', ListTargetsCommand)
 
@@ -139,6 +173,26 @@ class Targets(pluginapi.Plugin):
             target[0].delete()
         else:
             self.handle.ui.write("No target found with id '%s'" % targetId)
+
+    def edit(self, targetId):
+        dc = self.handle.DescriptorConfig
+        rb = self.handle.facade.rbuilder
+
+        target = rb.getTargets(target_id=targetId)
+        if target:
+            target = target[0]
+        else:
+            raise errors.PluginError(
+                "No target found with id 'foo'" % targetId)
+
+        currentValues = dict((e, getattr(target.target_configuration, e))
+                             for e in target.target_configuration.elements)
+        descriptor = rb.getTargetDescriptor(target.target_type.name)
+        ddata = dc.createDescriptorData(
+            fromStream=descriptor, defaults=currentValues)
+
+        target = rb.configureTarget(target, ddata)
+        self.configureTargetCredentials(target)
 
     def list(self, *args, **kwargs):
         return self.handle.facade.rbuilder.getTargets()

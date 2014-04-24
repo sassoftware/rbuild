@@ -359,8 +359,8 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
         try:
             return client.do_GET(fullUri)
         except robj.errors.HTTPNotFoundError:
-            raise errors.RbuildError("Unable to fetch images at '%s'" %
-                                     fullUri)
+            raise errors.RbuildError("Unable to fetch resource '%s' at '%s'" %
+                                     (resource, fullUri))
 
     @property
     def api(self):
