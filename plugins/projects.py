@@ -29,14 +29,19 @@ class ListProjectsCommand(command.ListCommand):
     showFieldMap = dict(
         members=dict(hidden=True),
         images=dict(hidden=True),
-        created_by=dict(accessor=lambda p: p.created_by.full_name),
-        modified_by=dict(accessor=lambda p: p.created_by.full_name),
+        created_by=dict(
+            accessor=lambda p: p.created_by.full_name if p.created_by else '',
+            ),
+        modified_by=dict(
+            accessor=lambda p: p.modified_by.full_name if p.modified_by else '',
+            ),
         project_branches=dict(
-            accessor=lambda p: ', '.join(b.name for b in p.project_branches),
+            accessor=lambda p: ', '.join(b.name for b in p.project_branches)
+                if p.project_branches else '',
             ),
         project_branch_stages=dict(
-            accessor=lambda p: ', '.join(
-                s.name for s in p.project_branch_stages),
+            accessor=lambda p: ', '.join(s.name for s in p.project_branch_stages)
+                if p.project_branch_stages else '',
             ),
         )
 
