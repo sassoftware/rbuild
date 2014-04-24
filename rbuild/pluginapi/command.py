@@ -355,7 +355,7 @@ class ListCommand(BaseCommand):
                     resource, self.listFields, self.listFieldMap)))
             handle.ui.writeTable(data, headers)
         else:
-            handle.ui.write('No %s found' % self.resource)
+            handle.ui.warning('No %s found' % self.resource)
         return resources
 
     def _show(self, handle, idList):
@@ -365,9 +365,10 @@ class ListCommand(BaseCommand):
                 self.resource)
         for resourceId in idList:
             resource = handle.getPlugin(self.resource).show(resourceId)
-            showFieldList = list(set(resource.elements + self.showFieldMap.keys()))
-            showFieldList.sort()
             if resource:
+                showFieldList = list(set(resource.elements
+                                         + self.showFieldMap.keys()))
+                showFieldList.sort()
                 handle.ui.writeTable(list(self._getResourceData(
                     resource,
                     showFieldList,
@@ -376,5 +377,5 @@ class ListCommand(BaseCommand):
                     )))
                 handle.ui.write()
             else:
-                handle.ui.write(
+                handle.ui.warning(
                     "No %s found with id '%s'", self.resource, resourceId)

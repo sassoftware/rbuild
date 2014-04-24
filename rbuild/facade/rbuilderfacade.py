@@ -525,18 +525,15 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
                 add = True
                 for key, value in kwargs.items():
                     if key == 'id':
-                        add = value in imageDef.id
+                        add = (value == imageDef.id.rsplit('/')[-1])
                     else:
-                        add = getattr(imageDef, key) == value
-                    if not add:
-                        break
+                        add = (getattr(imageDef, key) == value)
                 if add:
                     imageDefs.append(imageDef)
             return imageDefs
         except robj.errors.HTTPNotFoundError:
             raise errors.RbuildError(
                 "Project '%s' and version '%s' not found" % (product, version))
-
 
     def getImageTypeDef(self, product, version, imageType, arch):
         client = self.api._client
