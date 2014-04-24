@@ -685,7 +685,10 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
         br.description = description
         if namespace:
             br.namespace = namespace
-        br = project.project_branches.append(doc)
+        try:
+            br = project.project_branches.append(doc)
+        except robj.errors.HTTPConflictError:
+            raise errors.RbuildError("Branch named '%s' already exists" % name)
         return br.label
 
     def listPlatforms(self):

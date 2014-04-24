@@ -277,6 +277,25 @@ class RbuilderFacadeTest(rbuildhelp.RbuildHelper):
         self.assertRaises(errors.BadParameterError, facade.createBranch,
                 'proj', '-1', 'plat')
 
+    def testCreateExistingBranch(self):
+        handle, facade = self.prep()
+        cli = rbuilderfacade.RbuilderRESTClient('/foo', 'username',
+                'password', handle)
+        mock.mockMethod(facade._getRbuilderRESTClient, returnValue=cli)
+        projectBranches = mock.MockObject()
+        project = mock.MockObject(project_branches=projectBranches)
+        mock.mockMethod(cli.getProject, returnValue=project)
+
+        invocations = []
+        def append(projectBranch):
+            invocations.append(projectBranch)
+            raise robj.errors.HTTPConflictError(uri='/fake',
+                    status='Conflict', reason='Just because', response="")
+        projectBranches._mock.set(append=append)
+        e = self.assertRaises(errors.RbuildError, facade.createBranch,
+                'proj', 'branch', 'plat')
+        self.assertEquals(str(e), "Branch named 'branch' already exists")
+
     def testGetProject(self):
         handle, facade = self.prep()
         mock.mockMethod(facade._getRbuilderRESTClient)
