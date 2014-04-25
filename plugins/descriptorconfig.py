@@ -219,7 +219,11 @@ class DescriptorConfig(pluginapi.Plugin):
 
     def _read(self, filename):
         with open(os.path.expanduser(filename)) as fh:
-            return json.load(fh)
+            try:
+                return json.load(fh)
+            except ValueError as e:
+                location = str(e).rpartition(':')[-1].strip()
+                raise errors.ConfigParseError(file=filename, location=location)
 
     def _write(self, filename, data, append=False):
         mode = 'a' if append else 'w'

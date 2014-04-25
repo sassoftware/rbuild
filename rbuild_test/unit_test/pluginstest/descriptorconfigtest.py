@@ -123,3 +123,33 @@ class DescriptorConfigTest(rbuildhelp.RbuildHelper):
 
         dc._parseDescriptorData(_ddata)
         self.assertEqual(dc._config, {'foo': 'FOO', 'bar': 'BAR', 'baz': 'BAZ'})
+
+    def test_read(self):
+        handle = self.getRbuildHandle(mock.MockObject())
+        dc = handle.DescriptorConfig
+        dc.initialize()
+
+        filename = self.workDir + '/config.json'
+
+        with open(filename, 'w') as fh:
+            fh.write('''\
+{
+    "foo": "bar"
+}
+''')
+        rv = dc._read(filename)
+        self.assertEqual({"foo": "bar"}, rv)
+
+        with open(filename, 'w') as fh:
+            fh.write('''\
+{
+    "foo": "bar",
+    "baz": spam
+}
+''')
+        err = self.assertRaises(
+            errors.ConfigParseError, dc._read, filename)
+        self.assertEqual(
+            "Error parsing '%s' at line 3 column 12 (char 31)" % filename,
+            str(err),
+            )

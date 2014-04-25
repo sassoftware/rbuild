@@ -228,6 +228,17 @@ class RbuilderUserError(RbuilderError):
 ## END rBuild Errors
 
 
+## BEGIN Plugin Errors
+class ConfigParseError(PluginError):
+    """
+    Raised when there is a problem loading a descriptor configuration file
+    """
+    template = "Error parsing '%(file)s' at %(location)s"
+    params = ['file', 'location']
+
+
+## END Plugin Errors
+
 #: error that is output when a Python exception makes it to the command 
 #: line.
 _ERROR_MESSAGE = '''
