@@ -153,3 +153,81 @@ class DescriptorConfigTest(rbuildhelp.RbuildHelper):
             "Error parsing '%s' at line 3 column 12 (char 31)" % filename,
             str(err),
             )
+
+    def testCallbackEnumerated(self):
+        handle = self.getRbuildHandle(mock.MockObject())
+        callback = handle.DescriptorConfig.callbackClass(handle.ui)
+        fDef = handle.DescriptorConfig.descriptorClass()
+        fDef.addDataField('lotsaValues',
+            descriptions=[fDef.Description("foo")],
+            type=fDef.EnumeratedType([
+                fDef.ValueWithDescription('one',
+                    descriptions=[fDef.Description("One")]),
+                fDef.ValueWithDescription('two',
+                    descriptions=[fDef.Description("Two")]),
+            ]))
+        fDef.addDataField('lotsaValuesDefault',
+            descriptions=[fDef.Description("foo")],
+            default=['two'],
+            type=fDef.EnumeratedType([
+                fDef.ValueWithDescription('one',
+                    descriptions=[fDef.Description("One")]),
+                fDef.ValueWithDescription('two',
+                    descriptions=[fDef.Description("Two")]),
+            ]))
+
+        mock.mockMethod(handle.ui.getChoice)
+
+        # field with no default
+        handle.ui.getChoice._mock.setReturn(0,
+            'Enter choice',
+            ["One", "Two"], default=None)
+        rv = callback.getValueForField(fDef.getDataField('lotsaValues'))
+        self.assertEqual(rv, 'one')
+
+        # field with default
+        handle.ui.getChoice._mock.setReturn(0,
+            'Enter choice (blank for default)',
+            ["One", "Two"], default=1)
+        rv = callback.getValueForField(fDef.getDataField('lotsaValuesDefault'))
+        self.assertEqual(rv, 'one')
+
+    def testCallbackEnumeratedMultiple(self):
+        handle = self.getRbuildHandle(mock.MockObject())
+        callback = handle.DescriptorConfig.callbackClass(handle.ui)
+        fDef = handle.DescriptorConfig.descriptorClass()
+        fDef.addDataField('lotsaValues',
+            descriptions=[fDef.Description("foo")],
+            multiple=True,
+            type=fDef.EnumeratedType([
+                fDef.ValueWithDescription('one',
+                    descriptions=[fDef.Description("One")]),
+                fDef.ValueWithDescription('two',
+                    descriptions=[fDef.Description("Two")]),
+            ]))
+        fDef.addDataField('lotsaValuesDefault',
+            descriptions=[fDef.Description("foo")],
+            multiple=True,
+            default=['two'],
+            type=fDef.EnumeratedType([
+                fDef.ValueWithDescription('one',
+                    descriptions=[fDef.Description("One")]),
+                fDef.ValueWithDescription('two',
+                    descriptions=[fDef.Description("Two")]),
+            ]))
+
+        mock.mockMethod(handle.ui.getChoices)
+
+        # field with no default
+        handle.ui.getChoices._mock.setReturn([0],
+            'Enter choice',
+            ["One", "Two"], default=None)
+        rv = callback.getValueForField(fDef.getDataField('lotsaValues'))
+        self.assertEqual(rv, ['one'])
+
+        # field with default
+        handle.ui.getChoices._mock.setReturn([0],
+            'Enter choice (blank for default)',
+            ["One", "Two"], default=[1])
+        rv = callback.getValueForField(fDef.getDataField('lotsaValuesDefault'))
+        self.assertEqual(rv, ['one'])
