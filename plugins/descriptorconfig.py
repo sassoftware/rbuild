@@ -67,7 +67,11 @@ class RbuilderCallback(object):
 
         defmsg = ""  # message about the default value, if there is one
         reqmsg = ""  # message about whether the field is required, if so
-        typmsg = " (type %s)" % field.type
+
+        if field.listType:
+            typmsg = " (type list)"
+        else:
+            typmsg = " (type %s)" % field.type
 
         if field.name in self._defaults:
             # override the field's default value with ours
@@ -149,6 +153,9 @@ class RbuilderCallback(object):
                 # return the selected choice
                 return choices[data - 1][1]
 
+        if field.listType:
+            return self._listType(field)
+
         # for non enumerated types ...
 
         # if there is a default, say what it is
@@ -214,8 +221,22 @@ class DescriptorConfig(pluginapi.Plugin):
     _config = None
 
     def _parseDescriptorData(self, ddata):
-        self._config.update(dict((f.name, ddata.getField(f.name))
-                                 for f in ddata._descriptor.getDataFields()))
+        config = dict()
+        for dataField in ddata._descriptor.getDataFields():
+            # TODO: need to handle nested compound fields here
+            # for now we assume the list is shallow
+            value = ddata.getField(dataField.name)
+            if dataField.listType:
+                _value = []
+                for subv in value:
+                    if hasattr(subv, 'getFields'):
+                        _value.append(dict((f.getName(), f.getValue())
+                                           for f in subv.getFields()))
+                    else:
+                        _value.append(subv)
+                value = _value
+            config[dataField.name] = value
+        self._config.update(config)
 
     def _read(self, filename):
         with open(os.path.expanduser(filename)) as fh:
