@@ -320,6 +320,7 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
     REST rBuilder Client. This will replace the RPC client as more
     functionality is moved into the REST interface.
     """
+    _singleBackslashRe = re.compile(r'\\')
 
     def __init__(self, rbuilderUrl, user, pw, handle):
         _AbstractRbuilderClient.__init__(self, rbuilderUrl, user, pw, handle)
@@ -345,8 +346,10 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
         fullUri = self.api._uri + '/' + resource
 
         filter_by = []
-        for item in kwargs.items():
-            filter_by.append('EQUAL(%s,%s)' % item)
+        for field, param in kwargs.items():
+            param = self._singleBackslashRe.sub('r\\\\', param)
+            param = param.replace('"', r'\"')
+            filter_by.append('EQUAL(%s,"%s")' % (field, param))
 
         if filter_by:
             fullUri += ';filter_by=AND(%s)' % ','.join(filter_by)

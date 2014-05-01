@@ -1233,33 +1233,33 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
         client._api._client.do_GET._mock.setReturn(
             'image',
             "http://localhost/images"
-                ";filter_by=AND(EQUAL(name,foo))"
+                ';filter_by=AND(EQUAL(name,"foo"))'
                 ";order_by=-time_created")
         client._api._client.do_GET._mock.setReturn(
             'image_version',
             "http://localhost/images"
-                ";filter_by=AND(EQUAL(trailing_version,1-1-1)"
-                ",EQUAL(name,foo))"
+                ';filter_by=AND(EQUAL(trailing_version,"1-1-1")'
+                ',EQUAL(name,"foo"))'
                 ";order_by=-time_created")
         client._api._client.do_GET._mock.setReturn(
             'project',
             "http://localhost/projects/bar/images"
-                ";filter_by=AND(EQUAL(name,foo))"
+                ';filter_by=AND(EQUAL(name,"foo"))'
                 ";order_by=-time_created")
         client._api._client.do_GET._mock.setReturn(
             'project_stage',
             "http://localhost/projects/bar/project_branches/baz/project_branch_stages/Release/images"
-                ";filter_by=AND(EQUAL(name,foo))"
+                ';filter_by=AND(EQUAL(name,"foo"))'
                 ";order_by=-time_created")
         client._api._client.do_GET._mock.setReturn(
             'project_stage_version',
             "http://localhost/projects/bar/project_branches/baz/project_branch_stages/Release/images"
-                ";filter_by=AND(EQUAL(trailing_version,1-1-1)"
-                ",EQUAL(name,foo))"
+                ';filter_by=AND(EQUAL(trailing_version,"1-1-1")'
+                ',EQUAL(name,"foo"))'
                 ";order_by=-time_created")
         client._api._client.do_GET._mock.setReturn(
             [],
-            "http://localhost/images;filter_by=AND(EQUAL(name,bar))"
+            'http://localhost/images;filter_by=AND(EQUAL(name,"bar"))'
                 ";order_by=-time_created")
 
         self.assertEqual(client.getImages('foo'), 'image')
@@ -1294,7 +1294,7 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
         client._api._client.do_GET._mock.setReturn(
             'projects_filtered',
             "http://localhost/projects"
-                ";filter_by=AND(EQUAL(name,foo))",
+                ';filter_by=AND(EQUAL(name,"foo"))',
             )
         client._api._client.do_GET._mock.setReturn(
             'projects_ordered',
@@ -1304,7 +1304,7 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
         client._api._client.do_GET._mock.setReturn(
             'projects_ordered_filtered',
             "http://localhost/projects"
-                ";filter_by=AND(EQUAL(name,foo))"
+                ';filter_by=AND(EQUAL(name,"foo"))'
                 ";order_by=name",
             )
         client._api._client.do_GET._mock.setReturn(
