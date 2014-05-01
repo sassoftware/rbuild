@@ -102,18 +102,31 @@ class DescriptorConfigTest(rbuildhelp.RbuildHelper):
         dc.initialize()
 
         _field1 = mock.MockObject()
-        _field1._mock.set(name='foo')
+        _field1._mock.set(name='foo', listType=None)
 
         _field2 = mock.MockObject()
-        _field2._mock.set(name='bar')
+        _field2._mock.set(name='bar', listType=None)
 
         _field3 = mock.MockObject()
-        _field3._mock.set(name='baz')
+        _field3._mock.set(name='baz', listType=True)
+
+        _subf1 = mock.MockObject()
+        _subf1.getName._mock.setReturn('name')
+        _subf1.getValue._mock.setReturn('spam')
+
+        _subf2 = mock.MockObject()
+        _subf2.getName._mock.setReturn('value')
+        _subf2.getValue._mock.setReturn('eggs')
+
+        _subv1 = mock.MockObject()
+        _subv1.getFields._mock.setReturn([_subf1, _subf2])
+
+        _subv2 = {'afield': 'avalue', 'bfield': 'bvalue'}
 
         _ddata = mock.MockObject()
         _ddata.getField._mock.setReturn('FOO', 'foo')
         _ddata.getField._mock.setReturn('BAR', 'bar')
-        _ddata.getField._mock.setReturn('BAZ', 'baz')
+        _ddata.getField._mock.setReturn([_subv1, _subv2], 'baz')
         _ddata._descriptor.getDataFields._mock.setReturn([_field1, _field2])
 
         dc._parseDescriptorData(_ddata)
@@ -122,7 +135,14 @@ class DescriptorConfigTest(rbuildhelp.RbuildHelper):
         _ddata._descriptor.getDataFields._mock.setReturn([_field3])
 
         dc._parseDescriptorData(_ddata)
-        self.assertEqual(dc._config, {'foo': 'FOO', 'bar': 'BAR', 'baz': 'BAZ'})
+        self.assertEqual(dc._config, {
+            'foo': 'FOO',
+            'bar': 'BAR',
+            'baz': [
+                {'name': 'spam', 'value': 'eggs'},
+                {'afield': 'avalue', 'bfield': 'bvalue'},
+                ],
+            })
 
     def test_read(self):
         handle = self.getRbuildHandle(mock.MockObject())
