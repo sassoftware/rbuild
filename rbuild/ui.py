@@ -156,7 +156,6 @@ class UserInterface(object):
         else:
             return ret
 
-
     def getYn(self, prompt, default=True):
         '''
         Get a yes/no response from the user.  Return a bool representing
@@ -180,7 +179,7 @@ class UserInterface(object):
         return response[0].upper() == 'Y'
 
     def getResponse(self, prompt, default=None, validationFn=None,
-                    inputFn=None):
+                    inputFn=None, required=False):
         if inputFn is None:
             inputFn = self.input
         if default:
@@ -191,29 +190,19 @@ class UserInterface(object):
             response = inputFn(prompt)
             if not response:
                 if not default:
-                    self.write('Empty response not allowed.')
-                    continue
-                else:
+                    if required:
+                        self.write('Empty response not allowed.')
+                        continue
+                    response = None
+                elif default:
                     return default
             if validationFn is not None:
                 if not validationFn(response):
                     continue
             return response
 
-    def getChoice(self, prompt, choices, prePrompt='Choose one:', pageSize=None):
-        """
-        Present a list of choices to the user and have them select one by
-        index. Returns a 0-indexed integer into the original list of choices.
-
-        @param prompt: string to display in the final prompt
-        @type  prompt: str
-        @param choices: list of items to display, in desired order
-        @type  choices: list
-        @param prePrompt: optional string to display before the list of choices
-        @type  prePrompt: str
-        @param pageSize: (optional) number of items per page. Defaults to no pagination.
-        @type  pageSize: int
-        """
+    def _getChoiceResponse(self, prompt, choices, prePrompt='', default=None,
+                           pageSize=None, promptDefault=None):
         choices = list(choices)
         assert choices
         pad = len(str(len(choices)))
@@ -230,7 +219,7 @@ class UserInterface(object):
                 idxEnd = (pageNo + 1) * pageSize
                 hasPrev = (pageNo > 0)
                 chunk = ((idxStart + x, y)
-                        for x, y in enumerate(choices[idxStart:idxEnd]))
+                         for x, y in enumerate(choices[idxStart:idxEnd]))
             else:
                 chunk = enumerate(choices)
             for n, choice in chunk:
@@ -241,7 +230,10 @@ class UserInterface(object):
                 self.write(' %*s  %s' % (pad, '>', "(next page)"))
                 hasNext = True
 
-            response = self.input(prompt + ' [%d-%d]: ' % (1, len(choices)))
+            response = self.getResponse(
+                prompt + ' [%d-%d]' % (1, len(choices)),
+                default=promptDefault,
+                )
             if hasPrev and response == '<':
                 pageNo -= 1
                 continue
@@ -251,11 +243,78 @@ class UserInterface(object):
 
             try:
                 response = int(response)
-            except ValueError:
+            except (ValueError, TypeError):
+                if isinstance(response, list):
+                    return response
                 continue
+            return response
+
+    def getChoice(self, prompt, choices, prePrompt='Choose one:', default=None,
+                  pageSize=None):
+        """
+        Present a list of choices to the user and have them select one by
+        index. Returns a 0-indexed integer into the original list of choices.
+
+        @param prompt: string to display in the final prompt
+        @type  prompt: str
+        @param choices: list of items to display, in desired order
+        @type  choices: list
+        @param prePrompt: optional string to display before the list of choices
+        @type  prePrompt: str
+        @param default: default response
+        @type  default: int
+        @param pageSize: (optional) number of items per page. Defaults to no pagination.
+        @type  pageSize: int
+        """
+        if default is None:
+            promptDefault = default
+        else:
+            # prompts are 1-indexed
+            promptDefault = default + 1
+
+        while True:
+            response = self._getChoiceResponse(
+                prompt, choices, prePrompt, default, pageSize, promptDefault)
             if not (0 < response <= len(choices)):
                 continue
             return response - 1
+
+    def getChoices(self, prompt, choices, prePrompt='Choose:', default=None,
+                   pageSize=None):
+        """
+        Present a list of choices to the user and have them select one or more
+        by index. Returns a 0-indexed integer into the original list of
+        choices.
+
+        @param prompt: string to display in the final prompt
+        @type  prompt: str
+        @param choices: list of items to display, in desired order
+        @type  choices: list
+        @param prePrompt: optional string to display before the list of choices
+        @type  prePrompt: str
+        @param default: default choice(s)
+        @type  default: list of ints
+        @param pageSize: (optional) number of items per page. Defaults to no
+                         pagination.
+        @type  pageSize: int
+        """
+        promptDefault = set(d + 1 for d in default) if default else set()
+        while True:
+            response = self._getChoiceResponse(
+                prompt, choices, prePrompt, default, pageSize,
+                list(promptDefault))
+
+            if isinstance(response, list):
+                return [r - 1 for r in response]
+
+            if not (0 < response <= len(choices)):
+                continue
+
+            # toggle response
+            if response in promptDefault:
+                promptDefault.discard(response)
+            else:
+                promptDefault.add(response)
 
     def promptPassword(self, keyDesc, prompt, promptDesc, validateCallback):
         try:

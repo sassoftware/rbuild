@@ -274,16 +274,40 @@ class UserInterfaceTest(rbuildhelp.RbuildHelper):
     def testGetResponse(self):
         h = self.getRbuildHandle(mockOutput=False)
         mock.mockMethod(h.ui.input)
-        h.ui.input._mock.setReturns(['invalid', '', 'valid'], 'prompt: ')
-        validationFn = lambda x: x == 'valid'
-        rc, txt = self.captureOutput(h.ui.getResponse, 'prompt', 
-                                     validationFn=validationFn)
+
+        # allow None response
+        h.ui.input._mock.setReturns([''], 'prompt: ')
+        rc, txt = self.captureOutput(h.ui.getResponse, 'prompt')
+        assert(rc is None)
+        assert(txt == '')
+
+        # response is required
+        h.ui.input._mock.setReturns(['', 'valid'], 'prompt: ')
+        rc, txt = self.captureOutput(h.ui.getResponse, 'prompt', required=True)
         assert(rc == 'valid')
         assert(txt == 'Empty response not allowed.\n')
 
+        # validation function
+        h.ui.input._mock.setReturns(['invalid', '', 'valid'], 'prompt: ')
+        validationFn = lambda x: x == 'valid'
+        rc, txt = self.captureOutput(h.ui.getResponse, 'prompt',
+                                     validationFn=validationFn)
+        assert(rc == 'valid')
+        assert(txt == '')
+
+        # validation and required
+        h.ui.input._mock.setReturns(['invalid', '', 'valid'], 'prompt: ')
+        rc, txt = self.captureOutput(h.ui.getResponse, 'prompt', required=True,
+                                     validationFn=validationFn)
+        assert(rc == 'valid')
+        self.assertEqual('Empty response not allowed.\n', txt)
+
+        # default
         h.ui.input._mock.setReturns([''], 'prompt (Default: default): ')
-        rc = h.ui.getResponse('prompt', default='default')
+        rc, txt = self.captureOutput(h.ui.getResponse, 'prompt',
+                                     default='default')
         assert(rc == 'default')
+        assert(txt == '')
 
     def testGetPassword(self):
         h = self.getRbuildHandle()
@@ -299,25 +323,132 @@ class UserInterfaceTest(rbuildhelp.RbuildHelper):
 
     def testGetChoice(self):
         h = self.getRbuildHandle()
+        prompt = 'prompt'
         choices = ['a', 'b', 'c']
-        mock.mockMethod(h.ui.input)
-        h.ui.input._mock.setReturns(['', 'x', '0', '4', '3'], 'prompt [1-3]: ')
+        args = [prompt, choices, 'Choose one:', None, None, None]
+        mock.mockMethod(h.ui._getChoiceResponse)
+        h.ui._getChoiceResponse._mock.setReturns([0, 4, 3], *args)
         rc, txt = self.captureOutput(h.ui.getChoice, 'prompt', choices)
         self.assertEqual(rc, 2)
 
+    def testGetChoiceDefault(self):
+        h = self.getRbuildHandle()
+        prompt = 'prompt'
+        choices = ['a', 'b', 'c']
+        default = 2
+        args = [prompt, choices, 'Choose one:', 2, None, 3]
+        mock.mockMethod(h.ui._getChoiceResponse)
+
+        # accept the default
+        h.ui._getChoiceResponse._mock.setReturn(3, *args)
+        rc, txt = self.captureOutput(
+            h.ui.getChoice, prompt, choices, default=default)
+        self.assertEqual(rc, default)
+
+        # enter something else
+        h.ui._getChoiceResponse._mock.setReturn(1, *args)
+        rc, txt = self.captureOutput(
+            h.ui.getChoice, prompt, choices, default=default)
+        self.assertEqual(rc, 0)
+
     def testGetChoicePaged(self):
         h = self.getRbuildHandle()
-        choices = [ chr(x) for x in range(65, 91) ]
-        mock.mockMethod(h.ui.input)
-        h.ui.input._mock.setReturns(['', 'x', '0', '27', '3'], 'prompt [1-26]: ')
-        rc, txt = self.captureOutput(h.ui.getChoice, 'prompt', choices, pageSize=5)
+        prompt = 'prompt'
+        choices = [chr(x) for x in range(65, 91)]
+        args = [prompt, choices, 'Choose one:', None, 5, None]
+        mock.mockMethod(h.ui._getChoiceResponse)
+        h.ui._getChoiceResponse._mock.setReturns(
+            [0, 27, 3], *args)
+        rc, txt = self.captureOutput(
+            h.ui.getChoice, prompt, choices, pageSize=5)
         self.assertEqual(rc, 2)
 
-        # Now test page navigation
-        del h.ui.outStream.write._mock.calls[:]
-        h.ui.input._mock.setReturns(['<', '>', '>', '>', '>', '>', '3'], 'prompt [1-26]: ')
-        rc, txt = self.captureOutput(h.ui.getChoice, 'prompt', choices, pageSize=7)
-        self.assertEqual(rc, 2)
+    def testGetChoices(self):
+        h = self.getRbuildHandle()
+        choices = ['a', 'b', 'c']
+        mock.mockMethod(h.ui._getChoiceResponse)
+        h.ui._getChoiceResponse._mock.setReturn(
+            [3], 'prompt', choices, 'Choose:', None, None, [3])
+        h.ui._getChoiceResponse._mock.setReturns(
+            [0, 4, 3], 'prompt', choices, 'Choose:', None, None, [])
+        rc, txt = self.captureOutput(h.ui.getChoices, 'prompt', choices)
+        self.assertEqual(rc, [2])
+
+    def testGetChoicesDefault(self):
+        h = self.getRbuildHandle()
+        choices = ['a', 'b', 'c']
+        default = [1, 2]
+        mock.mockMethod(h.ui._getChoiceResponse)
+
+        # accept the defaults
+        h.ui._getChoiceResponse._mock.setReturn(
+            [2, 3], 'prompt', choices, 'Choose:', default, None, [2, 3])
+        rc, txt = self.captureOutput(
+            h.ui.getChoices, 'prompt', choices, default=default)
+        self.assertEqual(rc, [1, 2])
+
+        # add a choice to defaults
+        h.ui._getChoiceResponse._mock.setReturn(
+            1, 'prompt', choices, 'Choose:', default, None, [2, 3])
+        h.ui._getChoiceResponse._mock.setReturn(
+            [1, 2, 3], 'prompt', choices, 'Choose:', default, None, [1, 2, 3])
+        rc, txt = self.captureOutput(
+            h.ui.getChoices, 'prompt', choices, default=default)
+        self.assertEqual(rc, [0, 1, 2])
+
+        # remove one of the defaults
+        h.ui._getChoiceResponse._mock.setReturn(
+            3, 'prompt', choices, 'Choose:', default, None, [2, 3])
+        h.ui._getChoiceResponse._mock.setReturn(
+            [2], 'prompt', choices, 'Choose:', default, None, [2])
+        rc, txt = self.captureOutput(
+            h.ui.getChoices, 'prompt', choices, default=default)
+        self.assertEqual(rc, [1])
+
+        # toggle a default option
+        h.ui._getChoiceResponse._mock.setReturn(
+            2, 'prompt', choices, 'Choose:', default, None, [3])
+        h.ui._getChoiceResponse._mock.setReturns(
+            [2, [2, 3]], 'prompt', choices, 'Choose:', default, None, [2, 3])
+        rc, txt = self.captureOutput(
+            h.ui.getChoices, 'prompt', choices, default=default)
+        self.assertEqual(rc, [1, 2])
+
+        # toggler a non-default options
+        h.ui._getChoiceResponse._mock.setReturn(
+            1, 'prompt', choices, 'Choose:', default, None, [1, 2, 3])
+        h.ui._getChoiceResponse._mock.setReturns(
+            [1, [2, 3]], 'prompt', choices, 'Choose:', default, None, [2, 3])
+        rc, txt = self.captureOutput(
+            h.ui.getChoices, 'prompt', choices, default=default)
+        self.assertEqual(rc, [1, 2])
+
+    def testGetChoicesPaged(self):
+        h = self.getRbuildHandle()
+        choices = [chr(x) for x in range(65, 91)]
+        mock.mockMethod(h.ui._getChoiceResponse)
+        h.ui._getChoiceResponse._mock.setReturn(
+            [3], 'prompt', choices, 'Choose:', None, 5, [3])
+        h.ui._getChoiceResponse._mock.setReturns(
+            [0, 27, 3], 'prompt', choices, 'Choose:', None, 5, [])
+        rc, txt = self.captureOutput(
+            h.ui.getChoices, 'prompt', choices, pageSize=5)
+        self.assertEqual(rc, [2])
+
+    def test_getChoiceResponsePagination(self):
+        h = self.getRbuildHandle()
+        choices = [chr(x) for x in range(65, 91)]
+
+        mock.mockMethod(h.ui.getResponse)
+        h.ui.getResponse._mock.setReturns(
+            ['<', '>', '>', '>', '>', '>', '3'],
+            'prompt [1-26]',
+            default=None,
+            )
+        rc, txt = self.captureOutput(
+            h.ui._getChoiceResponse, 'prompt', choices, pageSize=7,
+            default=None, promptDefault=None, prePrompt='Choose one:')
+        self.assertEqual(rc, 3)
         self.assertEqual(
                 ''.join(x[0][0] for x in  h.ui.outStream.write._mock.calls),
                 '''\

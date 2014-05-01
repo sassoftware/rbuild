@@ -36,6 +36,36 @@ class RbuilderCallback(object):
         self._config = config or {}
         self._defaults = defaults or {}
 
+    def _enumeratedType(self, field):
+        prompt = "Enter choice"
+        choices = [self._description(x.descriptions) for x in field.type]
+        default = [idx for idx, x in enumerate(field.type)
+                   if x.key in field.default]
+        if default:
+            prompt += " (blank for default)"
+
+        if field.multiple:
+            response = self.ui.getChoices(prompt, choices,
+                default=default if default else None)
+            return [field.type[r].key for r in response]
+        else:
+            response = self.ui.getChoice(prompt, choices,
+                default=default[0] if default else None)
+            return field.type[response].key
+
+    def _listType(self, field):
+        responses = []
+        self.ui.write('Enter %s (type Ctrl-D to end input)' % field.name)
+        while True:
+            try:
+                response = field._descriptor.createDescriptorData(
+                    self, name=field.name)
+            except errors.RbuildError as e:
+                if 'Ran out of input' in str(e):
+                    return responses
+                raise
+            responses.append(response)
+
     def start(self, descriptor, name=None):
         pass
 
@@ -97,60 +127,9 @@ class RbuilderCallback(object):
         fieldDescr = self._description(field.get_descriptions())
 
         if field.enumeratedType:
-            # FIXME: refactor into subfunction
-
-            # print a list of options and let the user choose it by number
-
-            choices = [(self._description(x.descriptions), x.key)
-                       for x in field.type]
-
-            if field.default:
-                # Find description for default
-                defaultDescr = [x[0] for x in choices
-                                if x[1] == field.default[0]][0]
-                defmsg = " [default %s] " % defaultDescr
-                prompt = "Enter choice (blank for default): "
-            else:
-                prompt = "Enter choice: "
-
-            self.ui.write("Pick %s%s:" % (fieldDescr, defmsg))
-            for i, (choice, _) in enumerate(choices):
-                self.ui.write("\t%-2d: %s" % (i + 1, choice))
-
-            # enumerated type input
-            # loop while the user hasn't entered a valid number
-            while 1:
-
-                data = self.ui.input(prompt).strip()
-
-                # FIXME: error checking
-                if not data:
-                    # user entered blank input
-                    # if no default is present, prompt again
-                    if not field.default:
-                        continue
-                    data = 0
-                else:
-                    # ensure user entered an integer
-                    try:
-                        data = int(data)
-                    except ValueError:
-                        continue
-
-                # make sure the user input is inside the valid range
-                rangeMax = len(choices)
-                rangeMin = 0 if field.default else 1
-                if not (rangeMin <= data <= rangeMax):
-                    continue
-
-                # if selected the 0th element, return the default
-                if data == 0:
-                    return field.default[0]
-                # return the selected choice
-                return choices[data - 1][1]
+            return self._enumeratedType(field)
 
         # for non enumerated types ...
-
         # if there is a default, say what it is
         if field.default:
             defmsg = " [default %s]" % str(field.default[0])
@@ -163,17 +142,14 @@ class RbuilderCallback(object):
             if re.search(r'[Pp]assword', prompt):
                 data = self.ui.inputPassword(prompt)
             else:
-                data = self.ui.input(prompt).strip()
+                data = self.ui.getResponse(
+                    prompt,
+                    default=field.default[0] if field.default else None,
+                    required=field.required,
+                    )
             if data == '':
-                # if input is blank use the entered default data if it exists
-                if field.default:
-                    data = field.default[0]
-                elif field.required:
-                    # if blank and required, input again
-                    continue
-                else:
-                    # Assume the user chose not to fill in the value
-                    return None
+                # the user chose not to fill in the value
+                return None
             try:
                 # convert true/yes/etc to booleans and so on
                 return self.cast(data, field.type)
