@@ -158,6 +158,18 @@ class EditTargetTest(AbstractTargetTest):
         handle.Targets.edit._mock.assertCalled('1')
         handle.DescriptorConfig.writeConfig._mock.assertCalled('foo')
 
+    def testEditTarget(self):
+        h = self.handle
+
+        mock.mock(h, 'DescriptorConfig')
+        mock.mock(h.facade, 'rbuilder')
+
+        # no target 'bar'
+        h.facade.rbuilder.getTargets._mock.setReturn(None, target_id='bar')
+
+        err = self.assertRaises(errors.PluginError, h.Targets.edit, 'bar')
+        self.assertEqual("No target found with id 'bar'", str(err))
+
 
 class ListTargetsTest(AbstractTargetTest):
     def testCommandParsing(self):

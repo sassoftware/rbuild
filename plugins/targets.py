@@ -183,7 +183,7 @@ class Targets(pluginapi.Plugin):
             target = target[0]
         else:
             raise errors.PluginError(
-                "No target found with id 'foo'" % targetId)
+                "No target found with id '%s'" % targetId)
 
         currentValues = dict((e, getattr(target.target_configuration, e))
                              for e in target.target_configuration.elements)
