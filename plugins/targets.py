@@ -160,12 +160,15 @@ class Targets(pluginapi.Plugin):
         dc = self.handle.DescriptorConfig
         rb = self.handle.facade.rbuilder
 
-        creds_ddata = dc.createDescriptorData(
-            fromStream=target.actions[1].descriptor)
-        try:
-            rb.configureTargetCredentials(target, creds_ddata)
-        except errors.RbuildError as e:
-            self.handle.ui.warning(str(e))
+        for action in target.actions:
+            if 'credentials' in action.name:
+                ddata = dc.createDescriptorData(fromStream=action.descriptor)
+                try:
+                    rb.configureTargetCredentials(target, ddata)
+                except errors.RbuildError as e:
+                    self.handle.ui.warning(str(e))
+                return
+        errors.PluginError('Unable to find credentials action on this target')
 
     def delete(self, targetId):
         target = self.handle.facade.rbuilder.getTargets(target_id=targetId)
@@ -185,13 +188,13 @@ class Targets(pluginapi.Plugin):
             raise errors.PluginError(
                 "No target found with id '%s'" % targetId)
 
-        currentValues = dict((e, getattr(target.target_configuration, e))
-                             for e in target.target_configuration.elements)
-        descriptor = rb.getTargetDescriptor(target.target_type.name)
-        ddata = dc.createDescriptorData(
-            fromStream=descriptor, defaults=currentValues)
-
-        target = rb.configureTarget(target, ddata)
+        if rb.isAdmin(self.handle.getConfig().user[0]):
+            currentValues = dict((e, getattr(target.target_configuration, e))
+                                 for e in target.target_configuration.elements)
+            descriptor = rb.getTargetDescriptor(target.target_type.name)
+            ddata = dc.createDescriptorData(
+                fromStream=descriptor, defaults=currentValues)
+            target = rb.configureTarget(target, ddata)
         self.configureTargetCredentials(target)
 
     def list(self, *args, **kwargs):
