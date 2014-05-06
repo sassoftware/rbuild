@@ -36,7 +36,8 @@ class RbuilderCallback(object):
         self._config = config or {}
         self._defaults = defaults or {}
 
-    def _enumeratedType(self, field):
+    def _enumeratedType(self, field, fieldDescr):
+        prePrompt = 'Pick %s:' % fieldDescr
         prompt = "Enter choice"
         choices = [self._description(x.descriptions) for x in field.type]
         default = [idx for idx, x in enumerate(field.type)
@@ -46,16 +47,18 @@ class RbuilderCallback(object):
 
         if field.multiple:
             response = self.ui.getChoices(prompt, choices,
-                default=default if default else None)
+                default=default if default else None,
+                prePrompt=prePrompt)
             return [field.type[r].key for r in response]
         else:
             response = self.ui.getChoice(prompt, choices,
-                default=default[0] if default else None)
+                default=default[0] if default else None,
+                prePrompt=prePrompt)
             return field.type[response].key
 
-    def _listType(self, field):
+    def _listType(self, field, fieldDescr):
         responses = []
-        self.ui.write('Enter %s (type Ctrl-D to end input)' % field.name)
+        self.ui.write('Enter %s (type Ctrl-D to end input)' % fieldDescr)
         while True:
             try:
                 response = field._descriptor.createDescriptorData(
@@ -131,10 +134,10 @@ class RbuilderCallback(object):
         fieldDescr = self._description(field.get_descriptions())
 
         if field.enumeratedType:
-            return self._enumeratedType(field)
+            return self._enumeratedType(field, fieldDescr)
 
         if field.listType:
-            return self._listType(field)
+            return self._listType(field, fieldDescr)
 
         # for non enumerated types ...
         # if there is a default, say what it is
