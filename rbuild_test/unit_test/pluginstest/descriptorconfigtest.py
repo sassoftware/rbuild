@@ -251,3 +251,73 @@ class DescriptorConfigTest(rbuildhelp.RbuildHelper):
             ["One", "Two"], default=[1])
         rv = callback.getValueForField(fDef.getDataField('lotsaValuesDefault'))
         self.assertEqual(rv, ['one'])
+
+    def testCallbackDescriptorWithListType(self):
+        handle = self.getRbuildHandle(mock.MockObject())
+        callback = handle.DescriptorConfig.callbackClass(handle.ui)
+        dsc1 = handle.DescriptorConfig.descriptorClass()
+        dsc1.setId("apache-configuration/process-info")
+        dsc1.setRootElement("blabbedy-blah")
+        dsc1.setDisplayName('Process Ownership Information')
+        dsc1.addDescription('Process Ownership Information')
+        dsc1.addDataField("user", type="str", default="apache", required=True,
+                descriptions="User")
+        dsc1.addDataField("group", type="str", default="apache", required=True,
+                descriptions="Group")
+
+        vhost = handle.DescriptorConfig.descriptorClass()
+        vhost.setId("apache-configuration/vhost")
+        vhost.setRootElement('vhost')
+        vhost.setDisplayName('Virtual Host Configuration')
+        vhost.addDescription('Virtual Host Configuration')
+        vhost.addDataField('serverName', type="str", required=True,
+                descriptions="Virtual Host Name")
+        vhost.addDataField('documentRoot', type="str", required=True,
+                descriptions="Virtual Host Document Root")
+
+        dsc = handle.DescriptorConfig.descriptorClass()
+        dsc.setId("apache-configuration")
+        dsc.setDisplayName('Apache Configuration')
+        dsc.addDescription('Apache Configuration')
+
+        dsc.addDataField('port', type="int",
+                required=True, descriptions="Apache Port")
+        dsc.addDataField('processInfo', type=dsc.CompoundType(dsc1),
+                required=True, descriptions="Process Ownership Information")
+        dsc.addDataField('vhosts', type=dsc.ListType(vhost),
+                required=True, descriptions="Virtual Hosts",
+                constraints=[
+                    dict(constraintName='uniqueKey', value="serverName"),
+                    dict(constraintName="minLength", value=1)])
+
+        #mock.mockMethod(handle.ui.write)
+        #mock.mockMethod(handle.ui.writeError)
+        mock.mockMethod(handle.ui.input)
+        i = handle.ui.input
+        i._mock.setReturn('8081',
+                'Enter Apache Port [required] (type int): ')
+        i._mock.setReturn('nobody',
+                'Enter User [required] [default apache] (type str) (Default: apache): ')
+        i._mock.setReturn('nobody',
+                'Enter Group [required] [default apache] (type str) (Default: apache): ')
+        i._mock.setReturn('a.org',
+                'Enter Virtual Host Name [required] (type str): ')
+        i._mock.setReturn('/srv/www/a',
+                'Enter Virtual Host Document Root [required] (type str): ')
+
+        descriptorData = dsc.createDescriptorData(callback)
+        self.assertXMLEquals(descriptorData.toxml(), """
+<descriptorData version="1.1">
+  <port>8081</port>
+  <processInfo>
+    <user>nobody</user>
+    <group>nobody</group>
+  </processInfo>
+  <vhosts list="true">
+    <vhost>
+      <serverName>a.org</serverName>
+      <documentRoot>/srv/www/a</documentRoot>
+    </vhost>
+  </vhosts>
+</descriptorData>
+""")

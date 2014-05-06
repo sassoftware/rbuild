@@ -53,20 +53,7 @@ class RbuilderCallback(object):
                 default=default[0] if default else None)
             return field.type[response].key
 
-    def _listType(self, field):
-        responses = []
-        self.ui.write('Enter %s (type Ctrl-D to end input)' % field.name)
-        while True:
-            try:
-                response = field._descriptor.createDescriptorData(
-                    self, name=field.name)
-            except errors.RbuildError as e:
-                if 'Ran out of input' in str(e):
-                    return responses
-                raise
-            responses.append(response)
-
-    def start(self, descriptor, name=None):
+    def start(self, descriptor, name=None, listValues=None):
         pass
 
     def end(self, descriptor):
@@ -79,6 +66,25 @@ class RbuilderCallback(object):
         else:
             val = self._getValueForField(field)
         return val
+
+    def listHasMoreValues(self, field, values):
+        # Quickly check the constraints; no need to ask a question when we
+        # know we need at least 1 value
+        minLength = field.constraints.minLength
+        if minLength is not None:
+            minLength = minLength.presentation().get('value')
+        if minLength is not None:
+            if len(values) < minLength:
+                return True
+        maxLength = field.constraints.maxLength
+        if maxLength is not None:
+            maxLength = maxLength.presentation().get('value')
+        if maxLength is not None and len(values) > maxLength:
+            return False
+        fieldDescr = field.descriptions.asDict().get(None)
+        prompt = "More items for: %s (%s)" % (field.name, fieldDescr)
+        resp = self.ui.getYn(prompt)
+        return resp
 
     def _description(cls, description):
         """
@@ -133,9 +139,6 @@ class RbuilderCallback(object):
         if field.enumeratedType:
             return self._enumeratedType(field)
 
-        if field.listType:
-            return self._listType(field)
-
         # for non enumerated types ...
         # if there is a default, say what it is
         if field.default:
@@ -144,7 +147,7 @@ class RbuilderCallback(object):
         # FIXME: refactor into subfunction
         # TODO: nicer entry on the same line, try on certain failures
         #       in casting, etc
-        prompt = "Enter %s%s%s%s: " % (fieldDescr, reqmsg, defmsg, typmsg)
+        prompt = "Enter %s%s%s%s" % (fieldDescr, reqmsg, defmsg, typmsg)
         while 1:
             if re.search(r'[Pp]assword', prompt):
                 data = self.ui.inputPassword(prompt)
