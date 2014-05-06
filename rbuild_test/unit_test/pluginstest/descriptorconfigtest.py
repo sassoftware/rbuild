@@ -187,7 +187,7 @@ class DescriptorConfigTest(rbuildhelp.RbuildHelper):
                     descriptions=[fDef.Description("Two")]),
             ]))
         fDef.addDataField('lotsaValuesDefault',
-            descriptions=[fDef.Description("foo")],
+            descriptions=[fDef.Description("foodef")],
             default=['two'],
             type=fDef.EnumeratedType([
                 fDef.ValueWithDescription('one',
@@ -201,14 +201,14 @@ class DescriptorConfigTest(rbuildhelp.RbuildHelper):
         # field with no default
         handle.ui.getChoice._mock.setReturn(0,
             'Enter choice',
-            ["One", "Two"], default=None)
+            ["One", "Two"], default=None, prePrompt="Pick foo:")
         rv = callback.getValueForField(fDef.getDataField('lotsaValues'))
         self.assertEqual(rv, 'one')
 
         # field with default
         handle.ui.getChoice._mock.setReturn(0,
             'Enter choice (blank for default)',
-            ["One", "Two"], default=1)
+            ["One", "Two"], default=1, prePrompt="Pick foodef:")
         rv = callback.getValueForField(fDef.getDataField('lotsaValuesDefault'))
         self.assertEqual(rv, 'one')
 
@@ -226,7 +226,7 @@ class DescriptorConfigTest(rbuildhelp.RbuildHelper):
                     descriptions=[fDef.Description("Two")]),
             ]))
         fDef.addDataField('lotsaValuesDefault',
-            descriptions=[fDef.Description("foo")],
+            descriptions=[fDef.Description("foodef")],
             multiple=True,
             default=['two'],
             type=fDef.EnumeratedType([
@@ -241,14 +241,14 @@ class DescriptorConfigTest(rbuildhelp.RbuildHelper):
         # field with no default
         handle.ui.getChoices._mock.setReturn([0],
             'Enter choice',
-            ["One", "Two"], default=None)
+            ["One", "Two"], default=None, prePrompt="Pick foo:")
         rv = callback.getValueForField(fDef.getDataField('lotsaValues'))
         self.assertEqual(rv, ['one'])
 
         # field with default
         handle.ui.getChoices._mock.setReturn([0],
             'Enter choice (blank for default)',
-            ["One", "Two"], default=[1])
+            ["One", "Two"], default=[1], prePrompt="Pick foodef:")
         rv = callback.getValueForField(fDef.getDataField('lotsaValuesDefault'))
         self.assertEqual(rv, ['one'])
 

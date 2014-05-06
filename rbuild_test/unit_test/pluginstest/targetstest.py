@@ -163,12 +163,47 @@ class EditTargetTest(AbstractTargetTest):
 
         mock.mock(h, 'DescriptorConfig')
         mock.mock(h.facade, 'rbuilder')
+        mock.mockMethod(h.Targets.configureTargetCredentials)
+        mock.mockMethod(h.getConfig)
+
+        rb = h.facade.rbuilder
+
+        # mock out target fetching
+        _target = mock.MockObject()
+        _target.target_configuration._mock.set(elements=list())
+        _target.target_type._mock.set(name='type')
+        rb.getTargets._mock.setReturn([_target], target_id=1)
+
+        _desc = mock.MockObject()
+        rb.getTargetDescriptor._mock.setReturn(_desc, 'type')
+
+        _ddata = mock.MockObject()
+        h.DescriptorConfig.createDescriptorData._mock.setReturn(_ddata,
+            fromStream=_desc, defaults={})
+        rb.configureTarget._mock.setReturn(_target, _target, _ddata)
 
         # no target 'bar'
-        h.facade.rbuilder.getTargets._mock.setReturn(None, target_id='bar')
+        rb.getTargets._mock.setReturn(None, target_id='bar')
 
         err = self.assertRaises(errors.PluginError, h.Targets.edit, 'bar')
         self.assertEqual("No target found with id 'bar'", str(err))
+
+        _config = mock.MockObject()
+        h.getConfig._mock.setReturn(_config)
+        rb.isAdmin._mock.setReturn(True, 'admin')
+        rb.isAdmin._mock.setReturn(False, 'user')
+
+        # user is not admin
+        _config._mock.set(user=('user', 'secret'))
+        h.Targets.edit(1)
+        rb.configureTarget._mock.assertNotCalled()
+        h.Targets.configureTargetCredentials._mock.assertCalled(_target)
+
+        # user is admin
+        _config._mock.set(user=('admin', 'secret'))
+        h.Targets.edit(1)
+        rb.configureTarget._mock.assertCalled(_target, _ddata)
+        h.Targets.configureTargetCredentials._mock.assertCalled(_target)
 
 
 class ListTargetsTest(AbstractTargetTest):

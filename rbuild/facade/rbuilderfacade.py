@@ -601,6 +601,15 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
         '''
         return self._getResources('targets', **kwargs)
 
+    def getUsers(self, **kwargs):
+        '''
+        Get a filtered list of users
+
+        @return: list of users
+        @rtype: list of rObj(user)
+        '''
+        return self._getResources('users', **kwargs)
+
     def getProductDefinitionSchemaVersion(self):
         # rBuilder 5.2.3 <= version < rBuilder 6.1.0
         ver = getattr(self.api, 'proddefSchemaVersion', None)
@@ -980,6 +989,21 @@ class RbuilderFacade(object):
     @staticmethod
     def isValidBranchName(value):
         return re.match(r'^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*$', value)
+
+    def isAdmin(self, user):
+        '''
+        Check if the user is an rbuilder administrator
+
+        @param user: user name
+        @type user: str
+        @return: True if the user is an admin, otherwise False
+        @rtype: bool
+        '''
+        client = self._getRbuilderRESTClient()
+        user = client.getUsers(user_name=user)
+        if user:
+            return user[0].is_admin == 'true'
+        return False
 
     def listPlatforms(self):
         client = self._getRbuilderRESTClient()

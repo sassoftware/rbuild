@@ -51,8 +51,8 @@ class ListImageDefsCommand(command.ListCommand):
             ),
         stage=dict(
             display_name='Stages',
-            accessor=lambda i: ', '.join(
-                stage.href.rsplit('/', 1)[-1] for stage in i.stage),
+            accessor=lambda i: ', '.join(stage.href.rsplit('/')[-1] for stage in i.stage)
+                if isinstance(i.stage, list) else i.stage.name,
             ),
         **listFieldMap
         )
