@@ -22,6 +22,17 @@ from rbuild import pluginapi
 from rbuild.pluginapi import command
 
 
+class DeleteProjectsCommand(command.BaseCommand):
+    help = 'Delete project(s)'
+    paramHelp = '<short name|label>+'
+
+    def runCommand(self, handle, argSet, args):
+        _, projects = self.requireParameters(
+            args, expected=['PROJECT'], appendExtra=True)
+        for project in projects:
+            handle.Projects.delete(project)
+
+
 class ListProjectsCommand(command.ListCommand):
     help = 'list projects'
     resource = 'projects'
@@ -48,10 +59,33 @@ class ListProjectsCommand(command.ListCommand):
 
 class Projects(pluginapi.Plugin):
     name = 'projects'
+    prePrompt = 'This will delete the following branches and their stages:'
+    prompt = 'This may lead to issues with other projects that refer to %s' + \
+        ' branch%s.\nConfirm by typing DELETE'
+
+    def delete(self, project):
+        if '.' in project:
+            # project is a label, get the shortname
+            project = project.split('.')[0]
+        project = self.handle.facade.rbuilder.getProject(project)
+        self.handle.ui.write(self.prePrompt)
+        for branch in project.project_branches:
+            self.handle.ui.write('    %s' % branch.label)
+        self.handle.ui.write()
+        if project.project_branches == '1':
+            args = ('this', '')
+        else:
+            args = ('these', 'es')
+        response = self.handle.ui.getResponse(self.prompt % args)
+
+        if response.upper() == 'DELETE':
+            project.delete()
 
     def initialize(self):
+        self.handle.Commands.getCommandClass('delete').registerSubCommand(
+            self.name, DeleteProjectsCommand)
         self.handle.Commands.getCommandClass('list').registerSubCommand(
-            'projects', ListProjectsCommand)
+            self.name, ListProjectsCommand)
 
     def list(self, *args, **kwargs):
         '''

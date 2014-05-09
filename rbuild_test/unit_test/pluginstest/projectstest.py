@@ -23,7 +23,9 @@ from rbuild_test import rbuildhelp
 class ListProjectsTest(rbuildhelp.RbuildHelper):
     def testCommandParsing(self):
         handle = self.getRbuildHandle()
+        handle.Delete.registerCommands()
         handle.List.registerCommands()
+        handle.Delete.initialize()
         handle.List.initialize()
         handle.Projects.initialize()
         cmd = handle.Commands.getCommandClass('list')()
@@ -43,6 +45,59 @@ class ListProjectsTest(rbuildhelp.RbuildHelper):
 
 
 class ProjectsPluginTest(rbuildhelp.RbuildHelper):
+    def testDelete(self):
+        handle = self.getRbuildHandle(mock.MockObject())
+
+        mock.mockMethod(handle.facade.rbuilder.getProject)
+        mock.mock(handle, 'ui')
+
+        _branch1 = mock.MockObject()
+        _branch1._mock.set(label='foo@foo:foo-1')
+
+        _branch2 = mock.MockObject()
+        _branch2._mock.set(label='foo@foo:foo-2')
+
+        _project = mock.MockObject()
+        _project._mock.set(project_branches=[_branch1, _branch2])
+        handle.facade.rbuilder.getProject._mock.setReturn(_project,
+            'foo')
+
+        handle.ui.getResponse._mock.setReturn('',  handle.Projects.prompt %
+            ('these', 'es'))
+
+        handle.Projects.delete('foo')
+        handle.ui.write._mock.assertCalled(handle.Projects.prePrompt)
+        handle.ui.write._mock.assertCalled('    ' + _branch1.label)
+        handle.ui.write._mock.assertCalled('    ' + _branch2.label)
+        _project.delete._mock.assertNotCalled()
+
+        handle.ui.getResponse._mock.setReturn('not delete',
+            handle.Projects.prompt % ('these', 'es'))
+
+        handle.Projects.delete('foo')
+        handle.ui.write._mock.assertCalled(handle.Projects.prePrompt)
+        handle.ui.write._mock.assertCalled('    ' + _branch1.label)
+        handle.ui.write._mock.assertCalled('    ' + _branch2.label)
+        _project.delete._mock.assertNotCalled()
+
+        handle.ui.getResponse._mock.setReturn('delete',
+            handle.Projects.prompt % ('these', 'es'))
+
+        handle.Projects.delete('foo')
+        handle.ui.write._mock.assertCalled(handle.Projects.prePrompt)
+        handle.ui.write._mock.assertCalled('    ' + _branch1.label)
+        handle.ui.write._mock.assertCalled('    ' + _branch2.label)
+        _project.delete._mock.assertCalled()
+
+        handle.ui.getResponse._mock.setReturn('DELETE',
+            handle.Projects.prompt % ('these', 'es'))
+
+        handle.Projects.delete('foo')
+        handle.ui.write._mock.assertCalled(handle.Projects.prePrompt)
+        handle.ui.write._mock.assertCalled('    ' + _branch1.label)
+        handle.ui.write._mock.assertCalled('    ' + _branch2.label)
+        _project.delete._mock.assertCalled()
+
     def testList(self):
         handle = self.getRbuildHandle()
 
