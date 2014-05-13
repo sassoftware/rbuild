@@ -35,6 +35,8 @@ from conary import errors as conaryerrors
 
 from rmake import errors as rmakeerrors
 
+from robj import errors as robjerrors
+
 from rbuild import handle
 from rbuild import constants
 from rbuild import errors
@@ -248,7 +250,7 @@ def _main(argv, MainClass):
             debuggerException = errors.RbuildInternalError
         sys.excepthook = errors.genExcepthook(debug=debugAll,
                                               debugCtrlC=debugAll)
-        rc =  MainClass().main(argv, debuggerException=debuggerException)
+        rc = MainClass().main(argv, debuggerException=debuggerException)
         if rc is None:
             return 0
         return rc
@@ -266,6 +268,13 @@ service rmake restart''')
             conaryerrors.CvcError, rmakeerrors.RmakeError), err:
         log.error(err)
         return 1
+    except robjerrors.HTTPForbiddenError as err:
+        log.error('You are not authorized for this action')
+        return 1
+    except robjerrors.HTTPUnauthorizedError as err:
+        log.error('''\
+There was an error authenticating you with the rbuilder. Check your
+username and password''')
     except IOError, e:
         # allow broken pipe to exit
         if e.errno != errno.EPIPE:
