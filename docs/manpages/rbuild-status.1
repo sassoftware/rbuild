@@ -1,0 +1,91 @@
+.TH rbuild\-status 1 2014\-05\-13
+.SH NAME
+.B
+rbuild-status
+\-
+Print summary of differences between filesystem and repository
+.SH SYNOPSIS
+rbuild status 
+.SH DESCRIPTION
+.PP
+Print summary of differences between filesystem and repository
+.PP
+Prints summary of differences between the local checkout and
+the repository.  New 1ocal changes that have not been committed
+to the repository are marked with a leading character;
+New changes that have been committed to the repository but
+not yet applied to the local checkout are marked with a leading
+character.  If the 
+.I \-\-concise
+options is specified, prints
+a one\-line summary for each Conary source component directory
+checkout.  If the 
+.I \-\-concise 
+option is not specified, 
+then all commit messages for versions in the repository that
+are newer than the latest local update are printed, and a
+one\-line\-per\-file summary of changes made locally but not yet
+committed is printed.  If the 
+.I \-\-verbose 
+option is specified,
+differences within files are printed, again both for newer
+changes in the repository and for local changes not yet
+committed to the repository.
+    
+
+.SH OPTIONS
+.TP
+.B \-\-config='KEY
+VALUE'
+.TP
+.B \-\-config\-file=PATH
+Read PATH config file
+.TP
+.B \-\-quiet
+Quiet operation, intended for scripting
+.TP
+.B \-\-skip\-default\-config
+
+.TP
+.B \-\-stage=STAGE
+Specify the stage to use
+.TP
+.B \-\-verbose
+Display more detailed information where available
+.TP
+.B \-\-all
+Print status for entire product checkout
+.TP
+.B \-\-concise
+Print one-line summary for each checkout
+.TP
+.B \-\-local
+Print out only local changes not committed
+.TP
+.B \-\-no\-product
+Do not print status for the product definition
+.TP
+.B \-\-product
+Print status for the product definition
+.TP
+.B \-\-repository
+Print out only changes in repository not applied
+.SH SEEALSO
+ rbuild help <subcommand> 
+.SH BUGS
+ file issues or bugs
+.UR
+https://opensource.sas.com/its
+ 
+.SH AUTHORS
+.B
+ rbuild
+was written by SAS
+.UR
+http://www.sas.com/
+.
+.SH COPYRIGHT
+ Copyright (c)
+.B
+SAS Institute Inc.
+ 

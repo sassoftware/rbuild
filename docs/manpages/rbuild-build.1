@@ -1,0 +1,73 @@
+.TH rbuild\-build 1 2014\-05\-13
+.SH NAME
+.B
+rbuild-build
+\-
+Build the various components of a product
+.SH SYNOPSIS
+rbuild build <subcommand> [options]
+.SH DESCRIPTION
+.PP
+Build commands for building the various components of a product. 
+.PP
+Subcommands:
+     images    Build images for this stage
+     platform  Create a platform usable by others from this product
+     packages  Build edited packages for this stage
+     groups    Build groups for this stage
+
+(Use 'rbuild help build <subcommand>' for help on a subcommand)
+
+.SH OPTIONS
+.TP
+.B \-\-config='KEY
+VALUE'
+.TP
+.B \-\-config\-file=PATH
+Read PATH config file
+.TP
+.B \-\-quiet
+Quiet operation, intended for scripting
+.TP
+.B \-\-skip\-default\-config
+
+.TP
+.B \-\-stage=STAGE
+Specify the stage to use
+.TP
+.B \-\-verbose
+Display more detailed information where available
+.TP
+.B \-\-no\-commit
+
+.TP
+.B \-\-no\-recurse
+
+.TP
+.B \-\-no\-watch
+
+.TP
+.B \-\-recurse
+
+.TP
+.B \-\-refresh
+
+.SH SEEALSO
+ rbuild help <subcommand> 
+.SH BUGS
+ file issues or bugs
+.UR
+https://opensource.sas.com/its
+ 
+.SH AUTHORS
+.B
+ rbuild
+was written by SAS
+.UR
+http://www.sas.com/
+.
+.SH COPYRIGHT
+ Copyright (c)
+.B
+SAS Institute Inc.
+ 

@@ -1,0 +1,79 @@
+.TH rbuild\-checkout 1 2014\-05\-13
+.SH NAME
+.B
+rbuild-checkout
+\-
+Check out packages and groups for editing
+.SH SYNOPSIS
+rbuild checkout [<options>] <packagename>
+.SH DESCRIPTION
+.PP
+Check out a package, creating a new package if necessary.
+.PP
+If the product's platform contains a package by the same name,
+then you must specify whether to shadow or derive from that
+upstream version, or to create a new package by the same name 
+that is not related to the upstream version.
+.PP
+A derived package starts with the contents of the binary
+package from the platform, generally used to make modifications
+that do not require rebuilding binaries.
+.PP
+A shadow allows you to make changes relative to the platform's
+source package, changing how the package is built, and requiring
+rebuilding binaries.
+    
+
+.SH OPTIONS
+.TP
+.B \-\-config='KEY
+VALUE'
+.TP
+.B \-\-config\-file=PATH
+Read PATH config file
+.TP
+.B \-\-quiet
+Quiet operation, intended for scripting
+.TP
+.B \-\-skip\-default\-config
+
+.TP
+.B \-\-stage=STAGE
+Specify the stage to use
+.TP
+.B \-\-verbose
+Display more detailed information where available
+.TP
+.B \-\-derive
+Create derived package (based on upstream binary)
+.TP
+.B \-\-factory=FACTORY
+If creating a new package, specify its factory (not
+.TP
+.B \-\-new
+Create a new version of the package even if an
+.TP
+.B \-\-shadow
+Create shadowed package (based on upstream source)
+.TP
+.B \-\-template=TEMPLATE
+
+.SH SEEALSO
+ rbuild help <subcommand> 
+.SH BUGS
+ file issues or bugs
+.UR
+https://opensource.sas.com/its
+ 
+.SH AUTHORS
+.B
+ rbuild
+was written by SAS
+.UR
+http://www.sas.com/
+.
+.SH COPYRIGHT
+ Copyright (c)
+.B
+SAS Institute Inc.
+ 

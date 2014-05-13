@@ -1,0 +1,68 @@
+.TH rbuild\-init 1 2014\-05\-13
+.SH NAME
+.B rbuild\-init \- 
+Creates a working directory for working with the given product.
+.SH SYNOPSIS
+.B rbuild init 
+<project shortname> <version>
+.B rbuild init
+<label>
+.SH DESCRIPTION
+.PP
+Creates a working directory for working with the given product.
+.PP
+Parameters: (<project shortname> <version>|<label>)
+
+.SH OPTIONS
+.TP
+\-\-config='KEY VALUE'  
+Set config KEY to VALUE
+.TP
+\-\-config-file=PATH    
+Read PATH config file
+.TP
+\-\-quiet               
+Quiet operation, intended for scripting
+.TP
+\-\-skip-default-config 
+Don't read default configs
+.TP
+\-\-stage=STAGE         
+Specify the stage to use
+.TP
+\-\-verbose             
+Display more detailed information where available
+
+.SH EXAMPLES
+
+    Example: 
+.I
+rbuild init exampleprod 2
+.P
+    Assuming that there were a product defined at
+    exampleprod.rpath.org@examplens:exampleprod\-2, this would create a
+    product subdirectory tree representing the contents of that product
+    definition.
+
+    Example: 
+.I
+rbuild init example.rpath.org@ex:example\-2
+.P
+    If your product does not use a standard label layout, or its product
+    definition was not created through the rBuilder user interface, you
+    will need to use the label to the product definition directly.
+
+
+.SH SEEALSO
+ rbuild help <subcommand> 
+.SH BUGS
+ file issues here https://opensource.sas.com/its 
+.SH AUTHORS
+.B rbuild\-init
+was written by SAS http://www.sas.com/.
+.SH DISTRIBUTION
+The latest version of rbuild\-init may be downloaded from
+.UR https://bitbucket.org/rpathsync
+.UE
+.SH COPYRIGHT
+ Copyright (c) SAS Institute Inc. 
