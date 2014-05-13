@@ -148,7 +148,21 @@ class Images(pluginapi.Plugin):
         if not images:
             raise errors.PluginError("No image matching '%s'" % image_name)
 
-        image, action = self._getAction(images, target_name, action_type)
+        target = rb.getTargets(name=target_name)
+        if not target:
+            raise errors.PluginError("No target matching '%s'" % target_name)
+        target = target[0]
+        if target.is_configured == 'false':
+            raise errors.PluginError(("Target '{0}' is not configured. Try"
+                " running \"rbuild edit target '{0}'\" or contacting your"
+                " rbuilder administrator.").format(target_name))
+
+        if target.credentials_valid == 'false':
+            raise errors.PluginError(("Target '{0}' does not have valid"
+                " credentials. Try running \"rbuild edit target '{0}'\" and"
+                " updating your credentials.").format(target_name))
+
+        image, action = self._getAction(images, target, action_type)
 
         ddata = self.handle.DescriptorConfig.createDescriptorData(
             fromStream=action.descriptor)
@@ -170,7 +184,7 @@ class Images(pluginapi.Plugin):
             if image.status != '300':
                 continue
             for action in image.actions:
-                if key == action.key and target in action.name:
+                if key == action.key and target.name in action.name:
                     return image, action
         raise errors.PluginError(
             "cannot %s %s" % (key.replace('_', ' '), target))

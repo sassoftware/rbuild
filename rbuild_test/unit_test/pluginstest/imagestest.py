@@ -226,6 +226,9 @@ class ImagesPluginTest(AbstractImagesTest):
     def testCreateJob(self):
         handle = self.handle
 
+        mock.mockMethod(
+            handle.Images._getProductStage, ('product', 'branch', 'stage'))
+
         _jobs = []
 
         def _append(x):
@@ -237,6 +240,29 @@ class ImagesPluginTest(AbstractImagesTest):
         _image.jobs._mock.set(append=_append)
         mock.mockMethod(handle.facade.rbuilder.getImages, _image)
 
+        _target = mock.MockObject()
+        _target._mock.set(credentials_valid='false', is_configured='false')
+
+        # test no matching target
+        mock.mockMethod(handle.facade.rbuilder.getTargets, [])
+        err = self.assertRaises(errors.PluginError,
+            handle.Images._createJob, handle.Images.LAUNCH, 'foo', 'bar', True)
+        self.assertIn('No target matching', str(err))
+
+        # test unconfigured target
+        handle.facade.rbuilder.getTargets._mock.setDefaultReturn([_target])
+        err = self.assertRaises(errors.PluginError,
+            handle.Images._createJob, handle.Images.LAUNCH, 'foo', 'bar', True)
+        self.assertIn('is not configured', str(err))
+
+        # test no credentials
+        _target._mock.set(is_configured='true')
+        err = self.assertRaises(errors.PluginError,
+            handle.Images._createJob, handle.Images.LAUNCH, 'foo', 'bar', True)
+        self.assertIn('have valid credentials', str(err))
+
+        _target._mock.set(credentials_valid='true')
+
         _action = mock.MockObject()
         _action._mock.set(descriptor=DESCRIPTOR_XML)
         _action._root._mock.set(job_type='job_type')
@@ -247,8 +273,6 @@ class ImagesPluginTest(AbstractImagesTest):
         _ddata.toxml._mock.setDefaultReturn(DDATA_XML)
         mock.mockMethod(handle.DescriptorConfig.createDescriptorData, _ddata)
 
-        mock.mockMethod(
-            handle.Images._getProductStage, ('product', 'branch', 'stage'))
         rv = handle.Images._createJob(
             handle.Images.DEPLOY, 'foo', 'bar', True)
         handle.facade.rbuilder.getImages._mock.assertCalled(
@@ -259,7 +283,7 @@ class ImagesPluginTest(AbstractImagesTest):
             order_by='-time_created',
             )
         handle.Images._getAction._mock.assertCalled(
-            _image, 'bar', handle.Images.DEPLOY)
+            _image, _target, handle.Images.DEPLOY)
 
         self.assertEqual(len(_jobs), 1)
         self.assertEqual(rv, _jobs[0])
@@ -275,7 +299,7 @@ class ImagesPluginTest(AbstractImagesTest):
             order_by='-time_created',
             )
         handle.Images._getAction._mock.assertCalled(
-            _image, 'bar', handle.Images.DEPLOY)
+            _image, _target, handle.Images.DEPLOY)
 
         self.assertEqual(len(_jobs), 2)
         self.assertEqual(rv, _jobs[1])
@@ -292,7 +316,7 @@ class ImagesPluginTest(AbstractImagesTest):
             trailing_version='1',
             )
         handle.Images._getAction._mock.assertCalled(
-            _image, 'bar', handle.Images.DEPLOY)
+            _image, _target, handle.Images.DEPLOY)
 
         self.assertEqual(len(_jobs), 3)
         self.assertEqual(rv, _jobs[2])
@@ -308,7 +332,7 @@ class ImagesPluginTest(AbstractImagesTest):
             order_by='-time_created',
             )
         handle.Images._getAction._mock.assertCalled(
-            _image, 'bar', handle.Images.DEPLOY)
+            _image, _target, handle.Images.DEPLOY)
 
         self.assertEqual(len(_jobs), 4)
         self.assertEqual(rv, _jobs[3])
@@ -413,28 +437,33 @@ class ImagesPluginTest(AbstractImagesTest):
         _image = mock.MockObject()
         _image._mock.set(actions=[_action1, _action2])
 
+        _target = mock.MockObject()
+        _target._mock.set(name='foo')
+
         self.assertRaises(
             errors.PluginError,
             handle.Images._getAction,
             [_image],
-            'foo',
+            _target,
             handle.Images.DEPLOY,
             )
 
+        _target._mock.set(name='baz')
         _image._mock.set(status='300')
         self.assertRaises(
             errors.PluginError,
             handle.Images._getAction,
             [_image],
-            'baz',
+            _target,
             handle.Images.DEPLOY,
             )
 
-
-        rv = handle.Images._getAction([_image], 'foo', handle.Images.DEPLOY)
+        _target._mock.set(name='foo')
+        rv = handle.Images._getAction([_image], _target, handle.Images.DEPLOY)
         self.assertEqual(rv, (_image, _action1))
 
-        rv = handle.Images._getAction([_image], 'bar', handle.Images.DEPLOY)
+        _target._mock.set(name='bar')
+        rv = handle.Images._getAction([_image], _target, handle.Images.DEPLOY)
         self.assertEqual(rv, (_image, _action2))
 
     def testList(self):

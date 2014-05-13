@@ -341,9 +341,10 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
         uri = kwargs.pop('uri', None)
         order_by = kwargs.pop('order_by', None)
 
+        fullUri = self.api._uri + '/'
         if uri is not None:
-            resource = uri.strip('/') + '/' + resource
-        fullUri = self.api._uri + '/' + resource
+            fullUri += uri.strip('/') + '/'
+        fullUri += resource
 
         filter_by = []
         for field, param in kwargs.items():
