@@ -7,7 +7,26 @@ rbuild \- Conary-based Product Development Tool
 rbuild
 <command> <options>
 .SH DESCRIPTION
-
+.PP
+rBuild is the unified interface for Conary, rMake, and rBuilder.
+The purpose of this tool is to provide a single, unified, and
+fully-documented interface (command line and Python API) to
+developers using rPath technologies, using an extensible plugin
+framework, which automates many of the steps required to follow
+rPath's recommended best practices.
+.PP
+rBuild depends on product-definition packages that define the
+characteristics of the product you are building, including which
+images you build, what platform your product is based on, and
+so forth. Use the rBuilder interface to create and edit these
+packages. rBuild updates them automatically when appropriate.
+.PP
+A shell script written using the command-line interface should be
+relatively easy to transform to a Python program that uses the Python
+API.  You can provide your own plugins that dynamically extend that
+command-line interface and Python API.  Your plugins can also hook
+into other parts of the API, allowing you to enforce preconditions
+and take action following successful actions.
 .PP
 .B
 Common Commands
@@ -73,8 +92,59 @@ Display help information
 .PP
 (Use 'rbuild help <command> <subcommand>' for help on a subcommand)
 
-.SH SEEALSO
+.SH EXAMPLES
+.PP
  rbuild help <subcommand>
+
+.SH SEEALSO
+.PD 0
+.TP
+\fIrbuild-init\fP(1)
+.TP
+\fIrbuild-add\fP(1)
+.TP
+\fIrbuild-build\fP(1)
+.TP
+\fIrbuild-cancel\fP(1)
+.TP
+\fIrbuild-checkout\fP(1)
+.TP
+\fIrbuild-config\fP(1)
+.TP
+\fIrbuild-create\fP(1)
+.TP
+\fIrbuild-delete\fP(1)
+.TP
+\fIrbuild-deploy\fP(1)
+.TP
+\fIrbuild-disable\fP(1)
+.TP
+\fIrbuild-edit\fP(1)
+.TP
+\fIrbuild-enable\fP(1)
+.TP
+\fIrbuild-init\fP(1)
+.TP
+\fIrbuild-launch\fP(1)
+.TP
+\fIrbuild-list\fP(1)
+.TP
+\fIrbuild-promote\fP(1)
+.TP
+\fIrbuild-query\fP(1)
+.TP
+\fIrbuild-rebase\fP(1)
+.TP
+\fIrbuild-rm\fP(1)
+.TP
+\fIrbuild-show\fP(1)
+.TP
+\fIrbuild-status\fP(1)
+.TP
+\fIrbuild-update\fP(1)
+.TP
+\fIrbuild-watch\fP(1)
+.PD
 .SH BUGS
  file issues or bugs
 .UR
