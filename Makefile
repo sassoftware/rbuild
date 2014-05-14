@@ -24,6 +24,7 @@ export TOPDIR = $(shell pwd)
 
 SUBDIRS=commands rbuild plugins pylint
 MAKEALLSUBDIRS=commands rbuild plugins
+MANPAGES=$(notdir $(filter %.1,$(wildcard docs/manpages/*.1)))
 
 extra_files = \
 	Make.rules 		\
@@ -44,6 +45,13 @@ install: install-subdirs
 clean: clean-subdirs default-clean
 
 doc: html
+
+man:
+	mkdir -p $(DESTDIR)$(mandir)/man1 
+	for M in $(MANPAGES); do \
+		install -m 0644 docs/manpages/$$M $(DESTDIR)$(mandir)/man1/; \
+		gzip $(DESTDIR)$(mandir)/man1/$$M; \
+	done
 
 html:
 	ln -fs plugins/ rbuild_plugins
@@ -76,4 +84,4 @@ clean: clean-subdirs default-clean
 include Make.rules
 include Make.defs
  
-# vim: set sts=8 sw=8 noexpandtab :
+# vim: set sts=4 sw=4 noexpandtab :
