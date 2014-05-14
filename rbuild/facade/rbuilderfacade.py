@@ -1062,5 +1062,8 @@ class RbuilderFacade(object):
     def getTargetTypes(self):
         return self._getRbuilderRESTClient().getTargetTypes()
 
+    def getUsers(self, **kwargs):
+        return self._getRbuilderRESTClient().getUsers(**kwargs)
+
     def showImageStatus(self, buildIds):
         return self._getRbuilderRPCClient().showImageStatus(buildIds)

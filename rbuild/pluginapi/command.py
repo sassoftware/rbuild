@@ -337,11 +337,19 @@ class ListCommand(BaseCommand):
             if fdict.get('hidden', False) or fdict.get('verbose', False):
                 continue
             accessor = fdict.get('accessor', lambda i: getattr(i, field))
+            try:
+                value = accessor(resource)
+            except AttributeError:
+                # summary views can cause cache poisoning which manifests as
+                # AttributeErrors; refresh the resource and try again
+                resource.refresh()
+                value = accessor(resource)
+
             if row_major:
-                yield accessor(resource)
+                yield value
             else:
                 display_name = self._fieldNameToDisplayName(field, mapping)
-                yield (display_name, accessor(resource))
+                yield (display_name, value)
 
     def _list(self, handle, *args, **kwargs):
         headers = tuple(self._fieldNameToDisplayName(field, self.listFieldMap)
