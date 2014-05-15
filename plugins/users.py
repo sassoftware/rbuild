@@ -96,14 +96,6 @@ class ListUsersCommand(command.ListCommand):
 class Users(pluginapi.Plugin):
     name = 'users'
 
-    def initialize(self):
-        for command, subcommand, command_class in (
-                ('create', 'user', CreateUserCommand),
-                ('list', 'users', ListUsersCommand),
-                ):
-            cmd = self.handle.Commands.getCommandClass(command)
-            cmd.registerSubCommand(subcommand, command_class)
-
     def create(self, user_name, full_name, email, password, isExternal=False,
             isAdmin=False, createResources=False):
         '''
@@ -148,6 +140,22 @@ class Users(pluginapi.Plugin):
         # POST the new user
         client = self.handle.facade.rbuilder._getRbuilderRESTClient()
         client.api.users.append(user_doc)
+
+    def delete(self, user_name):
+        user = self.handle.facade.rbuilder.getUsers(user_name=user_name)
+        if user:
+            user[0].delete()
+        else:
+            self.handle.ui.warning("No user '%s' found" % user_name)
+
+    def initialize(self):
+        for command, subcommand, command_class in (
+                ('create', 'user', CreateUserCommand),
+                ('delete', 'users', DeleteUsersCommand),
+                ('list', 'users', ListUsersCommand),
+                ):
+            cmd = self.handle.Commands.getCommandClass(command)
+            cmd.registerSubCommand(subcommand, command_class)
 
     def list(self, *args, **kwargs):
         return self.handle.facade.rbuilder.getUsers(**kwargs)
