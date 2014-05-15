@@ -28,11 +28,6 @@ class AbstractUsersTest(rbuildhelp.RbuildHelper):
         handle.Delete.registerCommands()
         handle.Edit.registerCommands()
         handle.List.registerCommands()
-        handle.Users.registerCommands()
-        handle.Create.initialize()
-        handle.Delete.initialize()
-        handle.Edit.initialize()
-        handle.List.initialize()
         handle.Users.initialize()
         self.handle = handle
 
@@ -115,6 +110,32 @@ class CreateUserTest(AbstractUsersTest):
             'foo@example.com', None, True, True, True)
 
 
+class DeleteUsersTest(AbstractUsersTest):
+    def testDeleteUserArgParse(self):
+        self.checkRbuild('delete users foo',
+            'rbuild_plugins.users.DeleteUsersCommand.runCommand',
+            [None, None, {}, ['delete', 'users', 'foo']])
+
+    def testDeleteUserCmdline(self):
+        handle = self.handle
+
+        mock.mockMethod(handle.Users.delete)
+        mock.mockMethod(handle.ui.getYn)
+
+        handle.ui.getYn._mock.setReturn(False, "Really delete user 'foo'",
+            False)
+        handle.ui.getYn._mock.setReturn(True, "Really delete user 'bar'",
+            False)
+
+        cmd = handle.Commands.getCommandClass('delete')()
+
+        cmd.runCommand(handle, {}, ['rbuild', 'delete', 'users', 'foo'])
+        handle.Users.delete._mock.assertNotCalled()
+
+        cmd.runCommand(handle, {}, ['rbuild', 'delete', 'users', 'foo', 'bar'])
+        handle.Users.delete._mock.assertCalled('bar')
+
+
 class ListUsersTest(AbstractUsersTest):
     def testCommand(self):
         self.getRbuildHandle()
@@ -185,3 +206,20 @@ class UsersTest(rbuildhelp.RbuildHelper):
         self.assertTrue(doc.user.external_auth)
         self.assertTrue(doc.user.is_admin)
         self.assertTrue(doc.user.can_create)
+
+    def testDelete(self):
+        handle = self.getRbuildHandle()
+
+        _user = mock.MockObject()
+        mock.mockMethod(handle.facade.rbuilder.getUsers)
+        mock.mockMethod(handle.ui.warning)
+        handle.facade.rbuilder.getUsers._mock.setReturn([_user],
+            user_name='foo')
+        handle.facade.rbuilder.getUsers._mock.setReturn(None,
+            user_name='bar')
+
+        handle.Users.delete('foo')
+        _user.delete._mock.assertCalled()
+
+        handle.Users.delete('bar')
+        handle.ui.warning._mock.assertCalled("No user 'bar' found")

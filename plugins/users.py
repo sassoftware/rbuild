@@ -65,8 +65,16 @@ class CreateUserCommand(command.BaseCommand):
 
 
 class DeleteUsersCommand(command.BaseCommand):
-    pass
+    help = 'Delete an rbuilder user'
+    paramHelp = '<username>+'
 
+    def runCommand(self, handle, argSet, args):
+        _, usernames = self.requireParameters(args, expected='USERNAME',
+            appendExtra=True)
+
+        for user in usernames:
+            if handle.ui.getYn("Really delete user '%s'" % user, False):
+                handle.Users.delete(user)
 
 class EditUserComand(command.BaseCommand):
     pass
