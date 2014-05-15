@@ -167,7 +167,8 @@ class ListUsersCommand(command.ListCommand):
     paramHelp = '<username>+'
 
     resource = 'users'
-    listFields = ('user_id', 'user_name', 'full_name', 'email', 'is_admin',)
+    listFields = ('user_id', 'user_name', 'full_name', 'email', 'is_admin',
+        'external_auth', 'can_create')
     showFieldMap = dict(
         created_by=dict(accessor=lambda u: u.created_by.full_name),
         roles=dict(accessor=lambda u: ', '.join(sorted(r.name for r in u.roles))),
