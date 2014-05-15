@@ -36,78 +36,72 @@ class CreateUserTest(AbstractUsersTest):
     def testCreateUserArgParse(self):
         self.checkRbuild(
             'create user --external --admin --create-resources'
-            ' --password password username "full name" email@example.com',
+            ' --password password --user-name username --full-name "full name"'
+            ' --email email@example.com',
             'rbuild_plugins.users.CreateUserCommand.runCommand',
             [None, None, {
                 'external': True,
                 'admin': True,
                 'create-resources': True,
                 'password': 'password',
-                }, ['create', 'user', 'username', 'full name',
-                    'email@example.com']])
-
-        self.checkRbuild(
-            'create user -e -a -c -p password username "full name"'
-            ' email@example.com',
-            'rbuild_plugins.users.CreateUserCommand.runCommand',
-            [None, None, {
-                'external': True,
-                'admin': True,
-                'create-resources': True,
-                'password': 'password',
-                }, ['create', 'user', 'username', 'full name',
-                    'email@example.com']])
+                'full-name': 'full name',
+                'email': 'email@example.com',
+                'user-name': 'username',
+                }, ['create', 'user']])
 
     def testCreateUserCmdline(self):
         handle = self.handle
 
         mock.mockMethod(handle.Users.create)
         mock.mockMethod(handle.ui.getPassword)
+        mock.mockMethod(handle.ui.getResponse)
 
         cmd = handle.Commands.getCommandClass('create')()
 
-        err = self.assertRaises(errors.ParseError,
-            cmd.runCommand, handle, {}, ['rbuild', 'create', 'user'])
-        self.assertEqual("'user' missing 3 command parameter(s): USERNAME,"
-            " FULL_NAME, EMAIL", str(err))
-
-        err = self.assertRaises(errors.ParseError,
-            cmd.runCommand, handle, {}, ['rbuild', 'create', 'user', 'foo'])
-        self.assertEqual("'user' missing 2 command parameter(s): FULL_NAME,"
-            " EMAIL", str(err))
-
-        err = self.assertRaises(errors.ParseError,
-            cmd.runCommand, handle, {}, ['rbuild', 'create', 'user', 'foo',
-            '"full name"'])
-        self.assertEqual("'user' missing 1 command parameter(s): EMAIL",
-            str(err))
-
-        err = self.assertRaises(errors.BadParameterError,
-            cmd.runCommand, handle, {'external': True, 'password': 'foo'},
-            ['rbuild', 'create', 'user', 'foo', '"Foo Bar"', 'foo@example.com'])
-        self.assertIn('external authentication', str(err))
-
+        handle.ui.getResponse._mock.setReturn('foo', 'User name')
+        handle.ui.getResponse._mock.setReturn('foo bar', 'Full name')
+        handle.ui.getResponse._mock.setReturn('foo@example.com', 'Email')
         handle.ui.getPassword._mock.setReturn('secret', 'Password')
-        cmd.runCommand(handle, {},
-            ['rbuild', 'create', 'user', 'foo', 'Foo Bar', 'foo@example.com'])
-        handle.Users.create._mock.assertCalled('foo', 'Foo Bar',
-            'foo@example.com', 'secret', False, False, False)
+
+        cmd.runCommand(handle, {}, ['rbuild', 'create', 'user'])
+        handle.Users.create._mock.assertCalled(user_name='foo',
+            full_name='foo bar', email='foo@example.com', password='secret')
+
+        cmd.runCommand(handle, {'user-name': 'bar'},
+            ['rbuild', 'create', 'user'])
+        handle.Users.create._mock.assertCalled(user_name='bar',
+            full_name='foo bar', email='foo@example.com', password='secret')
+
+        cmd.runCommand(handle, {'full-name': 'Full Name'},
+            ['rbuild', 'create', 'user'])
+        handle.Users.create._mock.assertCalled(user_name='foo',
+            full_name='Full Name', email='foo@example.com', password='secret')
+
+        cmd.runCommand(handle, {'email': 'email'},
+            ['rbuild', 'create', 'user'])
+        handle.Users.create._mock.assertCalled(user_name='foo',
+            full_name='foo bar', email='email', password='secret')
+
+        cmd.runCommand(handle, {'password': 'password'},
+            ['rbuild', 'create', 'user'])
+        handle.Users.create._mock.assertCalled(user_name='foo',
+            full_name='foo bar', email='foo@example.com', password='password')
 
         cmd.runCommand(handle, {'external': True},
-            ['rbuild', 'create', 'user', 'foo', 'Foo Bar', 'foo@example.com'])
-        handle.Users.create._mock.assertCalled('foo', 'Foo Bar',
-            'foo@example.com', None, True, False, False)
+            ['rbuild', 'create', 'user'])
+        handle.Users.create._mock.assertCalled(user_name='foo',
+            full_name='foo bar', email='foo@example.com', external_auth=True)
 
-        cmd.runCommand(handle, {'external': True, 'admin': True},
-            ['rbuild', 'create', 'user', 'foo', 'Foo Bar', 'foo@example.com'])
-        handle.Users.create._mock.assertCalled('foo', 'Foo Bar',
-            'foo@example.com', None, True, True, False)
+        cmd.runCommand(handle, {'admin': True}, ['rbuild', 'create', 'user'])
+        handle.Users.create._mock.assertCalled(user_name='foo',
+            full_name='foo bar', email='foo@example.com', password='secret',
+            is_admin=True)
 
-        cmd.runCommand(handle,
-            {'external': True, 'admin': True, 'create-resources': True},
-            ['rbuild', 'create', 'user', 'foo', 'Foo Bar', 'foo@example.com'])
-        handle.Users.create._mock.assertCalled('foo', 'Foo Bar',
-            'foo@example.com', None, True, True, True)
+        cmd.runCommand(handle, {'create-resources': True},
+            ['rbuild', 'create', 'user'])
+        handle.Users.create._mock.assertCalled(user_name='foo',
+            full_name='foo bar', email='foo@example.com', password='secret',
+            can_create=True)
 
 
 class DeleteUsersTest(AbstractUsersTest):
@@ -154,17 +148,17 @@ class UsersTest(rbuildhelp.RbuildHelper):
         mock.mockMethod(handle.facade.rbuilder._getRbuilderRESTClient, _client)
 
         err = self.assertRaises(errors.PluginError, handle.Users.create, 'foo',
-            'foo bar', 'foo@example.com', 'secret', isExternal=True,
-            isAdmin=True, createResources=True)
+            'foo bar', 'foo@example.com', 'secret', external_auth=True,
+            is_admin=True, can_create=True)
         self.assertIn('external authentication', str(err))
 
         err = self.assertRaises(errors.PluginError, handle.Users.create, 'foo',
-            'foo bar', 'foo@example.com', '', isExternal=False,
-            isAdmin=True, createResources=True)
+            'foo bar', 'foo@example.com', '', external_auth=False,
+            is_admin=True, can_create=True)
         self.assertIn('Must provide', str(err))
 
         handle.Users.create('foo', 'foo bar', 'foo@example.com', 'secret',
-            isExternal=False, isAdmin=False, createResources=False)
+            external_auth=False, is_admin=False, can_create=False)
         doc = _client.api.users.append._mock.calls[0][0][0]
         self.assertEqual('foo', doc.user.user_name)
         self.assertEqual('foo bar', doc.user.full_name)
@@ -175,34 +169,34 @@ class UsersTest(rbuildhelp.RbuildHelper):
         self.assertFalse(doc.user.can_create)
 
         handle.Users.create('foo', 'foo bar', 'foo@example.com', None,
-            isExternal=True, isAdmin=False, createResources=False)
+            external_auth=True, is_admin=False, can_create=False)
         doc = _client.api.users.append._mock.calls[1][0][0]
         self.assertEqual('foo', doc.user.user_name)
         self.assertEqual('foo bar', doc.user.full_name)
         self.assertEqual('foo@example.com', doc.user.email)
-        self.assertEqual(None, doc.user.password)
+        self.assertFalse(hasattr(doc.user, 'password'))
         self.assertTrue(doc.user.external_auth)
         self.assertFalse(doc.user.is_admin)
         self.assertFalse(doc.user.can_create)
 
         handle.Users.create('foo', 'foo bar', 'foo@example.com', None,
-            isExternal=True, isAdmin=True, createResources=False)
+            external_auth=True, is_admin=True, can_create=False)
         doc = _client.api.users.append._mock.calls[2][0][0]
         self.assertEqual('foo', doc.user.user_name)
         self.assertEqual('foo bar', doc.user.full_name)
         self.assertEqual('foo@example.com', doc.user.email)
-        self.assertEqual(None, doc.user.password)
+        self.assertFalse(hasattr(doc.user, 'password'))
         self.assertTrue(doc.user.external_auth)
         self.assertTrue(doc.user.is_admin)
         self.assertFalse(doc.user.can_create)
 
         handle.Users.create('foo', 'foo bar', 'foo@example.com', None,
-            isExternal=True, isAdmin=True, createResources=True)
+            external_auth=True, is_admin=True, can_create=True)
         doc = _client.api.users.append._mock.calls[3][0][0]
         self.assertEqual('foo', doc.user.user_name)
         self.assertEqual('foo bar', doc.user.full_name)
         self.assertEqual('foo@example.com', doc.user.email)
-        self.assertEqual(None, doc.user.password)
+        self.assertFalse(hasattr(doc.user, 'password'))
         self.assertTrue(doc.user.external_auth)
         self.assertTrue(doc.user.is_admin)
         self.assertTrue(doc.user.can_create)

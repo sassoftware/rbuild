@@ -27,41 +27,52 @@ from rbuild.pluginapi import command
 
 class CreateUserCommand(command.BaseCommand):
     help = 'Create a new rbuilder user'
-    paramHelp = '[options] <username> <full name> <email>'
+    paramHelp = '[options]'
     docs = {
+        'user-name': "Name used for login",
+        'full-name': "User's full name",
+        'email': "User's email address",
+        'password': "User's password",
         'external': 'Use external authentication service',
         'admin': 'User is an admin',
         'create-resources': 'User has create resources permissions',
-        'password': 'User password',
         }
 
     def addLocalParameters(self, argDef):
-        argDef['external'] = '-e', command.NO_PARAM
-        argDef['admin'] = '-a', command.NO_PARAM
-        argDef['create-resources'] = '-c', command.NO_PARAM
-        argDef['password'] = '-p', command.ONE_PARAM
+        argDef['user-name'] = command.ONE_PARAM
+        argDef['full-name'] = command.ONE_PARAM
+        argDef['email'] = command.ONE_PARAM
+        argDef['password'] = command.ONE_PARAM
+        argDef['external'] = command.NO_PARAM
+        argDef['admin'] = command.NO_PARAM
+        argDef['create-resources'] = command.NO_PARAM
 
     def runCommand(self, handle, argSet, args):
-        _, user_name, full_name, email = self.requireParameters(args, expected=[
-                'USERNAME',
-                'FULL_NAME',
-                'EMAIL',
-                ])
+        ui = handle.ui
 
-        isExternal = argSet.pop('external', False)
-        isAdmin = argSet.pop('admin', False)
-        createResources = argSet.pop('create-resources', False)
-        password = argSet.pop('password', None)
+        self.requireParameters(args)
 
-        if password and isExternal:
-            raise errors.BadParameterError("Cannot use external authentication"
-                " and provide a password")
+        # user_name, full_name and email are required
+        kwargs = dict(
+            user_name=argSet.get('user-name', ui.getResponse('User name')),
+            full_name=argSet.get('full-name', ui.getResponse('Full name')),
+            email=argSet.get('email', ui.getResponse('Email')),
+            )
 
-        if not password and not isExternal:
-            password = handle.ui.getPassword('Password')
+        # must select external authentication or provide a password
+        if 'external' in argSet:
+            kwargs['external_auth'] = argSet['external']
+        else:
+            kwargs['password'] = argSet.pop('password',
+                ui.getPassword('Password'))
 
-        handle.Users.create(user_name, full_name, email, password, isExternal,
-            isAdmin, createResources)
+        if 'admin' in argSet:
+            kwargs['is_admin'] = argSet['admin']
+
+        if 'create-resources' in argSet:
+            kwargs['can_create'] = argSet['create-resources']
+
+        handle.Users.create(**kwargs)
 
 
 class DeleteUsersCommand(command.BaseCommand):
@@ -96,10 +107,9 @@ class ListUsersCommand(command.ListCommand):
 class Users(pluginapi.Plugin):
     name = 'users'
 
-    def create(self, user_name, full_name, email, password, isExternal=False,
-            isAdmin=False, createResources=False):
-        '''
-        Create a rbuilder user
+    def create(self, user_name, full_name, email, password=None,
+            external_auth=False, is_admin=False, can_create=False):
+        '''Create a rbuilder user
 
         :param user_name: login name for user
         :type user_name: str
@@ -109,33 +119,34 @@ class Users(pluginapi.Plugin):
         :type email: str
         :param password: user's password, if not using external authentication
         :type password: str
-        :param isExternal: whether to use external auth, must not be True if
+        :param external_auth: whether to use external auth, must not be True if
             password is provided
-        :type isExternal: bool
-        :param isAdmin: is this an admin user
-        :type isAdmin: bool
-        :param createResources: can this user create resources
-        :type createResources: bool
+        :type external_auth: bool
+        :param is_admin: is this an admin user
+        :type is_admin: bool
+        :param can_create: can this user create resources
+        :type can_create: bool
+        :raises: rbuild.errors.PluginError
         '''
-        if isExternal and password:
+        if external_auth and password:
             raise errors.PluginError('Cannot use a password with external'
                 ' authentication')
 
-        if not isExternal and not password:
+        if not external_auth and not password:
             raise errors.PluginError('Must provide a password if not using'
                 ' external authentication')
-
 
         # create the user xml document
         user_doc = xobj.Document()
         user_doc.user = user = xobj.XObj()
         user.user_name = user_name
         user.full_name = full_name
-        user.password = password
         user.email = email
-        user.external_auth = isExternal
-        user.is_admin = isAdmin
-        user.can_create = createResources
+        if password is not None:
+            user.password = password
+        user.external_auth = external_auth
+        user.is_admin = is_admin
+        user.can_create = can_create
 
         # POST the new user
         client = self.handle.facade.rbuilder._getRbuilderRESTClient()
