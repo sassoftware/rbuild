@@ -31,10 +31,10 @@ from rbuild import errors, pluginapi
 
 class EditCommand(pluginapi.command.CommandWithSubCommands):
     """
-    Edit product definition
+    Edit resources
     """
     commands = ['edit']
-    help = 'Edit product definition'
+    help = 'Edit resources'
 
 
 class EditProductCommand(pluginapi.command.BaseCommand):
