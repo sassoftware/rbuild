@@ -130,7 +130,7 @@ class EditTargetTest(AbstractTargetTest):
             ['rbuild', 'edit', 'target'],
             )
         self.assertEqual(
-            str(err), "'target' missing 1 command parameter(s): ID")
+            str(err), "'target' missing 1 command parameter(s): NAME")
 
         cmd.runCommand(
             handle,
@@ -138,7 +138,15 @@ class EditTargetTest(AbstractTargetTest):
             ['rbuild', 'edit', 'target', '1'],
             )
         handle.DescriptorConfig.readConfig._mock.assertNotCalled()
-        handle.Targets.edit._mock.assertCalled('1')
+        handle.Targets.edit._mock.assertCalled('1', None)
+
+        cmd.runCommand(
+            handle,
+            dict(),
+            ['rbuild', 'edit', 'target', '1', '2'],
+            )
+        handle.DescriptorConfig.readConfig._mock.assertNotCalled()
+        handle.Targets.edit._mock.assertCalled('1', '2')
 
         cmd.runCommand(
             handle,
@@ -146,7 +154,7 @@ class EditTargetTest(AbstractTargetTest):
             ['rbuild', 'edit', 'target', '1'],
             )
         handle.DescriptorConfig.readConfig._mock.assertCalled('foo')
-        handle.Targets.edit._mock.assertCalled('1')
+        handle.Targets.edit._mock.assertCalled('1', None)
         handle.DescriptorConfig.writeConfig._mock.assertNotCalled()
 
         cmd.runCommand(
@@ -155,7 +163,7 @@ class EditTargetTest(AbstractTargetTest):
             ['rbuild', 'edit', 'target', '1'],
             )
         handle.DescriptorConfig.readConfig._mock.assertNotCalled()
-        handle.Targets.edit._mock.assertCalled('1')
+        handle.Targets.edit._mock.assertCalled('1', None)
         handle.DescriptorConfig.writeConfig._mock.assertCalled('foo')
 
     def testEditTarget(self):
@@ -163,6 +171,7 @@ class EditTargetTest(AbstractTargetTest):
 
         mock.mock(h, 'DescriptorConfig')
         mock.mock(h.facade, 'rbuilder')
+        mock.mock(h, 'ui')
         mock.mockMethod(h.Targets.configureTargetCredentials)
         mock.mockMethod(h.getConfig)
 
@@ -172,7 +181,7 @@ class EditTargetTest(AbstractTargetTest):
         _target = mock.MockObject()
         _target.target_configuration._mock.set(elements=list())
         _target.target_type._mock.set(name='type')
-        rb.getTargets._mock.setReturn([_target], target_id=1)
+        rb.getTargets._mock.setReturn([_target], name='foo')
 
         _desc = mock.MockObject()
         rb.getTargetDescriptor._mock.setReturn(_desc, 'type')
@@ -183,10 +192,10 @@ class EditTargetTest(AbstractTargetTest):
         rb.configureTarget._mock.setReturn(_target, _target, _ddata)
 
         # no target 'bar'
-        rb.getTargets._mock.setReturn(None, target_id='bar')
+        rb.getTargets._mock.setReturn(None, name='bar')
 
         err = self.assertRaises(errors.PluginError, h.Targets.edit, 'bar')
-        self.assertEqual("No target found with id 'bar'", str(err))
+        self.assertEqual("No target found with name 'bar'", str(err))
 
         _config = mock.MockObject()
         h.getConfig._mock.setReturn(_config)
@@ -195,13 +204,13 @@ class EditTargetTest(AbstractTargetTest):
 
         # user is not admin
         _config._mock.set(user=('user', 'secret'))
-        h.Targets.edit(1)
+        h.Targets.edit('foo')
         rb.configureTarget._mock.assertNotCalled()
         h.Targets.configureTargetCredentials._mock.assertCalled(_target)
 
         # user is admin
         _config._mock.set(user=('admin', 'secret'))
-        h.Targets.edit(1)
+        h.Targets.edit('foo')
         rb.configureTarget._mock.assertCalled(_target, _ddata)
         h.Targets.configureTargetCredentials._mock.assertCalled(_target)
 

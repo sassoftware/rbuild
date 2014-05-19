@@ -91,12 +91,13 @@ class EditTargetCommand(command.BaseCommand):
         fromFile = argSet.pop('from-file', None)
         toFile = argSet.pop('to-file', None)
 
-        _, targetId = self.requireParameters(args, expected='ID')
+        _, targetName, targetType = self.requireParameters(args,
+            expected='NAME', allowExtra=True)
 
         if fromFile:
             handle.DescriptorConfig.readConfig(fromFile)
 
-        handle.Targets.edit(targetId)
+        handle.Targets.edit(targetName, targetType[0] if targetType else None)
 
         if toFile:
             handle.DescriptorConfig.writeConfig(toFile)
@@ -115,16 +116,6 @@ class ListTargetsCommand(command.ListCommand):
 
 class Targets(pluginapi.Plugin):
     name = 'targets'
-
-    def initialize(self):
-        self.handle.Commands.getCommandClass('create').registerSubCommand(
-            'target', CreateTargetCommand)
-        self.handle.Commands.getCommandClass('delete').registerSubCommand(
-            'targets', DeleteTargetsCommand)
-        self.handle.Commands.getCommandClass('edit').registerSubCommand(
-            'target', EditTargetCommand)
-        self.handle.Commands.getCommandClass('list').registerSubCommand(
-            'targets', ListTargetsCommand)
 
     def createTarget(self, targetType):
         '''
@@ -177,16 +168,30 @@ class Targets(pluginapi.Plugin):
         else:
             self.handle.ui.write("No target found with id '%s'" % targetId)
 
-    def edit(self, targetId):
+    def edit(self, targetName, targetType=None):
         dc = self.handle.DescriptorConfig
         rb = self.handle.facade.rbuilder
+        ui = self.handle.ui
 
-        target = rb.getTargets(target_id=targetId)
+        target = rb.getTargets(name=targetName)
         if target:
-            target = target[0]
+            if len(target) > 1:
+                if targetType:
+                    target = [t for t in target
+                              if t.target_type.name == targetType][0]
+                else:
+                    ui.write('Ambiguous target name')
+                    response = ui.getChoice('Pick a target', pageSize=10,
+                        choices=['%s (%s)' % (t.name, t.target_type.name)
+                                 for t in target])
+                    target = target[response]
+            else:
+                target = target[0]
         else:
-            raise errors.PluginError(
-                "No target found with id '%s'" % targetId)
+            msg = "No target found with name '%s'" % targetName
+            if targetType:
+                msg = ' '.join([msg, "and type '%s'" % targetType])
+            raise errors.PluginError(msg)
 
         if rb.isAdmin(self.handle.getConfig().user[0]):
             currentValues = dict((e, getattr(target.target_configuration, e))
@@ -196,6 +201,16 @@ class Targets(pluginapi.Plugin):
                 fromStream=descriptor, defaults=currentValues)
             target = rb.configureTarget(target, ddata)
         self.configureTargetCredentials(target)
+
+    def initialize(self):
+        self.handle.Commands.getCommandClass('create').registerSubCommand(
+            'target', CreateTargetCommand)
+        self.handle.Commands.getCommandClass('delete').registerSubCommand(
+            'targets', DeleteTargetsCommand)
+        self.handle.Commands.getCommandClass('edit').registerSubCommand(
+            'target', EditTargetCommand)
+        self.handle.Commands.getCommandClass('list').registerSubCommand(
+            'targets', ListTargetsCommand)
 
     def list(self, *args, **kwargs):
         return self.handle.facade.rbuilder.getTargets()
