@@ -92,7 +92,8 @@ class LaunchCommand(command.BaseCommand):
 class ListImagesCommand(command.ListCommand):
     help = 'list images'
     resource = 'images'
-    listFields = ('image_id', 'name', 'image_type', 'status', 'status_message')
+    listFields = ('image_id', 'name', 'image_type', 'architecture', 'status',
+        'status_message')
     listFieldMap = dict(
         image_type=dict(accessor=lambda i: i.image_type.name),
         )
