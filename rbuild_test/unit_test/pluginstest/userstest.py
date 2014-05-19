@@ -35,14 +35,14 @@ class AbstractUsersTest(rbuildhelp.RbuildHelper):
 class CreateUserTest(AbstractUsersTest):
     def testCreateUserArgParse(self):
         self.checkRbuild(
-            'create user --external --admin --create-resources'
+            'create user --external --admin --no-create'
             ' --password password --user-name username --full-name "full name"'
             ' --email email@example.com',
             'rbuild_plugins.users.CreateUserCommand.runCommand',
             [None, None, {
                 'external': True,
                 'admin': True,
-                'create-resources': True,
+                'no-create': True,
                 'password': 'password',
                 'full-name': 'full name',
                 'email': 'email@example.com',
@@ -97,11 +97,11 @@ class CreateUserTest(AbstractUsersTest):
             full_name='foo bar', email='foo@example.com', password='secret',
             is_admin=True)
 
-        cmd.runCommand(handle, {'create-resources': True},
+        cmd.runCommand(handle, {'no-create': True},
             ['rbuild', 'create', 'user'])
         handle.Users.create._mock.assertCalled(user_name='foo',
             full_name='foo bar', email='foo@example.com', password='secret',
-            can_create=True)
+            can_create=False)
 
 
 class DeleteUsersTest(AbstractUsersTest):
@@ -160,12 +160,20 @@ class EditUserTest(AbstractUsersTest):
             'rbuild_plugins.users.EditUserCommand.runCommand',
             [None, None, {'password': 'bar'}, ['edit', 'user', 'foo']])
 
-        self.checkRbuild('edit user foo --external --admin --create-resources',
+        self.checkRbuild('edit user foo --external --admin --create',
             'rbuild_plugins.users.EditUserCommand.runCommand',
             [None, None, {
                 'external': True,
                 'admin': True,
-                'create-resources': True,
+                'create': True,
+                }, ['edit', 'user', 'foo']])
+
+        self.checkRbuild('edit user foo --no-external --no-admin --no-create',
+            'rbuild_plugins.users.EditUserCommand.runCommand',
+            [None, None, {
+                'no-external': True,
+                'no-admin': True,
+                'no-create': True,
                 }, ['edit', 'user', 'foo']])
 
     def testEditUserCmdline(self):
@@ -272,16 +280,16 @@ class EditUserTest(AbstractUsersTest):
         handle.Users.edit._mock.assertCalled(_user, is_admin=False)
 
         # change can_create
-        cmd.runCommand(handle, {'create-resources': True},
+        cmd.runCommand(handle, {'create': True},
             ['rbuild', 'edit', 'user', 'foo'])
         handle.Users.edit._mock.assertCalled(_user, can_create=True)
 
-        cmd.runCommand(handle, {'no-create-resources': True},
+        cmd.runCommand(handle, {'no-create': True},
             ['rbuild', 'edit', 'user', 'foo'])
         handle.Users.edit._mock.assertCalled(_user, can_create=False)
 
         cmd.runCommand(handle,
-            {'create-resources': True, 'no-create-resources': True},
+            {'create': True, 'no-create': True},
             ['rbuild', 'edit', 'user', 'foo'])
         handle.Users.edit._mock.assertCalled(_user, can_create=False)
 
@@ -313,9 +321,19 @@ class UsersTest(rbuildhelp.RbuildHelper):
             is_admin=True, can_create=True)
         self.assertIn('Must provide', str(err))
 
+        handle.Users.create('foo', 'foo bar', 'foo@example.com', 'secret')
+        doc = _client.api.users.append._mock.calls.pop()[0][0]
+        self.assertEqual('foo', doc.user.user_name)
+        self.assertEqual('foo bar', doc.user.full_name)
+        self.assertEqual('foo@example.com', doc.user.email)
+        self.assertEqual('secret', doc.user.password)
+        self.assertFalse(doc.user.external_auth)
+        self.assertFalse(doc.user.is_admin)
+        self.assertTrue(doc.user.can_create)
+
         handle.Users.create('foo', 'foo bar', 'foo@example.com', 'secret',
             external_auth=False, is_admin=False, can_create=False)
-        doc = _client.api.users.append._mock.calls[0][0][0]
+        doc = _client.api.users.append._mock.calls.pop()[0][0]
         self.assertEqual('foo', doc.user.user_name)
         self.assertEqual('foo bar', doc.user.full_name)
         self.assertEqual('foo@example.com', doc.user.email)
@@ -326,7 +344,7 @@ class UsersTest(rbuildhelp.RbuildHelper):
 
         handle.Users.create('foo', 'foo bar', 'foo@example.com', None,
             external_auth=True, is_admin=False, can_create=False)
-        doc = _client.api.users.append._mock.calls[1][0][0]
+        doc = _client.api.users.append._mock.calls.pop()[0][0]
         self.assertEqual('foo', doc.user.user_name)
         self.assertEqual('foo bar', doc.user.full_name)
         self.assertEqual('foo@example.com', doc.user.email)
@@ -337,7 +355,7 @@ class UsersTest(rbuildhelp.RbuildHelper):
 
         handle.Users.create('foo', 'foo bar', 'foo@example.com', None,
             external_auth=True, is_admin=True, can_create=False)
-        doc = _client.api.users.append._mock.calls[2][0][0]
+        doc = _client.api.users.append._mock.calls.pop()[0][0]
         self.assertEqual('foo', doc.user.user_name)
         self.assertEqual('foo bar', doc.user.full_name)
         self.assertEqual('foo@example.com', doc.user.email)
@@ -348,7 +366,7 @@ class UsersTest(rbuildhelp.RbuildHelper):
 
         handle.Users.create('foo', 'foo bar', 'foo@example.com', None,
             external_auth=True, is_admin=True, can_create=True)
-        doc = _client.api.users.append._mock.calls[3][0][0]
+        doc = _client.api.users.append._mock.calls.pop()[0][0]
         self.assertEqual('foo', doc.user.user_name)
         self.assertEqual('foo bar', doc.user.full_name)
         self.assertEqual('foo@example.com', doc.user.email)

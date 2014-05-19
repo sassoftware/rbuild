@@ -45,7 +45,7 @@ class CreateUserCommand(command.BaseCommand):
         argDef['password'] = command.ONE_PARAM
         argDef['external'] = command.NO_PARAM
         argDef['admin'] = command.NO_PARAM
-        argDef['create-resources'] = command.NO_PARAM
+        argDef['no-create'] = command.NO_PARAM
 
     def runCommand(self, handle, argSet, args):
         ui = handle.ui
@@ -69,8 +69,8 @@ class CreateUserCommand(command.BaseCommand):
         if 'admin' in argSet:
             kwargs['is_admin'] = argSet['admin']
 
-        if 'create-resources' in argSet:
-            kwargs['can_create'] = argSet['create-resources']
+        if 'no-create' in argSet:
+            kwargs['can_create'] = not argSet['no-create']
 
         handle.Users.create(**kwargs)
 
@@ -99,8 +99,8 @@ class EditUserCommand(command.BaseCommand):
         'no-external': 'Turn off external authentication',
         'admin': 'Turn on administrative privlidges',
         'no-admin': 'Turn off administrative privlidges',
-        'create-resources': 'Turn on create resources permissions',
-        'no-create-resources': 'Turn off create resources permissions',
+        'create': 'Turn on create resources permissions',
+        'no-create': 'Turn off create resources permissions',
         }
 
     def addLocalParameters(self, argDef):
@@ -111,8 +111,8 @@ class EditUserCommand(command.BaseCommand):
         argDef['no-external'] = command.NO_PARAM
         argDef['admin'] = command.NO_PARAM
         argDef['no-admin'] = command.NO_PARAM
-        argDef['create-resources'] = command.NO_PARAM
-        argDef['no-create-resources'] = command.NO_PARAM
+        argDef['create'] = command.NO_PARAM
+        argDef['no-create'] = command.NO_PARAM
 
     def runCommand(self, handle, argSet, args):
         ui = handle.ui
@@ -145,9 +145,9 @@ class EditUserCommand(command.BaseCommand):
             kwargs['is_admin'] = (argSet.get('admin', False)
                 and not argSet.get('no-admin', False))
 
-        if 'create-resources' in argSet or 'no-create-resources' in argSet:
-            kwargs['can_create'] = (argSet.get('create-resources', False)
-                and not argSet.get('no-create-resources', False))
+        if 'create' in argSet or 'no-create' in argSet:
+            kwargs['can_create'] = (argSet.get('create', False)
+                and not argSet.get('no-create', False))
 
         if 'password' in argSet:
             if kwargs.get('external_auth'):
@@ -180,7 +180,7 @@ class Users(pluginapi.Plugin):
     name = 'users'
 
     def create(self, user_name, full_name, email, password=None,
-            external_auth=False, is_admin=False, can_create=False):
+            external_auth=False, is_admin=False, can_create=True):
         '''Create a rbuilder user
 
         :param user_name: login name for user
@@ -192,11 +192,11 @@ class Users(pluginapi.Plugin):
         :param password: user's password, if not using external authentication
         :type password: str
         :param external_auth: whether to use external auth, must not be True if
-            password is provided
+            password is provided, default False
         :type external_auth: bool
-        :param is_admin: is this an admin user
+        :param is_admin: is this an admin user, default False
         :type is_admin: bool
-        :param can_create: can this user create resources
+        :param can_create: can this user create resources, default True
         :type can_create: bool
         :raises: rbuild.errors.PluginError
         '''
