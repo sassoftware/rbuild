@@ -244,6 +244,19 @@ class UserInterfaceTest(rbuildhelp.RbuildHelper):
                                  self.captureOutput, h.ui.input, 'foo')
         self.assertEquals(str(err), "Ran out of input while reading for 'foo'")
 
+    def testMultiLineInput(self):
+        h = self.getRbuildHandle(mockOutput=False)
+        sys.stdin = StringIO.StringIO()
+        sys.stdin.write('spam\n\nthe eggs\n')
+        sys.stdin.seek(0)
+        rc, txt = self.captureOutput(h.ui.multiLineInput, 'foo')
+        self.assertEquals(rc, 'spam\n\nthe eggs')
+        self.assertEquals(txt, 'foo')
+
+        rc, txt = self.captureOutput(h.ui.multiLineInput, 'bar')
+        self.assertEquals(rc, '')
+        self.assertEquals(txt, 'bar')
+
     def testInputPassword(self):
         mock.mock(getpass, 'getpass')
         getpass.getpass._mock.setReturn('result', 'foo')

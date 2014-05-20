@@ -155,10 +155,20 @@ class RbuilderCallback(object):
             if re.search(r'[Pp]assword', prompt):
                 data = self.ui.inputPassword(prompt)
             else:
+                inputFn = self.ui.input
+                if field.get_constraints():
+                    length = field.constraints.get_length()
+                    if length is not None:
+                        length = length[0].presentation().get('value')
+                    if length is not None and length > 150:
+                        inputFn = self.ui.multiLineInput
+                        prompt += ' [CTRL-D to end]'
+
                 data = self.ui.getResponse(
                     prompt,
                     default=field.default[0] if field.default else None,
                     required=field.required,
+                    inputFn=inputFn,
                     )
             if data == '':
                 # the user chose not to fill in the value

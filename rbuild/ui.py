@@ -140,6 +140,23 @@ class UserInterface(object):
             raise errors.RbuildError(
                     "Ran out of input while reading for '%s'" % prompt)
 
+    def multiLineInput(self, prompt):
+        '''Reads input until it catches an EOFError, and returns a newline-
+        concatenated string or the empty string if no input was received.
+
+        :param prompt: user prompt
+        :type prompt: str
+        :returns: user's input
+        :rtype: str
+        '''
+        response = None
+        try:
+            response = [raw_input(prompt)]
+            while True:
+                response.append(raw_input())
+        except EOFError:
+            return '\n'.join(response) if response else ''
+
     def inputPassword(self, prompt):
         return getpass.getpass(prompt)
 
