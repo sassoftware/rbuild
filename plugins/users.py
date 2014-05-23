@@ -61,7 +61,7 @@ class CreateUserCommand(command.BaseCommand):
             full_name = ui.getResponse('Full name', required=True)
         email = argSet.pop('email', None)
         if not email:
-            email = ui.getResponse('email', required=True)
+            email = ui.getResponse('Email', required=True)
 
         kwargs = dict(user_name=user_name, full_name=full_name, email=email)
 

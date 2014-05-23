@@ -58,9 +58,12 @@ class CreateUserTest(AbstractUsersTest):
 
         cmd = handle.Commands.getCommandClass('create')()
 
-        handle.ui.getResponse._mock.setReturn('foo', 'User name')
-        handle.ui.getResponse._mock.setReturn('foo bar', 'Full name')
-        handle.ui.getResponse._mock.setReturn('foo@example.com', 'Email')
+        handle.ui.getResponse._mock.setReturn('foo', 'User name',
+            required=True)
+        handle.ui.getResponse._mock.setReturn('foo bar', 'Full name',
+            required=True)
+        handle.ui.getResponse._mock.setReturn('foo@example.com', 'Email',
+            required=True)
         handle.ui.getPassword._mock.setReturn('secret', 'Password')
 
         cmd.runCommand(handle, {}, ['rbuild', 'create', 'user'])
