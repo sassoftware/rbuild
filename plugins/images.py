@@ -155,13 +155,15 @@ class Images(pluginapi.Plugin):
         target = target[0]
         if target.is_configured == 'false':
             raise errors.PluginError(("Target '{0}' is not configured. Try"
-                " running \"rbuild edit target '{1}'\" or contacting your"
-                " rbuilder administrator.").format(target.name, target.id))
+                " running \"rbuild edit target '{0}' '{1}'\" or contacting"
+                " your rbuilder administrator.").format(target.name,
+                        target.target_type.name))
 
         if target.credentials_valid == 'false':
             raise errors.PluginError(("Target '{0}' does not have valid"
-                " credentials. Try running \"rbuild edit target '{1}'\" and"
-                " updating your credentials.").format(target.name, target.id))
+                " credentials. Try running \"rbuild edit target '{0}' '{1}'\""
+                " and updating your credentials.").format(target.name,
+                        target.target_type.name))
 
         image, action = self._getAction(images, target, action_type)
 
