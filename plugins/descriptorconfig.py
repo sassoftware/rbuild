@@ -163,9 +163,9 @@ class RbuilderCallback(object):
                 inputFn = self.ui.input
                 if field.get_constraints():
                     length = field.constraints.get_length()
-                    if length is not None:
+                    if length:
                         length = length[0].presentation().get('value')
-                    if length is not None and length > 150:
+                    if length and length > 150:
                         inputFn = self.ui.multiLineInput
                         prompt += ' [CTRL-D to end]'
 
