@@ -42,18 +42,23 @@ class RbuilderCallback(object):
         choices = [self._description(x.descriptions) for x in field.type]
         default = [idx for idx, x in enumerate(field.type)
                    if x.key in field.default]
+
+        pageSize, _ = self.ui.getTerminalSize()
+        pageSize -= 3
         if default:
             prompt += " (blank for default)"
 
         if field.multiple:
             response = self.ui.getChoices(prompt, choices,
                 default=default if default else None,
-                prePrompt=prePrompt)
+                prePrompt=prePrompt,
+                pageSize=22)
             return [field.type[r].key for r in response]
         else:
             response = self.ui.getChoice(prompt, choices,
                 default=default[0] if default else None,
-                prePrompt=prePrompt)
+                prePrompt=prePrompt,
+                pageSize=pageSize)
             return field.type[response].key
 
     def start(self, descriptor, name=None, listValues=None):

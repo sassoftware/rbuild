@@ -19,8 +19,11 @@
 User interface module for rbuild.
 """
 import getpass
+import fcntl
 import os
+import struct
 import sys
+import termios
 import time
 
 from rbuild import errors
@@ -42,6 +45,13 @@ class UserInterface(object):
         self._log = None
         self._logRoot = logRoot
         self.resetLogFile(logRoot)
+
+    def getTerminalSize(self):
+        s = struct.pack('HHHH', 0, 0, 0, 0)
+        fd = sys.stdout.fileno() if sys.stdout.isatty() else 1
+        result = fcntl.ioctl(fd, termios.TIOCGWINSZ, s)
+        rows, cols = struct.unpack('HHHH', result)[0:2]
+        return rows, cols
 
     def resetLogFile(self, logRoot):
         '''
