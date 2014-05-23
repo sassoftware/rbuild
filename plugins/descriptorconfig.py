@@ -52,7 +52,7 @@ class RbuilderCallback(object):
             response = self.ui.getChoices(prompt, choices,
                 default=default if default else None,
                 prePrompt=prePrompt,
-                pageSize=22)
+                pageSize=pageSize)
             return [field.type[r].key for r in response]
         else:
             response = self.ui.getChoice(prompt, choices,

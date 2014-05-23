@@ -197,18 +197,19 @@ class DescriptorConfigTest(rbuildhelp.RbuildHelper):
             ]))
 
         mock.mockMethod(handle.ui.getChoice)
+        mock.mockMethod(handle.ui.getTerminalSize, (24, 80))
 
         # field with no default
         handle.ui.getChoice._mock.setReturn(0,
-            'Enter choice',
-            ["One", "Two"], default=None, prePrompt="Pick foo:")
+            'Enter choice', ["One", "Two"], default=None,
+            prePrompt="Pick foo:", pageSize=21)
         rv = callback.getValueForField(fDef.getDataField('lotsaValues'))
         self.assertEqual(rv, 'one')
 
         # field with default
         handle.ui.getChoice._mock.setReturn(0,
-            'Enter choice (blank for default)',
-            ["One", "Two"], default=1, prePrompt="Pick foodef:")
+            'Enter choice (blank for default)', ["One", "Two"], default=1,
+            prePrompt="Pick foodef:", pageSize=21)
         rv = callback.getValueForField(fDef.getDataField('lotsaValuesDefault'))
         self.assertEqual(rv, 'one')
 
@@ -237,18 +238,19 @@ class DescriptorConfigTest(rbuildhelp.RbuildHelper):
             ]))
 
         mock.mockMethod(handle.ui.getChoices)
+        mock.mockMethod(handle.ui.getTerminalSize, (24, 80))
 
         # field with no default
-        handle.ui.getChoices._mock.setReturn([0],
-            'Enter choice',
-            ["One", "Two"], default=None, prePrompt="Pick foo:")
+        handle.ui.getChoices._mock.setReturn([0], 'Enter choice',
+            ["One", "Two"], default=None, prePrompt="Pick foo:",
+            pageSize=21)
         rv = callback.getValueForField(fDef.getDataField('lotsaValues'))
         self.assertEqual(rv, ['one'])
 
         # field with default
         handle.ui.getChoices._mock.setReturn([0],
-            'Enter choice (blank for default)',
-            ["One", "Two"], default=[1], prePrompt="Pick foodef:")
+            'Enter choice (blank for default)', ["One", "Two"], default=[1],
+            prePrompt="Pick foodef:", pageSize=21)
         rv = callback.getValueForField(fDef.getDataField('lotsaValuesDefault'))
         self.assertEqual(rv, ['one'])
 
