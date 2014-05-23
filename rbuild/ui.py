@@ -48,7 +48,7 @@ class UserInterface(object):
 
     def getTerminalSize(self):
         s = struct.pack('HHHH', 0, 0, 0, 0)
-        fd = sys.stdout.fileno() if sys.stdout.isatty() else 1
+        fd = self.outStream.fileno() if self.outStream.isatty() else 1
         result = fcntl.ioctl(fd, termios.TIOCGWINSZ, s)
         rows, cols = struct.unpack('HHHH', result)[0:2]
         return rows, cols
