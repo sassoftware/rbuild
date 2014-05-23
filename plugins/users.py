@@ -53,18 +53,26 @@ class CreateUserCommand(command.BaseCommand):
         self.requireParameters(args)
 
         # user_name, full_name and email are required
-        kwargs = dict(
-            user_name=argSet.get('user-name', ui.getResponse('User name')),
-            full_name=argSet.get('full-name', ui.getResponse('Full name')),
-            email=argSet.get('email', ui.getResponse('Email')),
-            )
+        user_name = argSet.pop('user-name', None)
+        if not user_name:
+            user_name = ui.getResponse('User name', required=True)
+        full_name = argSet.pop('full-name', None)
+        if not full_name:
+            full_name = ui.getResponse('Full name', required=True)
+        email = argSet.pop('email', None)
+        if not email:
+            email = ui.getResponse('email', required=True)
+
+        kwargs = dict(user_name=user_name, full_name=full_name, email=email)
 
         # must select external authentication or provide a password
         if 'external' in argSet:
             kwargs['external_auth'] = argSet['external']
         else:
-            kwargs['password'] = argSet.pop('password',
-                ui.getPassword('Password'))
+            password = argSet.pop('password', None)
+            if not password:
+                password = ui.getPassword('Password')
+            kwargs['password'] = password
 
         if 'admin' in argSet:
             kwargs['is_admin'] = argSet['admin']
