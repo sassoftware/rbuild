@@ -37,10 +37,10 @@ class ConfigTest(rbuildhelp.RbuildHelper):
         config.configLine('name Mr. User')
         config.configLine('contact mr.user@foo.com')
         config.configLine('repositoryMap []')
-        config.configLine('repositoryMap foo.com https://repo.foo.com/conary/')
         config.configLine('repositoryMap bar.com https://dev.bar.com/conary/')
-        config.configLine('repositoryUser foo.com foouser foopassword')
+        config.configLine('repositoryMap foo.com https://repo.foo.com/conary/')
         config.configLine('repositoryUser bar.com baruser barpassword')
+        config.configLine('repositoryUser foo.com foouser foopassword')
         config.configLine('user someuser somepassword')
         config.configLine('serverUrl http://myrbuilder.foo')
         config.configLine('signatureKey ASDF')
@@ -57,9 +57,9 @@ class ConfigTest(rbuildhelp.RbuildHelper):
 # pluginDirs (Default: /usr/share/rbuild/plugins:~/.rbuild/plugins.d) (At `rbuild init': /usr/share/rbuild/plugins:~/.rbuild/plugins.d)
 # quiet (Default: False) (At `rbuild init': True)
 # repositoryMap (Default: [])
-repositoryMap             foo.com                   https://repo.foo.com/conary/
 repositoryMap             bar.com                   https://dev.bar.com/conary/
-# repositoryUser (Default: []) (At `rbuild init': foo.com foouser foopassword, bar.com baruser barpassword)
+repositoryMap             foo.com                   https://repo.foo.com/conary/
+# repositoryUser (Default: []) (At `rbuild init': bar.com baruser barpassword, foo.com foouser foopassword)
 # rmakePluginDirs (Default: /usr/share/rmake/plugins:~/.rmake/plugins.d) (At `rbuild init': /usr/share/rmake/plugins:~/.rmake/plugins.d)
 # rmakeUrl (Default: None) (At `rbuild init': None)
 # serverUrl (Default: None) (At `rbuild init': http://myrbuilder.foo)
@@ -67,7 +67,7 @@ repositoryMap             bar.com                   https://dev.bar.com/conary/
 # signatureKeyMap (Default: []) (At `rbuild init': foo FDSA)
 '''
 
-        self.failUnlessEqual(dump, expected)
+        self.assertEqualWithDiff(dump, expected)
 
     def testPluginConfigurations(self):
         # Dump config file
