@@ -30,4 +30,5 @@ class rBuild(BuildPackageRecipe):
     def setup(r):
         r.addMercurialSnapshot()
         r.Make()
+        r.Make('man')
         r.MakeInstall('lib=%(lib)s')
