@@ -132,39 +132,66 @@ class EditUserCommand(command.BaseCommand):
         else:
             raise errors.BadParameterError("No user '%s' found" % user_name)
 
-        kwargs = {}
-        if 'full-name' in argSet:
-            full_name = argSet.get('full-name')
-            if full_name is True:
-                full_name = ui.getResponse('Full name', default=user.full_name)
-            kwargs['full_name'] = full_name
+        # common option validation
+        for flag, noflag in (
+                ('external', 'no-external'),
+                ('admin', 'no-admin'),
+                ('create', 'no-create'),
+                ):
+            if flag in argSet and noflag in argSet:
+                raise errors.BadParameterError(
+                    "Cannot use both '%s' and '%s'" % (flag, noflag))
 
-        if 'email' in argSet:
-            email = argSet.get('email')
-            if email is True:
-                email = ui.getResponse('Email', default=user.email)
-            kwargs['email'] = email
+        full_name = argSet.pop('full-name', None)
+        email = argSet.pop('email', None)
+        password = argSet.pop('password', None)
+
+        kwargs = {}
 
         if 'external' in argSet or 'no-external' in argSet:
-            kwargs['external_auth'] = (argSet.get('external', False)
-                and not argSet.get('no-external', False))
+            kwargs['external_auth'] = (argSet.pop('external', False)
+                and not argSet.pop('no-external', False))
 
         if 'admin' in argSet or 'no-admin' in argSet:
-            kwargs['is_admin'] = (argSet.get('admin', False)
-                and not argSet.get('no-admin', False))
+            kwargs['is_admin'] = (argSet.pop('admin', False)
+                and not argSet.pop('no-admin', False))
 
         if 'create' in argSet or 'no-create' in argSet:
-            kwargs['can_create'] = (argSet.get('create', False)
-                and not argSet.get('no-create', False))
+            kwargs['can_create'] = (argSet.pop('create', False)
+                and not argSet.pop('no-create', False))
 
-        if 'password' in argSet:
-            if kwargs.get('external_auth'):
-                # user tried to set both password and external auth
-                raise errors.BadParameterError("Cannot use external"
-                    " authentication and provide a password")
-            password = argSet.get('password')
-            if password is True:
-                password = ui.getPassword('Password')
+        if password and kwargs.get('external_auth'):
+            # user tried to set both password and external auth
+            raise errors.BadParameterError("Cannot use external"
+                " authentication and provide a password")
+
+        query_all = not kwargs and (full_name is None
+            and email is None
+            and password is None)
+
+        if full_name is True or query_all:
+            kwargs['full_name'] = ui.getResponse('Full name',
+                default=user.full_name)
+        elif full_name is not None:
+            kwargs['full_name'] = full_name
+
+        if email is True or query_all:
+            kwargs['email'] = ui.getResponse('Email', default=user.email)
+        elif email is not None:
+            kwargs['email'] = email
+
+        if (password is True
+                or kwargs.get('external_auth') is False
+                or query_all
+                ):
+            password = ui.getPassword('New password')
+            retype = ui.getPassword('Retype new password')
+            while password != retype:
+                ui.write('Sorry, passwords do not match')
+                password = ui.getPassword('New password')
+                retype = ui.getPassword('Retype new password')
+            kwargs['password'] = password
+        elif password is not None:
             kwargs['password'] = password
 
         handle.Users.edit(user, **kwargs)

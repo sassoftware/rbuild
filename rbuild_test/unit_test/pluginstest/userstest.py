@@ -179,7 +179,52 @@ class EditUserTest(AbstractUsersTest):
                 'no-create': True,
                 }, ['edit', 'user', 'foo']])
 
-    def testEditUserCmdline(self):
+    def testEditUserCmdlineErrors(self):
+        handle = self.handle
+
+        mock.mockMethod(handle.facade.rbuilder.getUsers)
+        mock.mockMethod(handle.Users.edit)
+
+        handle.facade.rbuilder.getUsers._mock.setReturn(False, user_name='bar')
+        handle.facade.rbuilder.getUsers._mock.setReturn([1], user_name='foo')
+
+        cmd = handle.Commands.getCommandClass('edit')()
+
+        # no user name on command line
+        err = self.assertRaises(errors.ParseError, cmd.runCommand, handle,
+            {}, ['rbuild', 'edit', 'user'])
+        self.assertIn('USERNAME', str(err))
+
+        # no user found macthing username
+        err = self.assertRaises(errors.BadParameterError, cmd.runCommand,
+            handle, {}, ['rbuild', 'edit', 'user', 'bar'])
+        self.assertIn('No user', str(err))
+
+        # only specify one of <flag> and no-<flag>
+        err = self.assertRaises(errors.BadParameterError, cmd.runCommand,
+            handle, {'external': True, 'no-external': True},
+            ['rbuild', 'edit', 'user', 'foo'])
+        self.assertIn('Cannot use both', str(err))
+        err = self.assertRaises(errors.BadParameterError, cmd.runCommand,
+            handle, {'admin': True, 'no-admin': True},
+            ['rbuild', 'edit', 'user', 'foo'])
+        self.assertIn('Cannot use both', str(err))
+        err = self.assertRaises(errors.BadParameterError, cmd.runCommand,
+            handle, {'create': True, 'no-create': True},
+            ['rbuild', 'edit', 'user', 'foo'])
+        self.assertIn('Cannot use both', str(err))
+
+        # both password and external triggers error
+        err = self.assertRaises(errors.BadParameterError, cmd.runCommand,
+            handle, {'external': True, 'password': True},
+            ['rbuild', 'edit', 'user', 'foo'])
+        self.assertIn('Cannot use external', str(err))
+        err = self.assertRaises(errors.BadParameterError, cmd.runCommand,
+            handle, {'external': True, 'password': 'secret'},
+            ['rbuild', 'edit', 'user', 'foo'])
+        self.assertIn('Cannot use external', str(err))
+
+    def testEditUserCmdlinePrompts(self):
         handle = self.handle
 
         mock.mockMethod(handle.facade.rbuilder.getUsers)
@@ -197,29 +242,15 @@ class EditUserTest(AbstractUsersTest):
             default='foo')
         handle.ui.getResponse._mock.setReturn('bar@com', 'Email',
             default='foo@com')
-        handle.ui.getPassword._mock.setReturn('secret', 'Password')
+        handle.ui.getPassword._mock.setReturn('secret', 'New password')
+        handle.ui.getPassword._mock.setReturn('secret', 'Retype new password')
 
         cmd = handle.Commands.getCommandClass('edit')()
 
-        # no user name on command line
-        err = self.assertRaises(errors.ParseError, cmd.runCommand, handle,
-            {}, ['rbuild', 'edit', 'user'])
-        self.assertIn('USERNAME', str(err))
-
-        # no user found macthing username
-        err = self.assertRaises(errors.BadParameterError, cmd.runCommand,
-            handle, {}, ['rbuild', 'edit', 'user', 'bar'])
-        self.assertIn('No user', str(err))
-
-        # both password and external triggers error
-        err = self.assertRaises(errors.BadParameterError, cmd.runCommand,
-            handle, {'external': True, 'password': True},
-            ['rbuild', 'edit', 'user', 'foo'])
-        self.assertIn('Cannot use', str(err))
-        err = self.assertRaises(errors.BadParameterError, cmd.runCommand,
-            handle, {'external': True, 'password': 'secret'},
-            ['rbuild', 'edit', 'user', 'foo'])
-        self.assertIn('Cannot use', str(err))
+        # make sure we prompt for everything is nothing is on the command line
+        cmd.runCommand(handle, {}, ['rbuild', 'edit', 'user', 'foo'])
+        handle.Users.edit._mock.assertCalled(_user, full_name='bar',
+            email='bar@com', password='secret')
 
         # change full name
         cmd.runCommand(handle, {'full-name': 'full name'},
@@ -256,15 +287,14 @@ class EditUserTest(AbstractUsersTest):
             ['rbuild', 'edit', 'user', 'foo'])
         handle.Users.edit._mock.assertCalled(_user, external_auth=True)
 
-        cmd.runCommand(handle, {'no-external': True},
-            ['rbuild', 'edit', 'user', 'foo'])
-        handle.Users.edit._mock.assertCalled(_user, external_auth=False)
-
-        cmd.runCommand(handle, {'external': True, 'no-external': True},
-            ['rbuild', 'edit', 'user', 'foo'])
-        handle.Users.edit._mock.assertCalled(_user, external_auth=False)
-
+        # turn off external auth, explicit password
         cmd.runCommand(handle, {'no-external': True, 'password': True},
+            ['rbuild', 'edit', 'user', 'foo'])
+        handle.Users.edit._mock.assertCalled(_user, external_auth=False,
+            password='secret')
+
+        # turn off external auth, implicit password
+        cmd.runCommand(handle, {'no-external': True},
             ['rbuild', 'edit', 'user', 'foo'])
         handle.Users.edit._mock.assertCalled(_user, external_auth=False,
             password='secret')
@@ -278,21 +308,12 @@ class EditUserTest(AbstractUsersTest):
             ['rbuild', 'edit', 'user', 'foo'])
         handle.Users.edit._mock.assertCalled(_user, is_admin=False)
 
-        cmd.runCommand(handle, {'admin': True, 'no-admin': True},
-            ['rbuild', 'edit', 'user', 'foo'])
-        handle.Users.edit._mock.assertCalled(_user, is_admin=False)
-
         # change can_create
         cmd.runCommand(handle, {'create': True},
             ['rbuild', 'edit', 'user', 'foo'])
         handle.Users.edit._mock.assertCalled(_user, can_create=True)
 
         cmd.runCommand(handle, {'no-create': True},
-            ['rbuild', 'edit', 'user', 'foo'])
-        handle.Users.edit._mock.assertCalled(_user, can_create=False)
-
-        cmd.runCommand(handle,
-            {'create': True, 'no-create': True},
             ['rbuild', 'edit', 'user', 'foo'])
         handle.Users.edit._mock.assertCalled(_user, can_create=False)
 
