@@ -83,6 +83,7 @@ class DeleteImagesTest(AbstractImagesTest):
         cmd = handle.Commands.getCommandClass('delete')()
 
         mock.mockMethod(handle.Images.delete)
+        mock.mockMethod(handle.ui.warning)
 
         err = self.assertRaises(
             errors.ParseError, cmd.runCommand, handle, {},
@@ -90,8 +91,14 @@ class DeleteImagesTest(AbstractImagesTest):
         self.assertIn('IMAGEID', str(err))
 
         cmd.runCommand(handle, {}, ['rbuild', 'delete', 'images', '10', '11'])
-        handle.Images.delete._mock.assertCalled('10')
-        handle.Images.delete._mock.assertCalled('11')
+        handle.Images.delete._mock.assertCalled(10)
+        handle.Images.delete._mock.assertCalled(11)
+
+        cmd.runCommand(handle, {},
+            ['rbuild', 'delete', 'images', '&^%&*%$^&$'])
+        handle.Images.delete._mock.assertNotCalled()
+        handle.ui.warning._mock.assertCalled(
+            "Cannot parse image id '&^%&*%$^&$'")
 
     def testCommand(self):
         self.checkRbuild('delete images',

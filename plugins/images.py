@@ -29,13 +29,17 @@ from rbuild.pluginapi import command
 
 class DeleteImagesCommand(command.BaseCommand):
     help = 'Delete images'
-    paramHelp = '<job id>+'
+    paramHelp = '<image id>+'
 
     def runCommand(self, handle, argSet, args):
         _, imageIds = self.requireParameters(
             args, expected=['IMAGEID'], appendExtra=True)
         for imageId in imageIds:
-            handle.Images.delete(imageId)
+            try:
+                imageId = int(imageId)
+                handle.Images.delete(imageId)
+            except ValueError:
+                handle.ui.warning("Cannot parse image id '%s'" % imageId)
 
 
 class LaunchCommand(command.BaseCommand):
