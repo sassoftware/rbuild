@@ -15,6 +15,7 @@
 #
 
 from rbuild import errors
+from robj import errors as robj_errors
 from testutils import mock
 
 from rbuild_test import rbuildhelp
@@ -118,6 +119,7 @@ class DeleteUsersTest(AbstractUsersTest):
 
         mock.mockMethod(handle.Users.delete)
         mock.mockMethod(handle.ui.getYn)
+        mock.mockMethod(handle.ui.warning)
 
         handle.ui.getYn._mock.setReturn(False, "Really delete user 'foo'",
             False)
@@ -131,6 +133,13 @@ class DeleteUsersTest(AbstractUsersTest):
 
         cmd.runCommand(handle, {}, ['rbuild', 'delete', 'users', 'foo', 'bar'])
         handle.Users.delete._mock.assertCalled('bar')
+
+        handle.Users.delete._mock.raiseErrorOnAccess(
+            robj_errors.HTTPDeleteError(uri='uri', status='status',
+                reason='reason', response='response'))
+        cmd.runCommand(handle, {}, ['rbuild', 'delete', 'users', 'baz'])
+        handle.ui.warning._mock.assertCalled(
+            "Unable to delete user 'baz'")
 
 
 class EditUserTest(AbstractUsersTest):

@@ -20,6 +20,8 @@ users
 '''
 from xobj import xobj
 
+from robj import errors as robj_errors
+
 from rbuild import errors
 from rbuild import pluginapi
 from rbuild.pluginapi import command
@@ -93,7 +95,10 @@ class DeleteUsersCommand(command.BaseCommand):
 
         for user in usernames:
             if handle.ui.getYn("Really delete user '%s'" % user, False):
-                handle.Users.delete(user)
+                try:
+                    handle.Users.delete(user)
+                except robj_errors.HTTPDeleteError:
+                    handle.ui.warning("Unable to delete user '%s'" % user)
 
 
 class EditUserCommand(command.BaseCommand):
