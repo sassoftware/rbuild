@@ -95,10 +95,7 @@ class DeleteUsersCommand(command.BaseCommand):
 
         for user in usernames:
             if handle.ui.getYn("Really delete user '%s'" % user, False):
-                try:
-                    handle.Users.delete(user)
-                except robj_errors.HTTPDeleteError:
-                    handle.ui.warning("Unable to delete user '%s'" % user)
+                handle.Users.delete(user)
 
 
 class EditUserCommand(command.BaseCommand):

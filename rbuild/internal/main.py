@@ -268,7 +268,7 @@ service rmake restart''')
             conaryerrors.CvcError, rmakeerrors.RmakeError), err:
         log.error(err)
         return 1
-    except robjerrors.HTTPForbiddenError as err:
+    except (robjerrors.HTTPForbiddenError, robjerrors.HTTPDeleteError) as err:
         log.error('You are not authorized for this action')
         return 1
     except robjerrors.HTTPUnauthorizedError as err:

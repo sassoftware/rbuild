@@ -29,6 +29,7 @@ from rbuild import errors
 from rbuild import rbuildcfg
 
 from rmake import errors as rmakeerrors
+from robj import errors as robjerrors
 
 
 class MainTest(rbuildhelp.RbuildHelper):
@@ -59,6 +60,22 @@ class MainTest(rbuildhelp.RbuildHelper):
         self.logFilter.add()
         rc, _ = _testException(rmakeerrors.RmakeError('Dazed and Confused'))
         self.assertEquals(self.logFilter.records, ['error: Dazed and Confused'])
+        self.logFilter.clear()
+
+        # robj errors related to authorization and authentication
+        self.logFilter.add()
+        rc, _ = _testException(robjerrors.HTTPDeleteError(uri='uri', status='status', reason='reason', request='request', response='respone'))
+        self.assertEquals(self.logFilter.records, ['error: You are not authorized for this action'])
+        self.logFilter.clear()
+
+        self.logFilter.add()
+        rc, _ = _testException(robjerrors.HTTPForbiddenError(uri='uri', status='status', reason='reason', request='request', response='respone'))
+        self.assertEquals(self.logFilter.records, ['error: You are not authorized for this action'])
+        self.logFilter.clear()
+
+        self.logFilter.add()
+        rc, _ = _testException(robjerrors.HTTPUnauthorizedError(uri='uri', status='status', reason='reason', request='request', response='respone'))
+        self.assertEquals(self.logFilter.records, ['error: There was an error authenticating you with the rbuilder. Check your\nusername and password'])
         self.logFilter.clear()
 
         # pipe errors generally mean EOF when writing to less, e.g.

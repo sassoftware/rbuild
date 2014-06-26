@@ -134,13 +134,6 @@ class DeleteUsersTest(AbstractUsersTest):
         cmd.runCommand(handle, {}, ['rbuild', 'delete', 'users', 'foo', 'bar'])
         handle.Users.delete._mock.assertCalled('bar')
 
-        handle.Users.delete._mock.raiseErrorOnAccess(
-            robj_errors.HTTPDeleteError(uri='uri', status='status',
-                reason='reason', response='response'))
-        cmd.runCommand(handle, {}, ['rbuild', 'delete', 'users', 'baz'])
-        handle.ui.warning._mock.assertCalled(
-            "Unable to delete user 'baz'")
-
 
 class EditUserTest(AbstractUsersTest):
     def testEditUserArgParse(self):
