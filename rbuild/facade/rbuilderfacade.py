@@ -980,7 +980,8 @@ class RbuilderFacade(object):
 
     @staticmethod
     def isValidShortName(value):
-        return len(value) < 63 and re.match('^[a-zA-Z][a-zA-Z0-9\-]*$', value)
+        return (value and len(value) < 63
+            and re.match('^[a-zA-Z][a-zA-Z0-9\-]*$', value))
 
     @staticmethod
     def isValidDomainName(value):
@@ -989,7 +990,7 @@ class RbuilderFacade(object):
 
     @staticmethod
     def isValidBranchName(value):
-        return re.match(r'^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*$', value)
+        return value and re.match(r'^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*$', value)
 
     def isAdmin(self, user):
         '''

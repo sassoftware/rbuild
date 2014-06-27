@@ -431,6 +431,65 @@ class RbuilderFacadeTest(rbuildhelp.RbuildHelper):
             order_by='-non_field',
             )
 
+    def testIsValidBranchName(self):
+        handle, facade = self.prep()
+
+        # value is None
+        self.assertFalse(facade.isValidBranchName(None))
+
+        # empty string
+        self.assertFalse(facade.isValidBranchName(''))
+
+        # value begins with non-alphanumeric
+        self.assertFalse(facade.isValidBranchName('.a'))
+
+        # value contians invalid characters
+        self.assertFalse(facade.isValidBranchName('a_b'))
+        self.assertFalse(facade.isValidBranchName('a-b'))
+        self.assertFalse(facade.isValidBranchName('a%%b'))
+        self.assertFalse(facade.isValidBranchName('a!b'))
+
+    def testIsValidDomainName(self):
+        handle, facade = self.prep()
+
+        # value is None
+        self.assertTrue(facade.isValidDomainName(None))
+
+        # empty string
+        self.assertTrue(facade.isValidDomainName(''))
+
+        # value begins with non-alphabetic
+        self.assertFalse(facade.isValidDomainName('9a'))
+        self.assertFalse(facade.isValidDomainName('-a'))
+
+        # value contians invalid characters
+        self.assertFalse(facade.isValidDomainName('a_b'))
+        self.assertFalse(facade.isValidDomainName('a%%b'))
+        self.assertFalse(facade.isValidDomainName('a!b'))
+
+    def testIsValidShortName(self):
+        handle, facade = self.prep()
+
+        # short name is None
+        self.assertFalse(facade.isValidShortName(None))
+
+        # shotname is empty string
+        self.assertFalse(facade.isValidShortName(''))
+
+        # short name is too long
+        self.assertFalse(facade.isValidShortName('a' * 63))
+        self.assertFalse(facade.isValidShortName('a' * 163))
+
+        # shortname begins with non-alphabetic
+        self.assertFalse(facade.isValidShortName('9a'))
+        self.assertFalse(facade.isValidShortName('-a'))
+
+        # some invalid characters
+        self.assertFalse(facade.isValidShortName('a_b'))
+        self.assertFalse(facade.isValidShortName('a.b'))
+        self.assertFalse(facade.isValidShortName('a%%b'))
+        self.assertFalse(facade.isValidShortName('a!b'))
+
 
 class RbuilderRPCClientTest(rbuildhelp.RbuildHelper):
     def _getClient(self):

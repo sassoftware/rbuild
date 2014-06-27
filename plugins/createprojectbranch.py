@@ -39,17 +39,17 @@ class CreateProjectCommand(command.BaseCommand):
         ui = handle.ui
         rb = handle.facade.rbuilder
         if not argSet.get('name'):
-            argSet['name'] = ui.getResponse("Project name")
-            argSet['description'] = ui.input("Project description (optional): ")
+            argSet['name'] = ui.getResponse("Project name (required)",
+                required=True)
+            argSet['description'] = ui.getResponse(
+                "Project description (optional)")
         if not argSet.get('short-name'):
-            argSet['short-name'] = ui.getResponse("Unique name",
-                    validationFn=rb.isValidShortName)
+            argSet['short-name'] = ui.getResponse("Unique name (required)",
+                    validationFn=rb.isValidShortName, required=True)
         if 'domain-name' not in argSet:
-            while True:
-                argSet['domain-name'] = ui.input(
-                        "Domain name (blank for default): ")
-                if rb.isValidDomainName(argSet['domain-name']):
-                    break
+            argSet['domain-name'] = ui.getResponse(
+                    "Domain name (blank for default)",
+                    validationFn=rb.isValidDomainName)
         projectId = rb.createProject(
                 title=argSet['name'],
                 shortName=argSet['short-name'],
@@ -80,13 +80,15 @@ class CreateBranchCommand(command.BaseCommand):
         ui = handle.ui
         rb = handle.facade.rbuilder
         if not argSet.get('project'):
-            argSet['project'] = ui.getResponse("Project name",
-                    validationFn=rb.isValidShortName)
+            argSet['project'] = ui.getResponse("Project name (required)",
+                    validationFn=rb.isValidShortName, required=True)
         if not argSet.get('branch'):
-            argSet['branch'] = ui.getResponse("Branch name",
-                    validationFn=rb.isValidBranchName)
-            argSet['description'] = ui.input("Branch description (optional): ")
-            argSet['namespace'] = ui.input("Namespace (blank for default): ")
+            argSet['branch'] = ui.getResponse("Branch name (required)",
+                    validationFn=rb.isValidBranchName, required=True)
+            argSet['description'] = ui.getResponse(
+                "Branch description (optional)")
+            argSet['namespace'] = ui.getResponse(
+                "Namespace (blank for default)")
         platforms = rb.listPlatforms()
         if argSet.get('platform'):
             match = argSet['platform'].lower().strip()

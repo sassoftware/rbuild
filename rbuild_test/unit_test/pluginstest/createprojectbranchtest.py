@@ -59,14 +59,16 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
         mock.mockMethod(handle.facade.rbuilder.createProject)
         mock.mock(handle, 'ui')
         handle.ui.getResponse._mock.appendReturn(
-                'project name', "Project name")
-        handle.ui.input._mock.appendReturn(
-                'desc', "Project description (optional): ")
+                'project name', "Project name (required)", required=True)
         handle.ui.getResponse._mock.appendReturn(
-                'shortname', "Unique name",
-                validationFn=handle.facade.rbuilder.isValidShortName)
-        handle.ui.input._mock.appendReturn(
-                'domain.name', "Domain name (blank for default): ")
+                'desc', "Project description (optional)")
+        handle.ui.getResponse._mock.appendReturn(
+                'shortname', "Unique name (required)",
+                validationFn=handle.facade.rbuilder.isValidShortName,
+                required=True)
+        handle.ui.getResponse._mock.appendReturn(
+                'domain.name', "Domain name (blank for default)",
+                validationFn=handle.facade.rbuilder.isValidDomainName)
         cmd = handle.Commands.getCommandClass('create')()
         cmd.runCommand(handle, {}, ['rbuild', 'create', 'project'])
         handle.facade.rbuilder.createProject._mock.assertCalled(
@@ -133,10 +135,16 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
             Platform('the platform', 'the@platform', 'http://the/platform'),
             Platform('not platform', 'not@platform', 'http://not/platform'),
             ])
-        handle.ui.getResponse._mock.appendReturn('proj', "Project name", validationFn=rb.isValidShortName)
-        handle.ui.getResponse._mock.appendReturn('branch', "Branch name", validationFn=rb.isValidBranchName)
-        handle.ui.input._mock.appendReturn('desc', "Branch description (optional): ")
-        handle.ui.input._mock.appendReturn('nsp', "Namespace (blank for default): ")
+        handle.ui.getResponse._mock.appendReturn('proj',
+            "Project name (required)", validationFn=rb.isValidShortName,
+            required=True)
+        handle.ui.getResponse._mock.appendReturn('branch',
+            "Branch name (required)", validationFn=rb.isValidBranchName,
+            required=True)
+        handle.ui.getResponse._mock.appendReturn('desc',
+            "Branch description (optional)")
+        handle.ui.getResponse._mock.appendReturn('nsp',
+            "Namespace (blank for default)")
         choiceArgs = ("Platform", [
             'the platform - the@platform',
             'not platform - not@platform'],
