@@ -33,9 +33,7 @@ from robj import errors as robjerrors
 
 
 class MainTest(rbuildhelp.RbuildHelper):
-
     def testExceptions(self):
-
         def genRaiseExceptionFn(exception):
             def fn(*args, **kw):
                 raise exception
@@ -64,18 +62,8 @@ class MainTest(rbuildhelp.RbuildHelper):
 
         # robj errors related to authorization and authentication
         self.logFilter.add()
-        rc, _ = _testException(robjerrors.HTTPDeleteError(uri='uri', status='status', reason='reason', request='request', response='respone'))
-        self.assertEquals(self.logFilter.records, ['error: You are not authorized for this action'])
-        self.logFilter.clear()
-
-        self.logFilter.add()
-        rc, _ = _testException(robjerrors.HTTPForbiddenError(uri='uri', status='status', reason='reason', request='request', response='respone'))
-        self.assertEquals(self.logFilter.records, ['error: You are not authorized for this action'])
-        self.logFilter.clear()
-
-        self.logFilter.add()
-        rc, _ = _testException(robjerrors.HTTPUnauthorizedError(uri='uri', status='status', reason='reason', request='request', response='respone'))
-        self.assertEquals(self.logFilter.records, ['error: There was an error authenticating you with the rbuilder. Check your\nusername and password'])
+        rc, _ = _testException(errors.UnauthorizedActionError('act'))
+        self.assertEquals(self.logFilter.records, ['error: You are not authorized to act'])
         self.logFilter.clear()
 
         # pipe errors generally mean EOF when writing to less, e.g.
@@ -107,9 +95,6 @@ class MainTest(rbuildhelp.RbuildHelper):
             assert(main.main() == 23)
         finally:
             sys.argv = oldargv
-
-
-
 
     def testGetCommand(self):
         mainHandler = main.RbuildMain()
@@ -199,8 +184,3 @@ class MainTest(rbuildhelp.RbuildHelper):
                        {},
                        'rbuild_plugins.build.BuildCommand.runCommand',
                        [cmd, handle.RbuildHandle, {}, []])
-
-
-
-
-

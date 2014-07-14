@@ -263,13 +263,10 @@ Could not contact the rMake server.  Perhaps the rMake service is not
 running.  To start the rMake service, as root, try running the command:
 service rmake restart''')
         return 1
-    except (errors.RbuildBaseError, conaryerrors.ConaryError,
-            conaryerrors.ParseError,
+    except (errors.RbuildBaseError, errors.UnauthorizedActionError,
+            conaryerrors.ConaryError, conaryerrors.ParseError,
             conaryerrors.CvcError, rmakeerrors.RmakeError), err:
         log.error(err)
-        return 1
-    except (robjerrors.HTTPForbiddenError, robjerrors.HTTPDeleteError) as err:
-        log.error('You are not authorized for this action')
         return 1
     except robjerrors.HTTPUnauthorizedError as err:
         log.error('''\
