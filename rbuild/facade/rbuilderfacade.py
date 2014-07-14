@@ -992,17 +992,21 @@ class RbuilderFacade(object):
     def isValidBranchName(value):
         return value and re.match(r'^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*$', value)
 
-    def isAdmin(self, user):
+    def isAdmin(self, userName=None):
         '''
-        Check if the user is an rbuilder administrator
+        Check if the user is an rbuilder administrator. If `user` is None,
+        checks if the rbuild user is an admin
 
-        @param user: user name
-        @type user: str
+        @param userName: user name
+        @type userName: str or None
         @return: True if the user is an admin, otherwise False
         @rtype: bool
         '''
         client = self._getRbuilderRESTClient()
-        user = client.getUsers(user_name=user)
+        if userName is None:
+            userName = self._handle.getConfig().user[0]
+
+        user = client.getUsers(user_name=userName)
         if user:
             return user[0].is_admin == 'true'
         return False
