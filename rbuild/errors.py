@@ -237,6 +237,14 @@ class ConfigParseError(PluginError):
     params = ['file', 'location']
 
 
+class UnauthorizedActionError(PluginError):
+    """
+    Raised when the user performs an action for which they are not authorized
+    """
+    template = "You are not authorized to %(action)s"
+    params = ['action']
+
+
 ## END Plugin Errors
 
 #: error that is output when a Python exception makes it to the command 

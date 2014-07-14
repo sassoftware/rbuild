@@ -20,8 +20,6 @@ users
 '''
 from xobj import xobj
 
-from robj import errors as robj_errors
-
 from rbuild import errors
 from rbuild import pluginapi
 from rbuild.pluginapi import command
@@ -245,6 +243,9 @@ class Users(pluginapi.Plugin):
             raise errors.PluginError('Must provide a password if not using'
                 ' external authentication')
 
+        if is_admin and not self.handle.facade.rbuilder.isAdmin():
+            raise errors.UnauthorizedActionError('grant admin privilege')
+
         # create the user xml document
         user_doc = xobj.Document()
         user_doc.user = user = xobj.XObj()
@@ -306,6 +307,8 @@ class Users(pluginapi.Plugin):
             user.external_auth = external_auth
 
         if is_admin is not None:
+            if is_admin and not self.handle.facade.rbuilder.isAdmin():
+                raise errors.UnauthorizedActionError('grant admin privilege')
             user.is_admin = is_admin
 
         if can_create is not None:

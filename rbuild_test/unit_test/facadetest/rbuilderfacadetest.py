@@ -490,6 +490,27 @@ class RbuilderFacadeTest(rbuildhelp.RbuildHelper):
         self.assertFalse(facade.isValidShortName('a%%b'))
         self.assertFalse(facade.isValidShortName('a!b'))
 
+    def testIsAdmin(self):
+        handle, facade = self.prep()
+
+        _user_bar = mock.MockObject()
+        _user_bar._mock.set(is_admin='true')
+
+        _user_foo = mock.MockObject()
+        _user_foo._mock.set(is_admin='false')
+
+        _client = mock.MockObject()
+        _client.getUsers._mock.setReturn([_user_bar], user_name='bar')
+        _client.getUsers._mock.setReturn([_user_foo], user_name='foo')
+        mock.mockMethod(facade._getRbuilderRESTClient, _client)
+
+        # don't pass userName
+        self.assertFalse(facade.isAdmin())
+
+        # with username
+        self.assertTrue(facade.isAdmin(userName='bar'))
+        self.assertFalse(facade.isAdmin(userName='foo'))
+
 
 class RbuilderRPCClientTest(rbuildhelp.RbuildHelper):
     def _getClient(self):

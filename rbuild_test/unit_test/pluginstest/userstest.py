@@ -336,6 +336,7 @@ class UsersTest(rbuildhelp.RbuildHelper):
         handle = self.getRbuildHandle()
         _client = mock.MockObject()
         mock.mockMethod(handle.facade.rbuilder._getRbuilderRESTClient, _client)
+        mock.mockMethod(handle.facade.rbuilder.isAdmin, False)
 
         err = self.assertRaises(errors.PluginError, handle.Users.create, 'foo',
             'foo bar', 'foo@example.com', 'secret', external_auth=True,
@@ -379,6 +380,12 @@ class UsersTest(rbuildhelp.RbuildHelper):
         self.assertFalse(doc.user.is_admin)
         self.assertFalse(doc.user.can_create)
 
+        err = self.assertRaises(errors.UnauthorizedActionError,
+            handle.Users.create, 'foo', 'foo bar', 'foo@example.com', None,
+            external_auth=True, is_admin=True, can_create=False)
+        self.assertIn('grant admin privilege', str(err))
+
+        handle.facade.rbuilder.isAdmin._mock.setReturn(True)
         handle.Users.create('foo', 'foo bar', 'foo@example.com', None,
             external_auth=True, is_admin=True, can_create=False)
         doc = _client.api.users.append._mock.calls.pop()[0][0]
@@ -425,6 +432,7 @@ class UsersTest(rbuildhelp.RbuildHelper):
             password=None, external_auth='false', is_admin='false',
             can_create='false', modified_date='one', created_date='two',
             last_login_date='three')
+        mock.mockMethod(handle.facade.rbuilder.isAdmin, False)
 
         err = self.assertRaises(errors.PluginError, handle.Users.edit, _user,
             password='secret', external_auth=True)
@@ -443,10 +451,16 @@ class UsersTest(rbuildhelp.RbuildHelper):
         self.assertEqual('secret', _user.password)
 
         handle.Users.edit(_user, external_auth=True)
-        self.assertEqual(True, _user.external_auth)
+        self.assertTrue(_user.external_auth)
 
+        err = self.assertRaises(errors.UnauthorizedActionError,
+            handle.Users.edit, _user, is_admin=True)
+        self.assertIn('grant admin privilege', str(err))
+        self.assertEqual('false', _user.is_admin)
+
+        handle.facade.rbuilder.isAdmin._mock.setReturn(True)
         handle.Users.edit(_user, is_admin=True)
-        self.assertEqual(True, _user.is_admin)
+        self.assertTrue(_user.is_admin)
 
         handle.Users.edit(_user, can_create=True)
-        self.assertEqual(True, _user.can_create)
+        self.assertTrue(_user.can_create)
