@@ -462,6 +462,16 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
             raise errors.RbuildError('Unable to set credentials')
         return target
 
+    def getGroups(self, shortName, label, **kwargs):
+        client = self.api._client
+        uri = ('/products/%s/repos/search?type=group&amp;label=%s' %
+               (shortName, label))
+        try:
+            return client.do_GET(uri)
+        except robj.errors.HTTPNotFoundError:
+            raise errors.RbuildError(
+                "Project '%s' and label '%s' not found" % (shortName, label))
+
     def getImageDefDescriptor(self, imageType):
         # image_type_definition_descriptors are not in a collection, and they
         # have an xml header, which causes rObj to process them incorrectly
@@ -821,6 +831,10 @@ class RbuilderFacade(object):
         '''
         client = self._getRbuilderRESTClient()
         return client.createTarget(ddata, ttype)
+
+    def getGroups(self, shortName, label, **kwargs):
+        return self._getRbuilderRESTClient().getGroups(shortName, label,
+            **kwargs)
 
     def getImageTypeDef(self, imageType, arch):
         client = self._getRbuilderRESTClient()

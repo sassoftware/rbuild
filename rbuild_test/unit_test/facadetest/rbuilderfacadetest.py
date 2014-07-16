@@ -887,6 +887,27 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
         self.failIfEqual(client._api, None)
         self.failUnlessEqual(api, v1)
 
+    def testGetGroups(self):
+        client = rbuilderfacade.RbuilderRESTClient(
+            'http://localhost', 'foo', 'bar', mock.MockObject())
+        mock.mock(client, '_api')
+        client._api._mock.set(_uri='http://localhost')
+
+        _groups = mock.MockObject()
+        client._api._client.do_GET._mock.setReturn(
+            _groups, '/products/%s/repos/search?type=group&amp;label=%s' %
+                ('test', 'test-1'))
+        self.assertEqual(
+            client.getGroups('test', 'test-1'), _groups)
+
+        client._api._client.do_GET._mock.raiseErrorOnAccess(
+            robj.errors.HTTPNotFoundError(uri=None, status=None, reason=None,
+                    response=None))
+        err = self.assertRaises(errors.RbuildError, client.getGroups, 'none',
+            'none-1')
+        self.assertIn("'none'", str(err))
+        self.assertIn("'none-1'", str(err))
+
     def testGetImageTypeDef(self):
         client = rbuilderfacade.RbuilderRESTClient(
             'http://localhost', 'foo', 'bar', mock.MockObject())
