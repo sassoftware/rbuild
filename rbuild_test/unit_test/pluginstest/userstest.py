@@ -107,6 +107,31 @@ class CreateUserTest(AbstractUsersTest):
             full_name='foo bar', email='foo@example.com', password='secret',
             can_create=False)
 
+    def testCreateExistingUser(self):
+        '''verify we handle a 409'''
+        handle = self.handle
+
+        mock.mockMethod(handle.Users.create)
+        mock.mockMethod(handle.ui.getPassword)
+        mock.mockMethod(handle.ui.getResponse)
+        handle.Users.create._mock.raiseErrorOnAccess(
+            robj_errors.HTTPConflictError(uri='uri', status='status',
+                   reason='reason', response='respone'))
+
+        cmd = handle.Commands.getCommandClass('create')()
+
+        handle.ui.getResponse._mock.setReturn('foo', 'User name',
+            required=True)
+        handle.ui.getResponse._mock.setReturn('foo bar', 'Full name',
+            required=True)
+        handle.ui.getResponse._mock.setReturn('foo@example.com', 'Email',
+            required=True)
+        handle.ui.getPassword._mock.setReturn('secret', 'Password')
+
+        err = self.assertRaises(errors.BadParameterError, cmd.runCommand,
+            handle, {}, ['rbuild', 'create', 'user'])
+        self.assertIn('already exists', str(err))
+
 
 class DeleteUsersTest(AbstractUsersTest):
     def testDeleteUserArgParse(self):

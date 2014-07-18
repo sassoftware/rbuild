@@ -20,6 +20,8 @@ users
 '''
 from xobj import xobj
 
+from robj import errors as robj_errors
+
 from rbuild import errors
 from rbuild import pluginapi
 from rbuild.pluginapi import command
@@ -80,7 +82,11 @@ class CreateUserCommand(command.BaseCommand):
         if 'no-create' in argSet:
             kwargs['can_create'] = not argSet['no-create']
 
-        handle.Users.create(**kwargs)
+        try:
+            handle.Users.create(**kwargs)
+        except robj_errors.HTTPConflictError:
+            raise errors.BadParameterError(
+                "a user '%s' already exists" % user_name)
 
 
 class DeleteUsersCommand(command.BaseCommand):
