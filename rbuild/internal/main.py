@@ -264,8 +264,9 @@ running.  To start the rMake service, as root, try running the command:
 service rmake restart''')
         return 1
     except (errors.RbuildBaseError, errors.UnauthorizedActionError,
-            conaryerrors.ConaryError, conaryerrors.ParseError,
-            conaryerrors.CvcError, rmakeerrors.RmakeError), err:
+            robjerrors.HTTPError, conaryerrors.ConaryError,
+            conaryerrors.ParseError, conaryerrors.CvcError,
+            rmakeerrors.RmakeError), err:
         log.error(err)
         return 1
     except robjerrors.HTTPUnauthorizedError as err:
