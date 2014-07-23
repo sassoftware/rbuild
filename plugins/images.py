@@ -18,6 +18,7 @@
 '''
 images
 '''
+import os
 import time
 
 from xobj import xobj
@@ -27,11 +28,46 @@ from rbuild import pluginapi
 from rbuild.pluginapi import command
 
 
+class CancelImageError(errors.RbuildError):
+    """Raised when there is an error canceling an image build"""
+
+
 class MissingImageError(errors.RbuildError):
     """Raised when we don"t find an image"""
     template = ("Unable to find image with id '%(image)s' on %(stage)s stage"
-        "of %(project)s project")
+        " of %(project)s project")
     params = ["image", "project", "stage"]
+
+
+class CancelImagesCommand(command.BaseCommand):
+    help = 'Cancel image build'
+    paramHelp = '<id>+'
+
+    def runCommand(self, handle, argSet, args):
+        _, imageIds = self.requireParameters(args, expected=['id'],
+            appendExtra=True)
+
+        project, branch, stage = handle.Images._getProductStage()
+        for imageId in imageIds:
+            try:
+                int(imageId)
+            except ValueError:
+                raise errors.BadParameterError(
+                    "Cannot parse image id '%s'" % imageId)
+
+            image = handle.facade.rbuilder.getImages(image_id=imageId,
+                project=project, branch=branch, stage=stage)
+
+            if not image:
+                handle.ui.warning(str(MissingImageError(image=imageId,
+                    project=project, stage=stage)))
+                continue
+            image = image[0]
+
+            try:
+                handle.Images.cancel(image)
+            except CancelImageError as err:
+                handle.ui.warning(str(err))
 
 
 class DeleteImagesCommand(command.BaseCommand):
@@ -137,6 +173,7 @@ class Images(pluginapi.Plugin):
     name = 'images'
     DEPLOY = 'deploy_image_on_target'
     LAUNCH = 'launch_system_on_target'
+    CANCEL = 'image_build_cancellation'
 
     def _createJob(self, action_type, image_name, target_name, doLaunch):
         rb = self.handle.facade.rbuilder
@@ -214,6 +251,32 @@ class Images(pluginapi.Plugin):
             raise errors.MissingActiveStageError(path=os.getcwd())
         return (product, baseLabel, stage)
 
+    def cancel(self, image):
+        '''
+        Cancel a currently running image build
+
+        :param image: image obj
+        :type image: rObj(image)
+        '''
+        if image.status != '100':
+            raise CancelImageError(msg="Image '%s' is not currently building" %
+                image.image_id)
+
+        cancelAction = [a for a in image.actions if a.key == self.CANCEL]
+        if not cancelAction:
+            raise CancelImageError(msg="Unable to find cancel action for"
+                " image '%s'" % image.image_id)
+        cancelAction = cancelAction[0]
+        ddata = self.handle.DescriptorConfig.createDescriptorData(
+            fromStream=cancelAction.descriptor)
+        doc = xobj.Document()
+        doc.job = job = xobj.XObj()
+
+        job.job_type = cancelAction._root.job_type
+        job.descriptor = cancelAction._root.descriptor
+        job.descriptor_data = xobj.parse(ddata.toxml()).descriptor_data
+        return image.jobs.append(doc)
+
     def deployImage(self, *args, **kwargs):
         '''
         Deploys an image template to a target
@@ -262,10 +325,13 @@ class Images(pluginapi.Plugin):
         return images
 
     def initialize(self):
-        self.handle.Commands.getCommandClass('delete').registerSubCommand(
-            'images', DeleteImagesCommand)
-        self.handle.Commands.getCommandClass('list').registerSubCommand(
-            'images', ListImagesCommand)
+        for command, subcommand, commandClass in (
+                ('cancel', 'images', CancelImagesCommand),
+                ('delete', 'images', DeleteImagesCommand),
+                ('list', 'images', ListImagesCommand),
+                ):
+            cmd = self.handle.Commands.getCommandClass(command)
+            cmd.registerSubCommand(subcommand, commandClass)
 
     def registerCommands(self):
         self.handle.Commands.registerCommand(LaunchCommand)

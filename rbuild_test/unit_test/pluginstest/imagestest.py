@@ -69,12 +69,69 @@ class AbstractImagesTest(rbuildhelp.RbuildHelper):
     def setUp(self):
         rbuildhelp.RbuildHelper.setUp(self)
         self.handle = self.getRbuildHandle(mock.MockObject())
+        self.handle.Cancel.registerCommands()
         self.handle.Delete.registerCommands()
         self.handle.List.registerCommands()
         self.handle.Images.registerCommands()
+        self.handle.Cancel.initialize()
         self.handle.Delete.initialize()
         self.handle.List.initialize()
         self.handle.Images.initialize()
+
+
+class CancelImagesTest(AbstractImagesTest):
+    def setUp(self):
+        AbstractImagesTest.setUp(self)
+        self.cmd = self.handle.Commands.getCommandClass('cancel')()
+
+    def testCommand(self):
+        self.checkRbuild('cancel images',
+            'rbuild_plugins.images.CancelImagesCommand.runCommand',
+            [None, None, {}, ['cancel', 'images']])
+        self.checkRbuild('cancel images 1 2',
+            'rbuild_plugins.images.CancelImagesCommand.runCommand',
+            [None, None, {}, ['cancel', 'images', '1', '2']])
+
+    def testCommandParsing(self):
+        handle = self.handle
+
+        mock.mockMethod(handle.Images.cancel)
+        mock.mockMethod(handle.ui.warning)
+        mock.mockMethod(handle.facade.rbuilder.getImages, ['image'])
+
+        err = self.assertRaises(
+            errors.ParseError, self.cmd.runCommand, handle, {},
+            ['rbuild', 'cancel', 'images'])
+        self.assertIn(': id', str(err))
+
+        self.cmd.runCommand(handle, {}, ['rbuild', 'cancel', 'images', '10'])
+        handle.Images.cancel._mock.assertCalled('image')
+
+        err = self.assertRaises(errors.BadParameterError,
+            self.cmd.runCommand, handle, {},
+            ['rbuild', 'cancel', 'images', '&^%&*%$^&$'])
+        self.assertIn('Cannot parse', str(err))
+
+    def testLaunchArgParse(self):
+        self.checkRbuild('cancel images 10',
+            'rbuild_plugins.images.CancelImagesCommand.runCommand',
+            [None, None, {}, ['cancel', 'images', '10']])
+
+    def testNoImage(self):
+        from rbuild_plugins import images
+
+        mock.mockMethod(self.handle.Images.cancel)
+        mock.mockMethod(self.handle.Images._getProductStage,
+            ('project', 'branch', 'stage'))
+        mock.mockMethod(self.handle.ui.warning)
+        mock.mockMethod(self.handle.ui.getYn, True)
+        mock.mockMethod(self.handle.facade.rbuilder.getImages, None)
+
+        self.cmd.runCommand(self.handle, {},
+            ['rbuild', 'cancel', 'images', '10'])
+        self.handle.ui.warning._mock.assertCalled("Unable to find image with"
+            " id '10' on stage stage of project project")
+        self.handle.Images.cancel._mock.assertNotCalled()
 
 
 class DeleteImagesTest(AbstractImagesTest):
@@ -230,6 +287,55 @@ class ListImagesTest(AbstractImagesTest):
 
 
 class ImagesPluginTest(AbstractImagesTest):
+    def testCancel(self):
+        from rbuild_plugins import images
+
+        mock.mockMethod(self.handle.DescriptorConfig.createDescriptorData)
+        mock.mock(images, 'xobj')
+
+        _doc = mock.MockObject()
+        _doc._mock.enable('job')
+        images.xobj.Document._mock.setReturn(_doc)
+
+        _job = mock.MockObject()
+        _job._mock.enable('job_type', 'descriptor')
+        images.xobj.XObj._mock.setReturn(_job)
+
+        _image_action = mock.MockObject()
+        _image_action._mock.set(key=images.Images.CANCEL)
+        _image_action._root._mock.set(job_type='job_type',
+            descriptor='descriptor')
+
+        _image = mock.MockObject()
+        _image._mock.set(key=images.Images.CANCEL, image_id='10', status='100',
+            actions=[_image_action])
+        _image.jobs.append._mock.setReturn(_doc, _doc)
+
+        rv = self.handle.Images.cancel(_image)
+        self.assertEqual(rv, _doc)
+        self.assertEqual(rv.job, _job)
+        self.assertEqual('job_type', rv.job.job_type)
+        self.assertEqual('descriptor', rv.job.descriptor)
+
+    def testCancelNonBuilding(self):
+        from rbuild_plugins import images
+
+        _image = mock.MockObject()
+        _image._mock.set(status='300')
+        err = self.assertRaises(images.CancelImageError,
+            self.handle.Images.cancel, _image)
+        self.assertIn('not currently building', str(err))
+
+    def testCancelNoCancelAction(self):
+        from rbuild_plugins import images
+
+        _image = mock.MockObject()
+        _image._mock.set(status='100')
+        err = self.assertRaises(images.CancelImageError,
+            self.handle.Images.cancel, _image)
+        self.assertIn('cancel action', str(err))
+
+
     def testCreateJob(self):
         handle = self.handle
 
