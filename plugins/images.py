@@ -27,6 +27,13 @@ from rbuild import pluginapi
 from rbuild.pluginapi import command
 
 
+class MissingImageError(errors.RbuildError):
+    """Raised when we don"t find an image"""
+    template = ("Unable to find image with id '%(image)s' on %(stage)s stage"
+        "of %(project)s project")
+    params = ["image", "project", "stage"]
+
+
 class DeleteImagesCommand(command.BaseCommand):
     help = 'Delete images'
     paramHelp = '<image id>+'
@@ -36,7 +43,7 @@ class DeleteImagesCommand(command.BaseCommand):
             args, expected=['IMAGEID'], appendExtra=True)
         for imageId in imageIds:
             try:
-                imageId = int(imageId)
+                int(imageId)
                 handle.Images.delete(imageId)
             except ValueError:
                 handle.ui.warning("Cannot parse image id '%s'" % imageId)
@@ -199,15 +206,12 @@ class Images(pluginapi.Plugin):
             product = self.handle.product.getProductShortname()
             baseLabel = self.handle.product.getBaseLabel()
         except AttributeError:
-            raise errors.PluginError(
-                'Current directory is not part of a product.\n'
-                'To initialize a new product directory, use "rbuild init"')
+            raise errors.MissingProductStoreError(path=os.getcwd())
 
         try:
             stage = self.handle.productStore.getActiveStageName()
         except errors.RbuildError:
-            raise errors.PluginError(
-                'Current directory is not a product stage.')
+            raise errors.MissingActiveStageError(path=os.getcwd())
         return (product, baseLabel, stage)
 
     def deployImage(self, *args, **kwargs):
@@ -226,18 +230,15 @@ class Images(pluginapi.Plugin):
         return self._createJob(self.DEPLOY, *args, **kwargs)
 
     def delete(self, imageId):
-        self.handle.Build.checkStage()
+        shortName, baseLabel, stageName = self._getProductStage()
 
-        images = self.handle.facade.rbuilder.getImages(
-            image_id=imageId,
-            project=self.handle.product.getProductShortname(),
-            branch=self.handle.product.getBaseLabel(),
-            stage=self.handle.productStore.getActiveStageName(),
-            )
+        images = self.handle.facade.rbuilder.getImages(image_id=imageId,
+            project=shortName, branch=baseLabel, stage=stageName)
         if images:
             images[0].delete()
         else:
-            self.handle.ui.write("No image found with id '%s'" % imageId)
+            raise MissingImageError(image=imageId, project=shortName,
+                stage=stageName)
 
     def launchImage(self, *args, **kwargs):
         '''
@@ -255,12 +256,9 @@ class Images(pluginapi.Plugin):
         return self._createJob(self.LAUNCH, *args, **kwargs)
 
     def list(self):
-        self.handle.Build.checkStage()
-        images = self.handle.facade.rbuilder.getImages(
-            project=self.handle.product.getProductShortname(),
-            stage=self.handle.productStore.getActiveStageName(),
-            branch=self.handle.product.getBaseLabel(),
-            )
+        shortName, baseLabel, stageName = self._getProductStage()
+        images = self.handle.facade.rbuilder.getImages(project=shortName,
+            stage=stageName, branch=baseLabel)
         return images
 
     def initialize(self):
@@ -279,13 +277,9 @@ class Images(pluginapi.Plugin):
             @param imageId: id of image
             @type imageId: str or int
         '''
-        self.handle.Build.checkStage()
-        image = self.handle.facade.rbuilder.getImages(
-            image_id=imageId,
-            project=self.handle.product.getProductShortname(),
-            branch=self.handle.product.getBaseLabel(),
-            stage=self.handle.productStore.getActiveStageName(),
-            )
+        shortName, baseLabel, stageName = self._getProductStage()
+        image = self.handle.facade.rbuilder.getImages(image_id=imageId,
+            project=shortName, branch=baseLabel, stage=stageName)
         if image:
             return image[0]
 
