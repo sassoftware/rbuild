@@ -20,6 +20,7 @@ Implements an RbuildConfiguration object, which is similar to
 a C{conarycfg} object.
 """
 import os
+import re
 
 from conary.lib import cfg
 from conary.lib import util
@@ -31,6 +32,20 @@ from rmake.build.buildcfg import CfgUser
 
 #pylint: disable-msg=R0904
 # R0904: Too many public methods
+
+class CfgHttpUrl(CfgString):
+
+    def parseString(self, s):
+        #match = re.match('https?://([^:]*):[^@]*@([^/:]*)(?::.*)?', s)
+        match = re.match('https?://([^:]*[^@]*@)?[^/:]+(?::.*)?', s)
+        if match is not None:
+            (user, ) = match.groups()
+            if user:
+                raise cfg.ParseError("URL entries should not contain user"
+                                     " names or passwords")
+            return s
+        raise cfg.ParseError("Not a valid http(s) url")
+
 
 class PluginSection(object):
     """
@@ -51,14 +66,14 @@ class RbuildConfiguration(cfg.SectionedConfigFile):
     _allowNewSections = True
     _defaultSectionType = PluginSection
 
-    serverUrl            = CfgString
+    serverUrl            = CfgHttpUrl
     user                 = CfgUser
     name                 = CfgString
     contact              = CfgString
     pluginDirs           = (CfgPathList, ['/usr/share/rbuild/plugins',
                                           '~/.rbuild/plugins.d'])
     rmakeUser            = CfgUser
-    rmakeUrl             = CfgString
+    rmakeUrl             = CfgHttpUrl
     rmakePluginDirs      = (CfgPathList, ['/usr/share/rmake/plugins',
                                           '~/.rmake/plugins.d'])
     repositoryMap        = CfgRepoMap

@@ -56,13 +56,13 @@ quiet                     False
 repositoryMap             []
 repositoryUser            []
 rmakePluginDirs           %s
-serverUrl                 some non-empty value
+serverUrl                 http://example.com
 signatureKeyMap           []
 user                      test <password>
 ''' % (resources.get_plugin_dirs()[0], rmake_resources.get_plugin_dirs()[0])
         self.assertEqualsText(txt, expectedText)
 
-        _, txt = self.captureOutput(handle.Config.displayConfig, 
+        _, txt = self.captureOutput(handle.Config.displayConfig,
                                     hidePasswords=False)
         expectedPasswordText = '''\
 contact                   http://bugzilla.rpath.com/
@@ -72,7 +72,7 @@ quiet                     False
 repositoryMap             []
 repositoryUser            []
 rmakePluginDirs           %s
-serverUrl                 some non-empty value
+serverUrl                 http://example.com
 signatureKeyMap           []
 user                      test foo
 ''' % (resources.get_plugin_dirs()[0], rmake_resources.get_plugin_dirs()[0])
@@ -508,7 +508,7 @@ The rBuilder url is a valid server, but there was an error communicating with th
 rBuilder authorized successfully.
 '''
             self.assertEqualsText(txt, expectedTxt)
-           
+
             handle.ui.input._mock.clearReturn()
             handle.ui.input._mock.setDefaultReturns(['http://localhost',
                                        'N', 'testuser', 'Contact',
@@ -537,7 +537,7 @@ The specified credentials were not successfully authorized against the rBuilder 
 rBuilder contacted successfully.
 The rBuilder url is a valid server, but there was an error communicating with the rBuilder at that location: bad url
 The specified credentials were not successfully authorized against the rBuilder at http://localhost.
-'''            
+'''
             self.assertEqualsText(txt, expectedTxt)
 
             handle.ui.input._mock.clearReturn()
