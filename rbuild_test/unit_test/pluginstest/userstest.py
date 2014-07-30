@@ -54,18 +54,25 @@ class CreateUserTest(AbstractUsersTest):
         handle = self.handle
 
         mock.mockMethod(handle.Users.create)
+        mock.mockMethod(handle.Users.isEmail, False)
         mock.mockMethod(handle.ui.getPassword)
         mock.mockMethod(handle.ui.getResponse)
-
-        cmd = handle.Commands.getCommandClass('create')()
 
         handle.ui.getResponse._mock.setReturn('foo', 'User name',
             required=True)
         handle.ui.getResponse._mock.setReturn('foo bar', 'Full name',
             required=True)
         handle.ui.getResponse._mock.setReturn('foo@example.com', 'Email',
-            required=True)
+            required=True, validationFn=handle.Users.isEmail)
         handle.ui.getPassword._mock.setReturn('secret', 'Password')
+
+        cmd = handle.Commands.getCommandClass('create')()
+
+        err = self.assertRaises(errors.BadParameterError, cmd.runCommand,
+            handle, {'email': "foo"}, ['rbuild', 'create', 'user'])
+        self.assertEqual("'foo' is not a valid email", str(err))
+
+        handle.Users.isEmail._mock.setDefaultReturn(True)
 
         cmd.runCommand(handle, {}, ['rbuild', 'create', 'user'])
         handle.Users.create._mock.assertCalled(user_name='foo',
@@ -211,9 +218,11 @@ class EditUserTest(AbstractUsersTest):
 
         mock.mockMethod(handle.facade.rbuilder.getUsers)
         mock.mockMethod(handle.Users.edit)
+        mock.mockMethod(handle.Users.isEmail)
 
         handle.facade.rbuilder.getUsers._mock.setReturn(False, user_name='bar')
         handle.facade.rbuilder.getUsers._mock.setReturn([1], user_name='foo')
+        handle.Users.isEmail._mock.setDefaultReturn(False)
 
         cmd = handle.Commands.getCommandClass('edit')()
 
@@ -226,6 +235,11 @@ class EditUserTest(AbstractUsersTest):
         err = self.assertRaises(errors.BadParameterError, cmd.runCommand,
             handle, {}, ['rbuild', 'edit', 'user', 'bar'])
         self.assertIn('No user', str(err))
+
+        # invalid email
+        err = self.assertRaises(errors.BadParameterError, cmd.runCommand,
+            handle, {'email': 'email'}, ['rbuild', 'edit', 'user', 'foo'])
+        self.assertEqual("'email' is not a valid email", str(err))
 
         # only specify one of <flag> and no-<flag>
         err = self.assertRaises(errors.BadParameterError, cmd.runCommand,
@@ -256,6 +270,7 @@ class EditUserTest(AbstractUsersTest):
 
         mock.mockMethod(handle.facade.rbuilder.getUsers)
         mock.mockMethod(handle.Users.edit)
+        mock.mockMethod(handle.Users.isEmail)
         mock.mockMethod(handle.ui.getPassword)
         mock.mockMethod(handle.ui.getResponse)
 
@@ -268,7 +283,7 @@ class EditUserTest(AbstractUsersTest):
         handle.ui.getResponse._mock.setReturn('bar', 'Full name',
             default='foo')
         handle.ui.getResponse._mock.setReturn('bar@com', 'Email',
-            default='foo@com')
+            default='foo@com', validationFn=handle.Users.isEmail)
         handle.ui.getPassword._mock.setReturn('secret', 'New password')
         handle.ui.getPassword._mock.setReturn('secret', 'Retype new password')
 
@@ -489,3 +504,11 @@ class UsersTest(rbuildhelp.RbuildHelper):
 
         handle.Users.edit(_user, can_create=True)
         self.assertTrue(_user.can_create)
+
+    def testIsEmail(self):
+        handle = self.getRbuildHandle(mock.MockObject())
+        self.assertTrue(handle.Users.isEmail('foo@bar.com'))
+        self.assertFalse(handle.Users.isEmail("foobar"))
+        self.assertFalse(handle.Users.isEmail("foo@"))
+        self.assertFalse(handle.Users.isEmail("@bar.com"))
+        self.assertFalse(handle.Users.isEmail("foo@bar"))
