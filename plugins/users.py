@@ -74,6 +74,9 @@ class CreateUserCommand(command.BaseCommand):
             password = argSet.pop('password', None)
             if not password:
                 password = ui.getPassword('Password')
+                while ui.getPassword('Retype password') != password:
+                    handle.ui.write("Sorry, passwords do not match.")
+                    password = ui.getPassword("Password")
             kwargs['password'] = password
 
         if 'admin' in argSet:
@@ -188,15 +191,16 @@ class EditUserCommand(command.BaseCommand):
 
         if (password is True
                 or kwargs.get('external_auth') is False
-                or query_all
-                ):
+                or query_all):
             password = ui.getPassword('New password')
-            retype = ui.getPassword('Retype new password')
-            while password != retype:
-                ui.write('Sorry, passwords do not match')
+            while password != ui.getPassword('Retype new password'):
+                ui.write('Sorry, passwords do not match.')
                 password = ui.getPassword('New password')
-                retype = ui.getPassword('Retype new password')
-            kwargs['password'] = password
+
+            if password == user.password:
+                handle.ui.write("Same as existing password, not changing")
+            else:
+                kwargs['password'] = password
         elif password is not None:
             kwargs['password'] = password
 
@@ -212,7 +216,8 @@ class ListUsersCommand(command.ListCommand):
         'external_auth', 'can_create')
     showFieldMap = dict(
         created_by=dict(accessor=lambda u: u.created_by.full_name),
-        roles=dict(accessor=lambda u: ', '.join(sorted(r.name for r in u.roles))),
+        roles=dict(
+            accessor=lambda u: ', '.join(sorted(r.name for r in u.roles))),
         modified_by=dict(accessor=lambda u: u.modified_by.full_name),
         )
 
@@ -329,13 +334,13 @@ class Users(pluginapi.Plugin):
         user.persist()
 
     def initialize(self):
-        for command, subcommand, command_class in (
+        for commandName, subcommand, command_class in (
                 ('create', 'user', CreateUserCommand),
                 ('delete', 'users', DeleteUsersCommand),
                 ('edit', 'user', EditUserCommand),
                 ('list', 'users', ListUsersCommand),
                 ):
-            cmd = self.handle.Commands.getCommandClass(command)
+            cmd = self.handle.Commands.getCommandClass(commandName)
             cmd.registerSubCommand(subcommand, command_class)
 
     def list(self, *args, **kwargs):

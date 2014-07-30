@@ -55,6 +55,7 @@ class CreateUserTest(AbstractUsersTest):
 
         mock.mockMethod(handle.Users.create)
         mock.mockMethod(handle.ui.getPassword)
+        mock.mockMethod(handle.ui.write)
         mock.mockMethod(handle.ui.getResponse)
 
         cmd = handle.Commands.getCommandClass('create')()
@@ -66,10 +67,13 @@ class CreateUserTest(AbstractUsersTest):
         handle.ui.getResponse._mock.setReturn('foo@example.com', 'Email',
             required=True)
         handle.ui.getPassword._mock.setReturn('secret', 'Password')
+        handle.ui.getPassword._mock.appendReturn('Secret', 'Retype password')
+        handle.ui.getPassword._mock.appendReturn('secret', 'Retype password')
 
         cmd.runCommand(handle, {}, ['rbuild', 'create', 'user'])
         handle.Users.create._mock.assertCalled(user_name='foo',
             full_name='foo bar', email='foo@example.com', password='secret')
+        handle.ui.write._mock.assertCalled("Sorry, passwords do not match.")
 
         cmd.runCommand(handle, {'user-name': 'bar'},
             ['rbuild', 'create', 'user'])
@@ -126,7 +130,7 @@ class CreateUserTest(AbstractUsersTest):
             required=True)
         handle.ui.getResponse._mock.setReturn('foo@example.com', 'Email',
             required=True)
-        handle.ui.getPassword._mock.setReturn('secret', 'Password')
+        handle.ui.getPassword._mock.setDefaultReturn('secret')
 
         err = self.assertRaises(errors.BadParameterError, cmd.runCommand,
             handle, {}, ['rbuild', 'create', 'user'])
@@ -258,6 +262,7 @@ class EditUserTest(AbstractUsersTest):
         mock.mockMethod(handle.Users.edit)
         mock.mockMethod(handle.ui.getPassword)
         mock.mockMethod(handle.ui.getResponse)
+        mock.mockMethod(handle.ui.write)
 
         _user = mock.MockObject()
         _user._mock.set(user_name='foo', full_name='foo', email='foo@com',
@@ -270,7 +275,10 @@ class EditUserTest(AbstractUsersTest):
         handle.ui.getResponse._mock.setReturn('bar@com', 'Email',
             default='foo@com')
         handle.ui.getPassword._mock.setReturn('secret', 'New password')
-        handle.ui.getPassword._mock.setReturn('secret', 'Retype new password')
+        handle.ui.getPassword._mock.appendReturn('not secret',
+            'Retype new password')
+        handle.ui.getPassword._mock.appendReturn('secret',
+            'Retype new password')
 
         cmd = handle.Commands.getCommandClass('edit')()
 
@@ -278,6 +286,7 @@ class EditUserTest(AbstractUsersTest):
         cmd.runCommand(handle, {}, ['rbuild', 'edit', 'user', 'foo'])
         handle.Users.edit._mock.assertCalled(_user, full_name='bar',
             email='bar@com', password='secret')
+        handle.ui.write._mock.assertCalled("Sorry, passwords do not match.")
 
         # change full name
         cmd.runCommand(handle, {'full-name': 'full name'},
