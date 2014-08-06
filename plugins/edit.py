@@ -213,9 +213,7 @@ class Edit(pluginapi.Plugin):
             # Cleanup here
             pass
         # We now have a changed product definition loaded
-        # Serialize it
-        handle.product.serialize(
-                file(handle.productStore.getProductDefinitionXmlPath(), "w"))
+        handle.productStore.save(handle.product)
         # And commit
         handle.productStore.commit(message=message)
         return 0
