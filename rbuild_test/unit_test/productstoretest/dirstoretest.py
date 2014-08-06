@@ -36,13 +36,29 @@ from rbuild_test.unit_test.facadetest import conaryfacadetest
 class DirStoreTest(rbuildhelp.RbuildHelper):
     def _prepProductStore(self):
         os.chdir(self.workDir)
+        pd = self._newProduct()
         util.mkdirChain('foo/.rbuild/product-definition')
-        self.writeFile(
-                    'foo/.rbuild/product-definition/product-definition.xml', '')
+        pd.serialize(file(
+                'foo/.rbuild/product-definition/product-definition.xml', 'w'))
         util.mkdirChain('foo/stable')
         self.writeFile('foo/stable/.stage', 'stable\n')
         from rbuild.productstore import abstract
         mock.mock(abstract.ProductStore, 'checkStageIsValid')
+        return pd
+
+    def _newProduct(self, name='Foo', shortName='foo', description='More foo',
+            version='1.0', versionDescription='Super version 1.0',
+            conaryRepositoryHostname='cny.tv', conaryNamespace='ns'):
+        pd = proddef.ProductDefinition()
+        pd.setProductName(name)
+        pd.setProductShortname(shortName)
+        pd.setProductDescription(description)
+        pd.setProductVersion(version)
+        pd.setProductVersionDescription(versionDescription)
+        pd.setConaryRepositoryHostname(conaryRepositoryHostname)
+        pd.setConaryNamespace(conaryNamespace)
+        pd.setImageGroup('group-os')
+        return pd
 
     def testCheckoutProductStore(self):
         self._prepProductStore()
@@ -364,3 +380,15 @@ class DirStoreTest(rbuildhelp.RbuildHelper):
         productStore.getProduct._mock.setDefaultReturn(product)
         self.assertEquals(productStore.getProductVersion(), '42.42')
 
+    def testSaveProduct(self):
+        self._prepProductStore()
+        os.chdir('foo/stable')
+        handle = self.getRbuildHandle(productStore=mock.MockObject())
+        productStore = dirstore.CheckoutProductStore(handle)
+        prodDef = productStore.getProduct()
+        self.assertEqual(prodDef.getProductDescription(), 'More foo')
+        # Update the product definition, and make sure save will persist it
+        prodDef.setProductDescription("Even more foo")
+        productStore.save(prodDef)
+        prodDef = productStore.getProduct()
+        self.assertEqual(prodDef.getProductDescription(), 'Even more foo')
