@@ -21,6 +21,9 @@ Test various methods of the RbuildConfiguration object.
 """
 
 import os
+
+from conary.lib import cfg
+
 from rbuild_test import rbuildhelp
 
 import tempfile
@@ -116,3 +119,14 @@ dummy-option-2 2
         newCfg = cfgFile + '.new'
         handle.getConfig().writeToFile(newCfg)
         self.assertEquals(file(newCfg).read(), file(newCfg).read())
+
+    def testCfgHttpUrlType(self):
+        config = rbuildcfg.RbuildConfiguration()
+        err = self.assertRaises(cfg.ParseError, config.configLine,
+            'serverUrl http://:myrbuilder.foo')
+        self.assertIn('valid http', str(err))
+        err = self.assertRaises(cfg.ParseError, config.configLine,
+            'serverUrl http://foo@myrbuilder.foo')
+        self.assertIn('URL entries', str(err))
+        config.configLine('serverUrl http://myrbuilder.foo:port')
+        config.configLine('serverUrl http://myrbuilder.foo')

@@ -68,13 +68,70 @@ JOB_XML = '''\
 class AbstractImagesTest(rbuildhelp.RbuildHelper):
     def setUp(self):
         rbuildhelp.RbuildHelper.setUp(self)
-        self.handle = self.getRbuildHandle()
+        self.handle = self.getRbuildHandle(mock.MockObject())
+        self.handle.Cancel.registerCommands()
         self.handle.Delete.registerCommands()
         self.handle.List.registerCommands()
         self.handle.Images.registerCommands()
+        self.handle.Cancel.initialize()
         self.handle.Delete.initialize()
         self.handle.List.initialize()
         self.handle.Images.initialize()
+
+
+class CancelImagesTest(AbstractImagesTest):
+    def setUp(self):
+        AbstractImagesTest.setUp(self)
+        self.cmd = self.handle.Commands.getCommandClass('cancel')()
+
+    def testCommand(self):
+        self.checkRbuild('cancel images',
+            'rbuild_plugins.images.CancelImagesCommand.runCommand',
+            [None, None, {}, ['cancel', 'images']])
+        self.checkRbuild('cancel images 1 2',
+            'rbuild_plugins.images.CancelImagesCommand.runCommand',
+            [None, None, {}, ['cancel', 'images', '1', '2']])
+
+    def testCommandParsing(self):
+        handle = self.handle
+
+        mock.mockMethod(handle.Images.cancel)
+        mock.mockMethod(handle.ui.warning)
+        mock.mockMethod(handle.facade.rbuilder.getImages, ['image'])
+
+        err = self.assertRaises(
+            errors.ParseError, self.cmd.runCommand, handle, {},
+            ['rbuild', 'cancel', 'images'])
+        self.assertIn(': id', str(err))
+
+        self.cmd.runCommand(handle, {}, ['rbuild', 'cancel', 'images', '10'])
+        handle.Images.cancel._mock.assertCalled('image')
+
+        err = self.assertRaises(errors.BadParameterError,
+            self.cmd.runCommand, handle, {},
+            ['rbuild', 'cancel', 'images', '&^%&*%$^&$'])
+        self.assertIn('Cannot parse', str(err))
+
+    def testLaunchArgParse(self):
+        self.checkRbuild('cancel images 10',
+            'rbuild_plugins.images.CancelImagesCommand.runCommand',
+            [None, None, {}, ['cancel', 'images', '10']])
+
+    def testNoImage(self):
+        from rbuild_plugins import images
+
+        mock.mockMethod(self.handle.Images.cancel)
+        mock.mockMethod(self.handle.Images._getProductStage,
+            ('project', 'branch', 'stage'))
+        mock.mockMethod(self.handle.ui.warning)
+        mock.mockMethod(self.handle.ui.getYn, True)
+        mock.mockMethod(self.handle.facade.rbuilder.getImages, None)
+
+        self.cmd.runCommand(self.handle, {},
+            ['rbuild', 'cancel', 'images', '10'])
+        self.handle.ui.warning._mock.assertCalled("Unable to find image with"
+            " id '10' on stage stage of project project")
+        self.handle.Images.cancel._mock.assertNotCalled()
 
 
 class DeleteImagesTest(AbstractImagesTest):
@@ -91,8 +148,8 @@ class DeleteImagesTest(AbstractImagesTest):
         self.assertIn('IMAGEID', str(err))
 
         cmd.runCommand(handle, {}, ['rbuild', 'delete', 'images', '10', '11'])
-        handle.Images.delete._mock.assertCalled(10)
-        handle.Images.delete._mock.assertCalled(11)
+        handle.Images.delete._mock.assertCalled('10')
+        handle.Images.delete._mock.assertCalled('11')
 
         cmd.runCommand(handle, {},
             ['rbuild', 'delete', 'images', '&^%&*%$^&$'])
@@ -230,6 +287,55 @@ class ListImagesTest(AbstractImagesTest):
 
 
 class ImagesPluginTest(AbstractImagesTest):
+    def testCancel(self):
+        from rbuild_plugins import images
+
+        mock.mockMethod(self.handle.DescriptorConfig.createDescriptorData)
+        mock.mock(images, 'xobj')
+
+        _doc = mock.MockObject()
+        _doc._mock.enable('job')
+        images.xobj.Document._mock.setReturn(_doc)
+
+        _job = mock.MockObject()
+        _job._mock.enable('job_type', 'descriptor')
+        images.xobj.XObj._mock.setReturn(_job)
+
+        _image_action = mock.MockObject()
+        _image_action._mock.set(key=images.Images.CANCEL)
+        _image_action._root._mock.set(job_type='job_type',
+            descriptor='descriptor')
+
+        _image = mock.MockObject()
+        _image._mock.set(key=images.Images.CANCEL, image_id='10', status='100',
+            actions=[_image_action])
+        _image.jobs.append._mock.setReturn(_doc, _doc)
+
+        rv = self.handle.Images.cancel(_image)
+        self.assertEqual(rv, _doc)
+        self.assertEqual(rv.job, _job)
+        self.assertEqual('job_type', rv.job.job_type)
+        self.assertEqual('descriptor', rv.job.descriptor)
+
+    def testCancelNonBuilding(self):
+        from rbuild_plugins import images
+
+        _image = mock.MockObject()
+        _image._mock.set(status='300')
+        err = self.assertRaises(images.CancelImageError,
+            self.handle.Images.cancel, _image)
+        self.assertIn('not currently building', str(err))
+
+    def testCancelNoCancelAction(self):
+        from rbuild_plugins import images
+
+        _image = mock.MockObject()
+        _image._mock.set(status='100')
+        err = self.assertRaises(images.CancelImageError,
+            self.handle.Images.cancel, _image)
+        self.assertIn('cancel action', str(err))
+
+
     def testCreateJob(self):
         handle = self.handle
 
@@ -368,62 +474,49 @@ class ImagesPluginTest(AbstractImagesTest):
     def testDelete(self):
         handle = self.handle
 
-        mock.mock(handle, 'productStore')
-        mock.mock(handle, 'product')
-        handle.product.getProductShortname._mock.setReturn('project')
-        handle.productStore.getActiveStageName._mock.setReturn('stage')
-        handle.product.getBaseLabel._mock.setReturn('branch')
         mock.mockMethod(handle.facade.rbuilder.getImages)
+        mock.mockMethod(handle.Images._getProductStage,
+            ('project', 'branch', 'stage'))
 
         handle.Images.delete(10)
         handle.facade.rbuilder.getImages._mock.assertCalled(
             image_id=10, project='project', branch='branch', stage='stage')
 
     def testDeleteMissing(self):
+        from rbuild_plugins import images
+
         handle = self.handle
 
-        mock.mock(handle, 'productStore')
-        mock.mock(handle, 'product')
-        mock.mock(handle, 'ui')
-        handle.product.getProductShortname._mock.setReturn('project')
-        handle.product.getBaseLabel._mock.setReturn('branch')
-        handle.productStore.getActiveStageName._mock.setReturn('stage')
         mock.mockMethod(handle.facade.rbuilder.getImages, None)
+        mock.mockMethod(handle.Images._getProductStage,
+            ('project', 'branch', 'stage'))
 
-        handle.Images.delete(10)
+        self.assertRaises(images.MissingImageError, handle.Images.delete, 10)
         handle.facade.rbuilder.getImages._mock.assertCalled(
             image_id=10, project='project', branch='branch', stage='stage')
-        handle.ui.write._mock.assertCalled("No image found with id '10'")
 
     def testDeleteNoProduct(self):
         handle = self.handle
 
         mock.mockMethod(handle.facade.rbuilder.getImages)
+        mock.mockMethod(handle.Images._getProductStage)
+        handle.Images._getProductStage._mock.raiseErrorOnAccess(
+            errors.MissingProductStoreError(path='/foo'))
 
-        err = self.assertRaises(
-            errors.PluginError,
-            handle.Images.delete,
-            10,
-            )
-        self.assertIn('rbuild init', str(err))
+        self.assertRaises(errors.MissingProductStoreError,
+            handle.Images.delete, 10)
         handle.facade.rbuilder.getImages._mock.assertNotCalled()
 
     def testDeleteNoStage(self):
         handle = self.handle
 
-        mock.mock(handle, 'productStore')
-        mock.mock(handle, 'product')
-        handle.product.getProductShortname._mock.setReturn('project')
-        handle.productStore._mock.set(_currentStage=None)
-
         mock.mockMethod(handle.facade.rbuilder.getImages)
+        mock.mockMethod(handle.Images._getProductStage)
+        handle.Images._getProductStage._mock.raiseErrorOnAccess(
+            errors.MissingActiveStageError(path='/foo'))
 
-        err = self.assertRaises(
-            errors.PluginError,
-            handle.Images.delete,
-            10,
-            )
-        self.assertIn('not a valid stage', str(err))
+        self.assertRaises(errors.MissingActiveStageError,
+            handle.Images.delete, 10)
         handle.facade.rbuilder.getImages._mock.assertNotCalled()
 
     def testGetAction(self):
@@ -475,12 +568,11 @@ class ImagesPluginTest(AbstractImagesTest):
 
     def testList(self):
         handle = self.handle
+
         mock.mockMethod(handle.facade.rbuilder.getImages)
-        mock.mock(handle, 'product')
-        mock.mock(handle, 'productStore')
-        handle.product.getProductShortname._mock.setReturn('project')
-        handle.productStore.getActiveStageName._mock.setReturn('stage')
-        handle.product.getBaseLabel._mock.setReturn('branch')
+        mock.mockMethod(handle.Images._getProductStage)
+        handle.Images._getProductStage._mock.setReturn(
+            ('project', 'branch', 'stage'))
 
         handle.Images.list()
         handle.facade.rbuilder.getImages._mock.assertCalled(
@@ -488,28 +580,25 @@ class ImagesPluginTest(AbstractImagesTest):
 
     def testListNoProduct(self):
         handle = self.handle
-        mock.mockMethod(handle.facade.rbuilder.getImages)
 
-        err = self.assertRaises(
-            errors.PluginError,
-            handle.Images.list,
-            )
-        self.assertIn('rbuild init', str(err))
+        mock.mockMethod(handle.facade.rbuilder.getImages)
+        mock.mockMethod(handle.Images._getProductStage)
+        handle.Images._getProductStage._mock.raiseErrorOnAccess(
+            errors.MissingProductStoreError(path='/foo'))
+
+        self.assertRaises(errors.MissingProductStoreError, handle.Images.list)
+        handle.facade.rbuilder.getImages._mock.assertNotCalled()
 
     def testListNoStage(self):
         handle = self.handle
-        mock.mockMethod(handle.facade.rbuilder.getImages)
-        mock.mock(handle, 'product')
-        mock.mock(handle, 'productStore')
-        handle.product.getProductShortname._mock.setReturn('project')
-        handle.productStore.getActiveStageName._mock.raiseErrorOnAccess(
-            errors.RbuildError('No current stage'))
 
-        err = self.assertRaises(
-            errors.RbuildError,
-            handle.Images.list,
-            )
-        self.assertEqual('No current stage', str(err))
+        mock.mockMethod(handle.facade.rbuilder.getImages)
+        mock.mockMethod(handle.Images._getProductStage)
+        handle.Images._getProductStage._mock.raiseErrorOnAccess(
+            errors.MissingActiveStageError(path='/foo'))
+
+        self.assertRaises(errors.MissingActiveStageError,
+            handle.Images.list)
         handle.facade.rbuilder.getImages._mock.assertNotCalled()
 
     def testShow(self):
@@ -546,31 +635,24 @@ class ImagesPluginTest(AbstractImagesTest):
         handle = self.handle
 
         mock.mockMethod(handle.facade.rbuilder.getImages)
+        mock.mockMethod(handle.Images._getProductStage)
+        handle.Images._getProductStage._mock.raiseErrorOnAccess(
+            errors.MissingProductStoreError(path='/foo'))
 
-        err = self.assertRaises(
-            errors.PluginError,
-            handle.Images.delete,
-            10,
-            )
-        self.assertIn('rbuild init', str(err))
+        self.assertRaises(errors.MissingProductStoreError,
+            handle.Images.delete, 10)
         handle.facade.rbuilder.getImages._mock.assertNotCalled()
 
     def testShowNoStage(self):
         handle = self.handle
 
-        mock.mock(handle, 'productStore')
-        mock.mock(handle, 'product')
-        handle.product.getProductShortname._mock.setReturn('project')
-        handle.productStore._mock.set(_currentStage=None)
-
         mock.mockMethod(handle.facade.rbuilder.getImages)
+        mock.mockMethod(handle.Images._getProductStage)
+        handle.Images._getProductStage._mock.raiseErrorOnAccess(
+            errors.MissingActiveStageError(path='/foo'))
 
-        err = self.assertRaises(
-            errors.PluginError,
-            handle.Images.show,
-            10,
-            )
-        self.assertIn('not a valid stage', str(err))
+        self.assertRaises(errors.MissingActiveStageError,
+            handle.Images.show, 10)
         handle.facade.rbuilder.getImages._mock.assertNotCalled()
 
     def testWatchJob(self):

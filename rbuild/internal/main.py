@@ -29,6 +29,7 @@ import re
 import sys
 
 from conary.build import explain
+from conary.lib import cfg
 from conary.lib import log
 from conary.lib import mainhandler
 from conary import errors as conaryerrors
@@ -92,7 +93,7 @@ class RbuildMain(mainhandler.MainHandler):
         before the command is processed and thus can change things like
         the configuration options to be used when loading the commands.
         """
-        argSet, args = mainhandler.MainHandler._getPreCommandOptions(self, 
+        argSet, args = mainhandler.MainHandler._getPreCommandOptions(self,
                                                                 argv, cfg)
         thisCommand = self.abstractCommand()
         _, cfgMap = thisCommand.prepare()
@@ -197,7 +198,7 @@ class RbuildMain(mainhandler.MainHandler):
         flags = mainhandler.MainHandler._getParserFlags(self, thisCommand)
 
         # If thisCommand has no 'description' attribute, clean up epydoc
-        # formatting from the doc string and set it as the description. 
+        # formatting from the doc string and set it as the description.
         if not hasattr(thisCommand, 'description') or \
            thisCommand.description is None:
             docString = thisCommand.__doc__ or ''
@@ -266,7 +267,7 @@ service rmake restart''')
     except (errors.RbuildBaseError, errors.UnauthorizedActionError,
             robjerrors.HTTPError, conaryerrors.ConaryError,
             conaryerrors.ParseError, conaryerrors.CvcError,
-            rmakeerrors.RmakeError), err:
+            rmakeerrors.RmakeError, cfg.ParseError), err:
         log.error(err)
         return 1
     except robjerrors.HTTPUnauthorizedError as err:

@@ -19,12 +19,18 @@
 users
 '''
 from xobj import xobj
+import re
 
 from robj import errors as robj_errors
 
 from rbuild import errors
 from rbuild import pluginapi
 from rbuild.pluginapi import command
+
+
+# simple email validator. just verify that address contains
+# only one @ sign and at least one . in the domain
+EMAIL_RE = re.compile("[^@]+@[^@]+\.[^@]+")
 
 
 class CreateUserCommand(command.BaseCommand):
@@ -63,7 +69,12 @@ class CreateUserCommand(command.BaseCommand):
             full_name = ui.getResponse('Full name', required=True)
         email = argSet.pop('email', None)
         if not email:
-            email = ui.getResponse('Email', required=True)
+            email = ui.getResponse('Email', required=True,
+                validationFn=handle.Users.isEmail)
+        else:
+            if not handle.Users.isEmail(email):
+                raise errors.BadParameterError(
+                    "'%s' is not a valid email" % email)
 
         kwargs = dict(user_name=user_name, full_name=full_name, email=email)
 
@@ -182,8 +193,12 @@ class EditUserCommand(command.BaseCommand):
             kwargs['full_name'] = full_name
 
         if email is True or query_all:
-            kwargs['email'] = ui.getResponse('Email', default=user.email)
+            kwargs['email'] = ui.getResponse('Email', default=user.email,
+                validationFn=handle.Users.isEmail)
         elif email is not None:
+            if not handle.Users.isEmail(email):
+                raise errors.BadParameterError("'%s' is not a valid email" %
+                    email)
             kwargs['email'] = email
 
         if (password is True
@@ -337,6 +352,9 @@ class Users(pluginapi.Plugin):
                 ):
             cmd = self.handle.Commands.getCommandClass(command)
             cmd.registerSubCommand(subcommand, command_class)
+
+    def isEmail(self, value):
+        return EMAIL_RE.match(value) is not None
 
     def list(self, *args, **kwargs):
         return self.handle.facade.rbuilder.getUsers(**kwargs)

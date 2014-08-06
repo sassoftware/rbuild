@@ -18,6 +18,7 @@
 '''
 images
 '''
+import os
 import time
 
 from xobj import xobj
@@ -25,6 +26,48 @@ from xobj import xobj
 from rbuild import errors
 from rbuild import pluginapi
 from rbuild.pluginapi import command
+
+
+class CancelImageError(errors.RbuildError):
+    """Raised when there is an error canceling an image build"""
+
+
+class MissingImageError(errors.RbuildError):
+    """Raised when we don"t find an image"""
+    template = ("Unable to find image with id '%(image)s' on %(stage)s stage"
+        " of %(project)s project")
+    params = ["image", "project", "stage"]
+
+
+class CancelImagesCommand(command.BaseCommand):
+    help = 'Cancel image build'
+    paramHelp = '<id>+'
+
+    def runCommand(self, handle, argSet, args):
+        _, imageIds = self.requireParameters(args, expected=['id'],
+            appendExtra=True)
+
+        project, branch, stage = handle.Images._getProductStage()
+        for imageId in imageIds:
+            try:
+                int(imageId)
+            except ValueError:
+                raise errors.BadParameterError(
+                    "Cannot parse image id '%s'" % imageId)
+
+            image = handle.facade.rbuilder.getImages(image_id=imageId,
+                project=project, branch=branch, stage=stage)
+
+            if not image:
+                handle.ui.warning(str(MissingImageError(image=imageId,
+                    project=project, stage=stage)))
+                continue
+            image = image[0]
+
+            try:
+                handle.Images.cancel(image)
+            except CancelImageError as err:
+                handle.ui.warning(str(err))
 
 
 class DeleteImagesCommand(command.BaseCommand):
@@ -36,7 +79,7 @@ class DeleteImagesCommand(command.BaseCommand):
             args, expected=['IMAGEID'], appendExtra=True)
         for imageId in imageIds:
             try:
-                imageId = int(imageId)
+                int(imageId)
                 handle.Images.delete(imageId)
             except ValueError:
                 handle.ui.warning("Cannot parse image id '%s'" % imageId)
@@ -130,6 +173,7 @@ class Images(pluginapi.Plugin):
     name = 'images'
     DEPLOY = 'deploy_image_on_target'
     LAUNCH = 'launch_system_on_target'
+    CANCEL = 'image_build_cancellation'
 
     def _createJob(self, action_type, image_name, target_name, doLaunch):
         rb = self.handle.facade.rbuilder
@@ -199,16 +243,39 @@ class Images(pluginapi.Plugin):
             product = self.handle.product.getProductShortname()
             baseLabel = self.handle.product.getBaseLabel()
         except AttributeError:
-            raise errors.PluginError(
-                'Current directory is not part of a product.\n'
-                'To initialize a new product directory, use "rbuild init"')
+            raise errors.MissingProductStoreError(path=os.getcwd())
 
         try:
             stage = self.handle.productStore.getActiveStageName()
         except errors.RbuildError:
-            raise errors.PluginError(
-                'Current directory is not a product stage.')
+            raise errors.MissingActiveStageError(path=os.getcwd())
         return (product, baseLabel, stage)
+
+    def cancel(self, image):
+        '''
+        Cancel a currently running image build
+
+        :param image: image obj
+        :type image: rObj(image)
+        '''
+        if image.status != '100':
+            raise CancelImageError(msg="Image '%s' is not currently building" %
+                image.image_id)
+
+        cancelAction = [a for a in image.actions if a.key == self.CANCEL]
+        if not cancelAction:
+            raise CancelImageError(msg="Unable to find cancel action for"
+                " image '%s'" % image.image_id)
+        cancelAction = cancelAction[0]
+        ddata = self.handle.DescriptorConfig.createDescriptorData(
+            fromStream=cancelAction.descriptor)
+        doc = xobj.Document()
+        doc.job = job = xobj.XObj()
+
+        job.job_type = cancelAction._root.job_type
+        job.descriptor = cancelAction._root.descriptor
+        job.descriptor_data = xobj.parse(ddata.toxml()).descriptor_data
+        return image.jobs.append(doc)
 
     def deployImage(self, *args, **kwargs):
         '''
@@ -226,18 +293,15 @@ class Images(pluginapi.Plugin):
         return self._createJob(self.DEPLOY, *args, **kwargs)
 
     def delete(self, imageId):
-        self.handle.Build.checkStage()
+        shortName, baseLabel, stageName = self._getProductStage()
 
-        images = self.handle.facade.rbuilder.getImages(
-            image_id=imageId,
-            project=self.handle.product.getProductShortname(),
-            branch=self.handle.product.getBaseLabel(),
-            stage=self.handle.productStore.getActiveStageName(),
-            )
+        images = self.handle.facade.rbuilder.getImages(image_id=imageId,
+            project=shortName, branch=baseLabel, stage=stageName)
         if images:
             images[0].delete()
         else:
-            self.handle.ui.write("No image found with id '%s'" % imageId)
+            raise MissingImageError(image=imageId, project=shortName,
+                stage=stageName)
 
     def launchImage(self, *args, **kwargs):
         '''
@@ -255,19 +319,19 @@ class Images(pluginapi.Plugin):
         return self._createJob(self.LAUNCH, *args, **kwargs)
 
     def list(self):
-        self.handle.Build.checkStage()
-        images = self.handle.facade.rbuilder.getImages(
-            project=self.handle.product.getProductShortname(),
-            stage=self.handle.productStore.getActiveStageName(),
-            branch=self.handle.product.getBaseLabel(),
-            )
+        shortName, baseLabel, stageName = self._getProductStage()
+        images = self.handle.facade.rbuilder.getImages(project=shortName,
+            stage=stageName, branch=baseLabel)
         return images
 
     def initialize(self):
-        self.handle.Commands.getCommandClass('delete').registerSubCommand(
-            'images', DeleteImagesCommand)
-        self.handle.Commands.getCommandClass('list').registerSubCommand(
-            'images', ListImagesCommand)
+        for command, subcommand, commandClass in (
+                ('cancel', 'images', CancelImagesCommand),
+                ('delete', 'images', DeleteImagesCommand),
+                ('list', 'images', ListImagesCommand),
+                ):
+            cmd = self.handle.Commands.getCommandClass(command)
+            cmd.registerSubCommand(subcommand, commandClass)
 
     def registerCommands(self):
         self.handle.Commands.registerCommand(LaunchCommand)
@@ -279,13 +343,9 @@ class Images(pluginapi.Plugin):
             @param imageId: id of image
             @type imageId: str or int
         '''
-        self.handle.Build.checkStage()
-        image = self.handle.facade.rbuilder.getImages(
-            image_id=imageId,
-            project=self.handle.product.getProductShortname(),
-            branch=self.handle.product.getBaseLabel(),
-            stage=self.handle.productStore.getActiveStageName(),
-            )
+        shortName, baseLabel, stageName = self._getProductStage()
+        image = self.handle.facade.rbuilder.getImages(image_id=imageId,
+            project=shortName, branch=baseLabel, stage=stageName)
         if image:
             return image[0]
 

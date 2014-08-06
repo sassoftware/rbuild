@@ -50,7 +50,7 @@ class RbuildHelper(rmakehelp.RmakeHelper):
         self.rbuildCfg.contact = self.cfg.contact
         self.rbuildCfg.name = self.cfg.name
         self.rbuildCfg.pluginDirs = resources.get_plugin_dirs()
-        self.rbuildCfg.serverUrl = 'some non-empty value'
+        self.rbuildCfg.serverUrl = 'http://example.com'
         self.rbuildCfg.rmakePluginDirs = rmake_resources.get_plugin_dirs()
         self.writeFile(self.cfg.root + '/conaryrc', '')
         self.rbuildCfg.user = ('test', 'foo')

@@ -206,6 +206,11 @@ class MissingProductStoreError(RbuildError):
     params = ['path']
 
 
+class MissingActiveStageError(RbuildError):
+    template = "Directory %(path)r is not a valid stage"
+    params = ["path"]
+
+
 class MissingGroupSearchPathElementError(RbuildError):
     template = ("Group search path element "
             "%(name)s=%(version)s[%(flavor)s] was not found")
@@ -216,6 +221,7 @@ class MissingImageDefinitionError(RbuildError):
         'Product Definition %(name)s contains no image definitions',
         'Please add at least one image to your product definition'))
     params = ['name']
+
 
 class RbuilderError(RbuildError):
     template = "rBuilder error %(error)s: %(frozen)r"

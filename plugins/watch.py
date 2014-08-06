@@ -18,8 +18,16 @@
 """
 watch command and related utilities.
 """
+from rbuild import errors
 from rbuild import pluginapi
 from rbuild.pluginapi import command
+
+
+class MissingJobIdError(errors.RbuildError):
+    """Raised when there is not job id in the status file store"""
+    template = "No %(type)s builds have run in this checkout"
+    params = ["type"]
+
 
 class WatchCommand(command.CommandWithSubCommands):
     #pylint: disable-msg=R0923
@@ -64,12 +72,18 @@ class Watch(pluginapi.Plugin):
 
     def watchPackages(self):
         jobId = self.handle.productStore.getPackageJobId()
+        if jobId is None:
+            raise MissingJobIdError(type="package")
         self.handle.Build.watchJob(jobId)
 
     def watchGroups(self):
         jobId = self.handle.productStore.getGroupJobId()
+        if jobId is None:
+            raise MissingJobIdError(type="group")
         self.handle.Build.watchJob(jobId)
 
     def watchImages(self):
         jobIds = self.handle.productStore.getImageJobIds()
+        if jobIds is None:
+            raise MissingJobIdError(type="image")
         self.handle.facade.rbuilder.watchImages(jobIds)

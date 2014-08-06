@@ -15,10 +15,10 @@
 # limitations under the License.
 #
 
-
+from testutils import mock
 
 from rbuild_test import rbuildhelp
-from testutils import mock
+
 
 class WatchTest(rbuildhelp.RbuildHelper):
     def testWatchCommandParsing(self):
@@ -39,3 +39,27 @@ class WatchTest(rbuildhelp.RbuildHelper):
         handle.facade.rbuilder.watchImages._mock.assertCalled([30])
         cmd.runCommand(handle, {}, ['rbuild', 'watch', 'job', '20'])
         handle.Build.watchJob._mock.assertCalled('20')
+
+    def testNoStatusStore(self):
+        """Regression test for APPENG-2994"""
+        from rbuild_plugins import watch
+
+        handle = self.getRbuildHandle(mock.MockObject())
+        handle.Watch.registerCommands()
+        handle.Watch.initialize()
+
+        handle.productStore.getPackageJobId._mock.setReturn(None)
+        handle.productStore.getGroupJobId._mock.setReturn(None)
+        handle.productStore.getImageJobIds._mock.setReturn(None)
+
+        err = self.assertRaises(watch.MissingJobIdError,
+            handle.Watch.watchPackages)
+        self.assertIn('package', str(err))
+
+        err = self.assertRaises(watch.MissingJobIdError,
+            handle.Watch.watchGroups)
+        self.assertIn('group', str(err))
+
+        err = self.assertRaises(watch.MissingJobIdError,
+            handle.Watch.watchImages)
+        self.assertIn('image', str(err))
