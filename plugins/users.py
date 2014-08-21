@@ -333,6 +333,9 @@ class Users(pluginapi.Plugin):
             user.is_admin = is_admin
 
         if can_create is not None:
+            if not self.handle.facade.rbuilder.isAdmin():
+                raise errors.UnauthorizedActionError(
+                    'toggle can create resources')
             user.can_create = can_create
 
         # hack because rbuilder gives us dates in a format it can't parse

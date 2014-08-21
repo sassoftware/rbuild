@@ -498,6 +498,11 @@ class UsersTest(rbuildhelp.RbuildHelper):
         self.assertIn('grant admin privilege', str(err))
         self.assertEqual('false', _user.is_admin)
 
+        err = self.assertRaises(errors.UnauthorizedActionError,
+            handle.Users.edit, _user, can_create=True)
+        self.assertIn('toggle can create resources', str(err))
+        self.assertEqual('false', _user.can_create)
+
         handle.facade.rbuilder.isAdmin._mock.setReturn(True)
         handle.Users.edit(_user, is_admin=True)
         self.assertTrue(_user.is_admin)
