@@ -56,6 +56,13 @@ class ProductStore(object):
         """
         self._handle.product = self.getProduct()
 
+    def save(self, product):
+        """
+        Save the changes to the product into the product store, but don't
+        commit
+        """
+        return self
+
     def commit(self, message):
         """
         Commit a product definition change

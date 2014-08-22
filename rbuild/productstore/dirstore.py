@@ -127,6 +127,15 @@ class CheckoutProductStore(ProductStore):
             raise errors.RbuildError('Failed to update product definition')
         ProductStore.update(self)
 
+    def save(self, product):
+        """
+        Save the changes to the product into the product store, but don't
+        commit
+        """
+        pdXmlPath = self.getProductDefinitionXmlPath()
+        product.serialize(file(pdXmlPath, "w"))
+        return self
+
     def commit(self, message):
         """
         Commit a product definition change

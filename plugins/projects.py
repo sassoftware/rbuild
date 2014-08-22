@@ -42,7 +42,7 @@ class DeleteProjectsCommand(command.BaseCommand):
             branch_count = len(project.project_branches)
 
             handle.ui.write(self.prePrompt %
-                (('es', 'their') if branch_count > 1 else ('', "it's")))
+                (('es', 'their') if branch_count > 1 else ('', "its")))
             for branch in project.project_branches:
                 handle.ui.write('    %s' % branch.label)
             handle.ui.write()
