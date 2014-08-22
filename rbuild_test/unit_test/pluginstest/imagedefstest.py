@@ -136,8 +136,6 @@ class ImageDefsPluginTest(AbstractImageDefsTest):
         handle = self.handle
         mock.mockMethod(handle.facade.rbuilder.getImages)
 
-        err = self.assertRaises(
-            errors.PluginError,
-            handle.ImageDefs.list,
-            )
+        err = self.assertRaises(errors.MissingProductStoreError,
+            handle.ImageDefs.list)
         self.assertIn('rbuild init', str(err))

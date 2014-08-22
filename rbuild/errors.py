@@ -202,7 +202,8 @@ class InternalRmakeFacadeError(RbuildError):
 
 ## BEGIN rBuild Errors
 class MissingProductStoreError(RbuildError):
-    template = "Directory %(path)r does not contain a product checkout"
+    template = ("Directory %(path)r does not contain a product checkout.\n"
+        "To initialize a new product directory, use 'rbuild init'")
     params = ['path']
 
 

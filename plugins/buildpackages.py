@@ -17,6 +17,7 @@
 
 from rbuild import errors
 from rbuild import pluginapi
+from rbuild.decorators import requiresStage
 from rbuild.pluginapi import command
 
 from rbuild_plugins.build import packages
@@ -55,6 +56,7 @@ class BuildPackagesCommand(command.BaseCommand):
 
     #pylint: disable-msg=R0201,R0903
     # could be a function, and too few public methods
+    @requiresStage
     def runCommand(self, handle, argSet, args):
         watch = not argSet.pop('no-watch', False)
         commit = not argSet.pop('no-commit', False)
@@ -64,7 +66,6 @@ class BuildPackagesCommand(command.BaseCommand):
         message = argSet.pop('message', None)
         success = True
         _, packageList, = self.requireParameters(args, allowExtra=True)
-        handle.Build.checkStage()
         if not packageList:
             if refreshArg:
                 handle.BuildPackages.refreshAllPackages()

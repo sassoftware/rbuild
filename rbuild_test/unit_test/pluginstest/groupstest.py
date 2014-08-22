@@ -41,7 +41,6 @@ class GroupsTest(AbstractGroupsTest):
     def testList(self):
         handle = self.handle
 
-        mock.mockMethod(handle.Build.checkStage)
         mock.mock(handle, 'product')
         mock.mock(handle, 'productStore')
 

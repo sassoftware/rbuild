@@ -25,6 +25,7 @@ from xobj import xobj
 
 from rbuild import errors
 from rbuild import pluginapi
+from rbuild.decorators import requiresStage
 from rbuild.pluginapi import command
 
 
@@ -238,17 +239,11 @@ class Images(pluginapi.Plugin):
         raise errors.PluginError(
             "cannot %s %s" % (key.replace('_', ' '), target))
 
+    @requiresStage
     def _getProductStage(self):
-        try:
-            product = self.handle.product.getProductShortname()
-            baseLabel = self.handle.product.getBaseLabel()
-        except AttributeError:
-            raise errors.MissingProductStoreError(path=os.getcwd())
-
-        try:
-            stage = self.handle.productStore.getActiveStageName()
-        except errors.RbuildError:
-            raise errors.MissingActiveStageError(path=os.getcwd())
+        product = self.handle.product.getProductShortname()
+        baseLabel = self.handle.product.getBaseLabel()
+        stage = self.handle.productStore.getActiveStageName()
         return (product, baseLabel, stage)
 
     def cancel(self, image):

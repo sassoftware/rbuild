@@ -132,8 +132,9 @@ class UpdateTest(rbuildhelp.RbuildHelper):
         handle.Update.updateStages._mock.assertCalled(['foo'])
 
         # we do not have an active stage
-        handle.productStore.getActiveStageName._mock.setDefaultReturn(None)
-        self.assertRaises(errors.PluginError, handle.Update.updateCurrentStage)
+        handle.productStore._mock.set(_currentStage=None)
+        self.assertRaises(errors.MissingActiveStageError,
+                          handle.Update.updateCurrentStage)
 
     def testUpdateStages(self):
         handle = self._getHandle()

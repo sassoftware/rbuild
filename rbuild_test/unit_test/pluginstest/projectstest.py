@@ -24,25 +24,26 @@ from rbuild_test import rbuildhelp
 class ProjectTest(rbuildhelp.RbuildHelper):
     def setUp(self):
         rbuildhelp.RbuildHelper.setUp(self)
-        self.handle = self.getRbuildHandle()
+        self.handle = self.getRbuildHandle(mock.MockObject())
         self.handle.Delete.registerCommands()
         self.handle.List.registerCommands()
         self.handle.Delete.initialize()
         self.handle.List.initialize()
         self.handle.Projects.initialize()
 
+
 class DeleteProjectTest(ProjectTest):
     def setUp(self):
         ProjectTest.setUp(self)
 
         self.project1_branch1 = mock.MockObject()
-        self.project1_branch1._mock.set( label='bar.example.com@sas:bar-1')
+        self.project1_branch1._mock.set(label='bar.example.com@sas:bar-1')
 
         self.project2_branch1 = mock.MockObject()
-        self.project2_branch1._mock.set( label='foo.example.com@sas:foo-1')
+        self.project2_branch1._mock.set(label='foo.example.com@sas:foo-1')
 
         self.project2_branch2 = mock.MockObject()
-        self.project2_branch2._mock.set( label='foo.example.com@sas:foo-2')
+        self.project2_branch2._mock.set(label='foo.example.com@sas:foo-2')
 
         self.project1 = mock.MockObject()
         self.project1._mock.set(
@@ -71,7 +72,7 @@ class DeleteProjectTest(ProjectTest):
         cmd.runCommand(handle, {}, ['rbuild', 'delete', 'projects', 'bar'])
         handle.facade.rbuilder.getProject._mock.assertCalled('bar')
         handle.ui.write._mock.assertCalled("This will delete the following"
-            " branch and it's stage(s):")
+            " branch and its stage(s):")
         handle.ui.write._mock.assertCalled("    bar.example.com@sas:bar-1")
         handle.ui.getResponse._mock.assertCalled("This may lead to issues with"
             " other projects that refer to this branch.\nConfirm by typing"

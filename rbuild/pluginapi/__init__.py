@@ -26,8 +26,10 @@ major versions of rBuild.
 Module functions, classes, and class methods that do not start
 with a C{_} character are public.
 """
+import functools
 import inspect
 import new
+import os
 from conary.lib import cfg
 
 
@@ -37,6 +39,7 @@ from conary.lib import cfg
 from rmake.lib import pluginlib
 
 from rbuild import errors
+from rbuild import handle
 from rbuild.internal.internal_types import WeakReference
 
 class PluginConfiguration(cfg.ConfigSection):
@@ -189,3 +192,4 @@ def _apiWrapper(method, prehooks, posthooks):
     wrapper.__doc__ = method.__doc__
     wrapped = new.instancemethod(wrapper, self, self.__class__)
     return wrapped
+

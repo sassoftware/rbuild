@@ -22,6 +22,7 @@ import os
 
 from rbuild import errors
 from rbuild import pluginapi
+from rbuild.decorators import requiresStage
 
 class UpdateCommand(pluginapi.command.CommandWithSubCommands):
     """
@@ -159,13 +160,12 @@ class Update(pluginapi.Plugin):
         self.handle.Update.updateStages(
             self.handle.productStore.iterStageNames())
 
+    @requiresStage
     def updateCurrentStage(self):
         """
         Update all source packages in the current stage in the current product.
         """
         stageName = self.handle.productStore.getActiveStageName()
-        if not stageName:
-            raise errors.PluginError('Could not find current stage')
         self.updateStages([stageName])
 
     def updateStages(self, stageNames):

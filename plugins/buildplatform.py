@@ -16,7 +16,9 @@
 
 
 from rbuild import pluginapi
+from rbuild.decorators import requiresProduct
 from rbuild.pluginapi import command
+
 
 class BuildPlatformCommand(command.BaseCommand):
     help = 'Create a platform usable by others from this product'
@@ -26,7 +28,6 @@ class BuildPlatformCommand(command.BaseCommand):
     def runCommand(self, handle, _, args):
         # no allowed parameters
         self.requireParameters(args)
-        handle.Build.checkProductStore()
         handle.BuildPlatform.buildPlatform()
 
 
@@ -37,6 +38,7 @@ class BuildPlatform(pluginapi.Plugin):
         self.handle.Commands.getCommandClass('build').registerSubCommand(
                                         'platform', BuildPlatformCommand)
 
+    @requiresProduct
     def buildPlatform(self):
         conaryClient = self.handle.facade.conary._getConaryClient()
         self.handle.product.savePlatformToRepository(conaryClient)

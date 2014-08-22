@@ -33,14 +33,16 @@ class BuildImagesTest(rbuildhelp.RbuildHelper):
         mock.mockMethod(handle.facade.rbuilder.watchImages)
         mock.mockMethod(handle.BuildImages.printImageUrlsForBuild)
 
-        err = self.assertRaises(errors.PluginError, cmd.runCommand, handle, {},
+        err = self.assertRaises(errors.MissingProductStoreError,
+                                cmd.runCommand, handle, {},
                                 ['rbuild', 'build', 'images'])
         self.assertIn('rbuild init', str(err))
 
         mock.mock(handle, 'productStore')
         handle.productStore._mock.set(_currentStage=None)
 
-        err = self.assertRaises(errors.PluginError, cmd.runCommand, handle, {},
+        err = self.assertRaises(errors.MissingActiveStageError,
+                                cmd.runCommand, handle, {},
                                 ['rbuild', 'build', 'images'])
         self.assertIn('valid stage', str(err))
 

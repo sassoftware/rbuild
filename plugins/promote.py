@@ -19,6 +19,7 @@ Update packages and product definition source troves managed by Conary
 """
 
 from rbuild import pluginapi
+from rbuild.decorators import requiresStage
 from rbuild.pluginapi import command
 
 
@@ -57,6 +58,7 @@ class Promote(pluginapi.Plugin):
         """
         self.handle.Commands.registerCommand(PromoteCommand)
 
+    @requiresStage
     def promoteAll(self, infoOnly=False):
         """
         Promote all appropriate troves from the currently active stage

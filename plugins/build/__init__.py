@@ -41,20 +41,6 @@ class BuildCommand(command.CommandWithSubCommands):
 class Build(pluginapi.Plugin):
     name = 'build'
 
-    def checkProductStore(self):
-        if not self.handle.productStore:
-            # none of the build commands function outside of
-            # a product store or active stage
-            raise errors.PluginError(
-                'Current directory is not part of a product.\n'
-                'To initialize a new product directory, use "rbuild init"')
-
-    def checkStage(self):
-        self.checkProductStore()
-        if self.handle.productStore._currentStage is None:
-            raise errors.PluginError(
-                'Current directory is not a valid stage for this product')
-
     def registerCommands(self):
         self.handle.Commands.registerCommand(BuildCommand)
 

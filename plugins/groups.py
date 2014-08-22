@@ -19,6 +19,7 @@
 projects
 '''
 from rbuild import pluginapi
+from rbuild.decorators import requiresStage
 from rbuild.pluginapi import command
 
 
@@ -39,8 +40,8 @@ class Groups(pluginapi.Plugin):
         self.handle.Commands.getCommandClass('list').registerSubCommand(
             'groups', ListGroupsCommand)
 
+    @requiresStage
     def list(self, *args, **kwargs):
-        self.handle.Build.checkStage()
         return sorted(
             self.handle.facade.rbuilder.getGroups(
                 shortName=self.handle.product.getProductShortname(),

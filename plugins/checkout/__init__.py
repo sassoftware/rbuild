@@ -25,6 +25,7 @@ from conary.lib import util
 
 from rbuild import errors
 from rbuild import pluginapi
+from rbuild.decorators import requiresStage
 from rbuild.pluginapi import command
 
 from rbuild_plugins.checkout import derive
@@ -102,6 +103,7 @@ class Checkout(pluginapi.Plugin):
     def registerCommands(self):
         self.handle.Commands.registerCommand(CheckoutCommand)
 
+    @requiresStage
     def checkoutPackageDefault(self, packageName, template=None,
                                factory=None):
         existingPackage = self._getExistingPackage(packageName)
@@ -121,7 +123,7 @@ class Checkout(pluginapi.Plugin):
                     '  --new to replace it with a new version')))
         self.newPackage(packageName, template=template, factory=factory)
 
-
+    @requiresStage
     def checkoutPackage(self, packageName):
         productStore = self.handle.productStore
         currentLabel = productStore.getActiveStageLabel()
@@ -130,8 +132,8 @@ class Checkout(pluginapi.Plugin):
             packageName, currentLabel, targetDir=targetDir)
         return targetDir
 
+    @requiresStage
     def derivePackage(self, packageName):
-        self._checkProductStore()
         ui = self.handle.ui
         upstreamLatest = self._getUpstreamPackage(packageName)
         if not upstreamLatest:
@@ -142,6 +144,7 @@ class Checkout(pluginapi.Plugin):
             packageName, targetDir, *upstreamLatest)
         ui.info('Edit the recipe to add your changes to the binary package.')
 
+    @requiresStage
     def shadowPackage(self, packageName):
         conaryFacade = self.handle.facade.conary
         productStore = self.handle.productStore
@@ -170,6 +173,7 @@ class Checkout(pluginapi.Plugin):
         self.handle.ui.info('Shadowed package %r in %r', packageName,
                 self._relPath(os.getcwd(), targetDir))
 
+    @requiresStage
     def newPackage(self, packageName, message=None, template=None,
                    factory=None):
         ui = self.handle.ui
@@ -233,15 +237,7 @@ class Checkout(pluginapi.Plugin):
             return troveList[0]
         return None
 
-    def _checkProductStore(self):
-        if not self.handle.productStore:
-            # Neither new nor checkout functions outside of a product store
-            raise errors.PluginError(
-                'Current directory is not part of a product.\n'
-                'To initialize a new product directory, use "rbuild init"')
-
     def _getExistingPackage(self, packageName):
-        self._checkProductStore()
         currentLabel = self.handle.productStore.getActiveStageLabel()
         return self.handle.facade.conary._findTrove(packageName + ':source',
                                                     currentLabel,

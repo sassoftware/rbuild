@@ -32,13 +32,15 @@ class BuildGroupsTest(rbuildhelp.RbuildHelper):
         mock.mockMethod(handle.Build.watchAndCommitJob)
 
         mock.mockMethod(handle.BuildPlatform.buildPlatform)
-        err = self.assertRaises(errors.PluginError, cmd.runCommand, handle, {},
+        err = self.assertRaises(errors.MissingProductStoreError,
+                                cmd.runCommand, handle, {},
                                 ['rbuild', 'build', 'groups'])
         self.assertIn('rbuild init', str(err))
 
         mock.mock(handle, 'productStore')
         handle.productStore._mock.set(_currentStage=None)
-        err = self.assertRaises(errors.PluginError, cmd.runCommand, handle, {},
+        err = self.assertRaises(errors.MissingActiveStageError,
+                                cmd.runCommand, handle, {},
                                 ['rbuild', 'build', 'groups'])
         self.assertIn('valid stage', str(err))
 

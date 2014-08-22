@@ -17,6 +17,7 @@
 
 from rbuild import errors
 from rbuild import pluginapi
+from rbuild.decorators import requiresStage
 from rbuild.pluginapi import command
 
 class BuildImagesCommand(command.BaseCommand):
@@ -34,13 +35,13 @@ class BuildImagesCommand(command.BaseCommand):
 
     #pylint: disable-msg=R0201,R0903
     # could be a function, and too few public methods
+    @requiresStage
     def runCommand(self, handle, argSet, args):
         watch = not argSet.pop('no-watch', False)
         _, imageNames = self.requireParameters(args, allowExtra=True)
         if imageNames == []:
             imageNames = None
 
-        handle.Build.checkStage()
         buildIds = handle.BuildImages.buildImages(imageNames)
         handle.productStore.setImageJobIds(buildIds)
         if watch:

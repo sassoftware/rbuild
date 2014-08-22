@@ -98,10 +98,13 @@ class CheckoutTest(rbuildhelp.RbuildHelper):
 
         # RBLD-122: avoid traceback here, make sure it's a PluginError
         # (to which we attach useful information...)
+        # APPENG-2757: Changed to MiccingProductStoreError
         handle.productStore = None
-        self.assertRaises(errors.PluginError,
+        self.assertRaises(errors.MissingProductStoreError,
             handle.Checkout.checkoutPackageDefault, 'asdf')
 
+        # APPENG-2757: now mock out the product store
+        handle.productStore = mock.MockObject()
         mock.mockMethod(handle.Checkout._getExistingPackage)
         handle.Checkout._getExistingPackage._mock.setDefaultReturn(
                                         self.makeTroveTuple('foo:source'))

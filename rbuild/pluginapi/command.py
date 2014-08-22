@@ -69,6 +69,9 @@ class BaseCommand(command.AbstractCommand):
             'lsprof'             : SUPPRESS_HELP,
             }
 
+    projectCommand = False
+    stageCommand = False
+
     def addParameters(self, argDef):
         """
         Called by C{AbstractCommand}, this sets up default commands
@@ -387,3 +390,4 @@ class ListCommand(BaseCommand):
             else:
                 handle.ui.warning(
                     "No %s found with id '%s'", self.resource, resourceId)
+

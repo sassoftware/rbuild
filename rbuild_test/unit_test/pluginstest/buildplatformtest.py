@@ -28,12 +28,13 @@ class BuildPlatformTest(rbuildhelp.RbuildHelper):
         handle.Build.initialize()
         handle.BuildPlatform.initialize()
         cmd = handle.Commands.getCommandClass('build')()
-        mock.mockMethod(handle.BuildPlatform.buildPlatform)
 
-        err = self.assertRaises(errors.PluginError, cmd.runCommand, handle, {},
+        err = self.assertRaises(errors.MissingProductStoreError,
+                                cmd.runCommand, handle, {},
                                 ['rbuild', 'build', 'platform'])
         self.assertIn('rbuild init', str(err))
 
+        mock.mockMethod(handle.BuildPlatform.buildPlatform)
         mock.mock(handle, 'productStore')
 
         cmd.runCommand(handle, {}, ['rbuild', 'build', 'platform'])

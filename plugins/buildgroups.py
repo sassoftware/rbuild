@@ -17,6 +17,7 @@
 
 from rbuild import errors
 from rbuild import pluginapi
+from rbuild.decorators import requiresStage
 from rbuild.pluginapi import command
 
 from rbuild_plugins.build import groups
@@ -34,6 +35,7 @@ class BuildGroupsCommand(command.BaseCommand):
 
     #pylint: disable-msg=R0201,R0903
     # could be a function, and too few public methods
+    @requiresStage
     def runCommand(self, handle, argSet, args):
         watch = not argSet.pop('no-watch', False)
         commit = not argSet.pop('no-commit', False)
@@ -41,7 +43,6 @@ class BuildGroupsCommand(command.BaseCommand):
         success = True
         _, groupList, = self.requireParameters(args, allowExtra=True)
 
-        handle.Build.checkStage()
         if not groupList:
             jobId = handle.BuildGroups.buildAllGroups()
         else:

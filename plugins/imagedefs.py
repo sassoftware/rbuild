@@ -24,6 +24,7 @@ from xobj import xobj
 
 from rbuild import errors
 from rbuild import pluginapi
+from rbuild.decorators import requiresProduct
 from rbuild.pluginapi import command
 
 
@@ -68,7 +69,7 @@ class CreateImageDefCommand(command.BaseCommand):
     docs = {'list': 'List available image types',
             'from-file': 'Load config from file',
             'to-file': 'Write config to file',
-           }
+            }
 
     def addLocalParameters(self, argDef):
         argDef['message'] = '-m', command.ONE_PARAM
@@ -236,8 +237,8 @@ class ImageDefs(pluginapi.Plugin):
         self.handle.Commands.getCommandClass('list').registerSubCommand(
             'imagedefs', ListImageDefsCommand)
 
+    @requiresProduct
     def list(self):
-        self.handle.Build.checkProductStore()
         return self.handle.facade.rbuilder.getImageDefs(
             product=self.handle.product.getProductShortname(),
             version=self.handle.product.getProductVersion(),
