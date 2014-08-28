@@ -20,4 +20,5 @@ Implementations of product stores for different implementations.
  - C{abstract}: product store base class
  - C{dirstore}: directory-based checkout as created by the C{rbuild init}
    command
+ -C{decorators}: decorators for functions that work with the product store
 """

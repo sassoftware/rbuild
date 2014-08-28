@@ -25,7 +25,7 @@ from xobj import xobj
 
 from rbuild import errors
 from rbuild import pluginapi
-from rbuild.decorators import requiresStage
+from rbuild.productstore.decorators import requiresStage
 from rbuild.pluginapi import command
 
 

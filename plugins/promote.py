@@ -19,7 +19,7 @@ Update packages and product definition source troves managed by Conary
 """
 
 from rbuild import pluginapi
-from rbuild.decorators import requiresStage
+from rbuild.productstore.decorators import requiresStage
 from rbuild.pluginapi import command
 
 

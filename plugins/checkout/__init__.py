@@ -25,7 +25,7 @@ from conary.lib import util
 
 from rbuild import errors
 from rbuild import pluginapi
-from rbuild.decorators import requiresStage
+from rbuild.productstore.decorators import requiresStage
 from rbuild.pluginapi import command
 
 from rbuild_plugins.checkout import derive

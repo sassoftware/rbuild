@@ -16,7 +16,7 @@
 
 
 from rbuild import pluginapi
-from rbuild.decorators import requiresProduct
+from rbuild.productstore.decorators import requiresProduct
 from rbuild.pluginapi import command
 
 

@@ -22,7 +22,7 @@ import os
 
 from rbuild import errors
 from rbuild import pluginapi
-from rbuild.decorators import requiresStage
+from rbuild.productstore.decorators import requiresStage
 
 class UpdateCommand(pluginapi.command.CommandWithSubCommands):
     """
