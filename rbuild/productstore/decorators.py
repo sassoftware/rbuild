@@ -23,25 +23,33 @@ import os
 
 from rbuild import errors
 from rbuild.handle import RbuildHandle
+from rbuild.pluginapi import Plugin
 
 
-def _getHandle(l):
-    if hasattr(l[0], 'handle') \
-            and isinstance(l[0].handle, RbuildHandle):
-        _handle = l[0].handle
-    elif isinstance(l[1], RbuildHandle):
-        _handle = l[1]
+def _getHandle(args):
+    """
+    Search `args` for a handle.
+
+    If the first item in `args` is a Plugin, then return the Plugin's handle.
+    Else if the second item in `args` is a RbuildHandle, then return it.
+
+    :param list args: list to search
+    :return RbuildHandle: a handle
+    """
+    if isinstance(args[0], Plugin):
+        return args[0].handle
+    elif isinstance(args[1], RbuildHandle):
+        return args[1]
     else:
-        raise errors.PluginError("Must wrap a plugin methodor the runCommand"
+        raise errors.PluginError("Must wrap a plugin method or the runCommand"
                                  " method of a BaseCommand subclass")
-    return _handle
 
 
 def requiresProduct(method):
     @functools.wraps(method)
     def wrapper(*args, **kwargs):
-        _handle = _getHandle(args)
-        if _handle.productStore is None:
+        handle = _getHandle(args)
+        if handle.productStore is None:
             raise errors.MissingProductStoreError(os.getcwd())
         return method(*args, **kwargs)
     return wrapper
@@ -50,10 +58,10 @@ def requiresProduct(method):
 def requiresStage(method):
     @functools.wraps(method)
     def wrapper(*args, **kwargs):
-        _handle = _getHandle(args)
-        if _handle.productStore is None:
+        handle = _getHandle(args)
+        if handle.productStore is None:
             raise errors.MissingProductStoreError(os.getcwd())
-        if _handle.productStore._currentStage is None:
+        if handle.productStore._currentStage is None:
             raise errors.MissingActiveStageError(os.getcwd())
         return method(*args, **kwargs)
     return wrapper
