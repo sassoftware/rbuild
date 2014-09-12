@@ -71,7 +71,7 @@ class DeleteProjectTest(ProjectTest):
         cmd.runCommand(handle, {}, ['rbuild', 'delete', 'projects', 'bar'])
         handle.facade.rbuilder.getProject._mock.assertCalled('bar')
         handle.ui.write._mock.assertCalled("This will delete the following"
-            " branch and it's stage(s):")
+            " branch and its stage(s):")
         handle.ui.write._mock.assertCalled("    bar.example.com@sas:bar-1")
         handle.ui.getResponse._mock.assertCalled("This may lead to issues with"
             " other projects that refer to this branch.\nConfirm by typing"
