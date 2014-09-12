@@ -87,7 +87,7 @@ class DeleteImagesCommand(command.BaseCommand):
 
 class LaunchCommand(command.BaseCommand):
     help = 'Launch/Deploy an image onto a target'
-    paramHelp = '<IMAGE> <TARGET>'
+    paramHelp = '<image name[=version] | image id> <target name>'
     commands = ['launch', 'deploy']
     docs = {'list': 'List available targets',
             'from-file': 'Load launch/deploy descriptor from file',
@@ -122,7 +122,7 @@ class LaunchCommand(command.BaseCommand):
             handle.DescriptorConfig.readConfig(fromFile)
 
         command, image, target = self.requireParameters(
-            args, expected=['IMAGE', 'TARGET'])
+            args, expected=['image name or id', 'target name'])
 
         if command == 'deploy':
             job = handle.Images.deployImage(image, target, doLaunch)
