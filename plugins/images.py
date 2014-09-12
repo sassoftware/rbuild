@@ -179,7 +179,6 @@ class Images(pluginapi.Plugin):
         rb = self.handle.facade.rbuilder
 
         project, branch, stage = self._getProductStage()
-        image_name, _, version = image_name.partition('=')
         query_params = dict(
             project=project,
             branch=branch,
@@ -189,10 +188,11 @@ class Images(pluginapi.Plugin):
         if image_name.isdigit():
             query_params['image_id'] = image_name
         else:
+            image_name, _, version = image_name.partition('=')
             query_params['name'] = image_name
+            if version:
+                query_params['trailing_version'] = version
 
-        if version:
-            query_params['trailing_version'] = version
         images = rb.getImages(**query_params)
         if not images:
             raise errors.PluginError("No image matching '%s'" % image_name)
