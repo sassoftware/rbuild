@@ -335,7 +335,6 @@ class ImagesPluginTest(AbstractImagesTest):
             self.handle.Images.cancel, _image)
         self.assertIn('cancel action', str(err))
 
-
     def testCreateJob(self):
         handle = self.handle
 
