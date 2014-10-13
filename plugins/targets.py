@@ -62,7 +62,7 @@ class CreateTargetCommand(command.BaseCommand):
 
 class DeleteTargetsCommand(command.BaseCommand):
     help = 'Delete targets'
-    paramHelp = '<target id>+'
+    paramHelp = '<target id or name>+'
 
     def runCommand(self, handle, argSet, args):
         _, targetIds = self.requireParameters(
@@ -166,7 +166,13 @@ class Targets(pluginapi.Plugin):
         if target:
             target[0].delete()
         else:
-            self.handle.ui.write("No target found with id '%s'" % targetId)
+            # no target found with that ID, check if the ID is really a name
+            targets = [ t for t in self.handle.facade.rbuilder.getTargets() if t.name == targetId ]
+            if targets:
+                for target in targets:
+                    target.delete()
+            else:
+                self.handle.ui.write("No target found with id or name '%s'" % targetId)
 
     def edit(self, targetName, targetType=None):
         dc = self.handle.DescriptorConfig
