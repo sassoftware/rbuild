@@ -116,11 +116,23 @@ class ListImageDefsCommand(command.ListCommand):
     help = 'list image definitions'
     resource = 'imagedefs'
     listFields = ('id', 'name', 'container', 'architecture')
+
+    def _generateTypeDisplayName(i):
+        try:
+            if i.options.ebsBacked == 'true':
+                extra = " (EBS)"
+            else:
+                extra = ""
+        except AttributeError:  # no 'ebsBacked' attribute for non-AMI images
+            extra = ""
+
+        return i.container.displayName + extra
+
     listFieldMap = dict(
         id=dict(accessor=lambda i: i.id.rsplit('/')[-1]),
         container=dict(
             display_name='Type',
-            accessor=lambda i: i.container.displayName,
+            accessor=_generateTypeDisplayName,
             ),
         architecture=dict(
             accessor=lambda i: i.architecture.displayName,
