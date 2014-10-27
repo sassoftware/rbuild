@@ -202,7 +202,9 @@ class UserInterface(object):
             defaultChar = 'Y'
         else:
             defaultChar = 'N'
-        response = self.getResponse(prompt, default=defaultChar)
+
+        validationFn = lambda r : r[0].upper() in ['Y', 'N', ]
+        response = self.getResponse(prompt, default=defaultChar, validationFn=validationFn)
         return response[0].upper() == 'Y'
 
     def getResponse(self, prompt, default=None, validationFn=None,
