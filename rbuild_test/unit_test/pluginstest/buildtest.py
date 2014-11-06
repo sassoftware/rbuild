@@ -77,8 +77,8 @@ class BuildTest(rbuildhelp.RbuildHelper):
         handle.facade.conary._getNewerRepositoryVersions._mock.setDefaultReturn(
             ['0', '1'])
 
-        mock.mockMethod(handle.ui.getResponse)
-        handle.ui.getResponse._mock.setDefaultReturn('y')
+        mock.mockMethod(handle.ui.getYn)
+        handle.ui.getYn._mock.setDefaultReturn(True)
         handle.Build.warnIfOldProductDefinition('foo', display=False)
         self.assertEquals(outputList, [
             'The local copy of the adsf product definition is out of date',
@@ -87,7 +87,7 @@ class BuildTest(rbuildhelp.RbuildHelper):
             'your local copy of the product definition.',
             '',
         ])
-        handle.ui.getResponse._mock.assertCalled('Proceed with foo, ignoring differences in product definition?', default='Y')
+        handle.ui.getYn._mock.assertCalled('Proceed with foo, ignoring differences in product definition?', default=True)
 
         del outputList[:]
         mock.mockMethod(handle.facade.conary.iterRepositoryDiff)
@@ -96,7 +96,7 @@ class BuildTest(rbuildhelp.RbuildHelper):
         mock.mockMethod(handle.facade.conary.getCheckoutLog)
         handle.facade.conary.getCheckoutLog._mock.setReturn(['CHANGELOG'],
             proddefDir, versionList=['0', '1'])
-        handle.ui.getResponse._mock.setDefaultReturn('n')
+        handle.ui.getYn._mock.setDefaultReturn(False)
         err = self.assertRaises(build_plugin.OutdatedProductDefinitionError,
             handle.Build.warnIfOldProductDefinition, 'foo')
         self.assertEquals(outputList, [
@@ -115,7 +115,7 @@ class BuildTest(rbuildhelp.RbuildHelper):
             '',
         ])
         self.assertEquals(str(err), 'adsf product definition out of date')
-        handle.ui.getResponse._mock.assertCalled('Proceed with foo, ignoring differences in product definition?', default='Y')
+        handle.ui.getYn._mock.assertCalled('Proceed with foo, ignoring differences in product definition?', default=True)
 
         handle.productStore = abstract.ProductStore()
         self.assertEquals(handle.Build.warnIfOldProductDefinition('adsf'),

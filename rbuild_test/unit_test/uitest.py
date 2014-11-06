@@ -284,6 +284,16 @@ class UserInterfaceTest(rbuildhelp.RbuildHelper):
             rc, txt = self.captureOutput(h.ui.getYn, 'prompt', default=False)
             self.assertEquals(rc, True)
 
+        h.ui.input._mock.setReturns(['this is not Y or N', 'N'],
+                                    'prompt (Default: Y): ')
+        rc, txt = self.captureOutput(h.ui.getYn, 'prompt')
+        self.assertEquals(rc, False)
+
+        h.ui.input._mock.setReturns(['this is not Y or N', 'Y'],
+                                    'prompt (Default: Y): ')
+        rc, txt = self.captureOutput(h.ui.getYn, 'prompt')
+        self.assertEquals(rc, True)
+
     def testGetResponse(self):
         h = self.getRbuildHandle(mockOutput=False)
         mock.mockMethod(h.ui.input)
