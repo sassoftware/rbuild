@@ -495,6 +495,9 @@ user                      testuser
             m._mock.setReturn('N',
                 'Would you like to re-enter the user name and password? (Y/N) (Default: N): ')
 
+            m._mock.setReturn('Y',
+                "Do you want to use the rMake server running on the rBuilder Appliance?  'N' will use the rMake server on this local machine. (Y/N): (Default: Y): ")
+
             m._mock.setDefaultReturns(['http://localhost', 'N',
                                        'testuser', 'Contact',
                                        'Display Name'])
