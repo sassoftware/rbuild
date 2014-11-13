@@ -489,7 +489,13 @@ user                      testuser
             cfg.user = None
             m = mock.mockMethod(handle.ui.input)
 
-            m._mock.setDefaultReturns(['http://localhost',
+            # answers that don't change across the run, and don't change the output
+            m._mock.setReturn('N',
+                'Store your password in the local configuration file? (Default: N): ')
+            m._mock.setReturn('N',
+                'Would you like to re-enter the user name and password? (Y/N) (Default: N): ')
+
+            m._mock.setDefaultReturns(['http://localhost', 'N',
                                        'testuser', 'Contact',
                                        'Display Name'])
             m = mock.mockMethod(handle.ui.inputPassword)
@@ -511,7 +517,7 @@ rBuilder authorized successfully.
 
             handle.ui.input._mock.clearReturn()
             handle.ui.input._mock.setDefaultReturns(['http://localhost',
-                                       'N', 'testuser', 'Contact',
+                                       'N', 'testuser', 'N', 'Contact',
                                        'Display Name'])
             handle.facade.rbuilder.validateCredentials._mock.setReturn(
                 False, 'testuser', 'testpass', 'http://localhost')
@@ -525,8 +531,8 @@ The specified credentials were not successfully authorized against the rBuilder 
 
             handle.ui.input._mock.clearReturn()
             handle.ui.input._mock.setDefaultReturns(['http://localhost',
-                                       'N', 'testuser', 'Y', 'http://localhost', 'Contact',
-                                       'Display Name'])
+                                       'N', 'testuser', 'Y', 'http://localhost', 'N', 'N',
+                                       'Contact', 'Display Name'])
             handle.facade.rbuilder.validateCredentials._mock.setReturn(
                 False, 'testuser', 'testpass', 'http://localhost')
             rc, txt = self.captureOutput(handle.Config.updateConfig)

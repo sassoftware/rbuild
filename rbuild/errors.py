@@ -260,15 +260,13 @@ _ERROR_MESSAGE = '''
 ERROR: An unexpected condition has occurred in rBuild.  This is
 most likely due to insufficient handling of erroneous input, but
 may be some other bug.  In either case, please report the error at
-https://issues.rpath.com/ and attach to the issue the file
+http://opensource.sas.com/its/ and attach to the issue the file
 %(stackfile)s
 
 To get a debug prompt, rerun the command with the --debug-all argument.
 
 For more information, go to:
-http://wiki.rpath.com/wiki/Conary:How_To_File_An_Effective_Bug_Report
-For more debugging help, please go to #conary on freenode.net
-or email conary-list@lists.rpath.com.
+https://opensource.sas.com/conarywiki/index.php/Conary:How_To_File_An_Effective_Bug_Report
 
 Error details follow:
 

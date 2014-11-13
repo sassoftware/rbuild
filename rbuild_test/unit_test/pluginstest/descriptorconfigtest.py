@@ -306,6 +306,8 @@ class DescriptorConfigTest(rbuildhelp.RbuildHelper):
                 'Enter Virtual Host Name [required] (type str): ')
         i._mock.setReturn('/srv/www/a',
                 'Enter Virtual Host Document Root [required] (type str): ')
+        i._mock.setReturn('N',
+                'More items for: vhosts (Virtual Hosts) (Default: Y): ')
 
         descriptorData = dsc.createDescriptorData(callback)
         self.assertXMLEquals(descriptorData.toxml(), """
