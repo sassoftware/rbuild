@@ -72,10 +72,12 @@ class AbstractImagesTest(rbuildhelp.RbuildHelper):
         self.handle.Cancel.registerCommands()
         self.handle.Delete.registerCommands()
         self.handle.List.registerCommands()
+        self.handle.Show.registerCommands()
         self.handle.Images.registerCommands()
         self.handle.Cancel.initialize()
         self.handle.Delete.initialize()
         self.handle.List.initialize()
+        self.handle.Show.initialize()
         self.handle.Images.initialize()
 
 
@@ -284,6 +286,17 @@ class ListImagesTest(AbstractImagesTest):
         cmd.runCommand(handle, {}, ['rbuild', 'list', 'images'])
         handle.ui.write._mock.assertCalled(
             'http://localhost/latest%%20image')
+
+
+class ShowImagesTest(AbstractImagesTest):
+    def testCommand(self):
+        self.getRbuildHandle()
+        self.checkRbuild('show images',
+            'rbuild_plugins.images.ListImagesCommand.runCommand',
+            [None, None, {}, ['show', 'images']])
+        self.checkRbuild('show images 1 2',
+            'rbuild_plugins.images.ListImagesCommand.runCommand',
+            [None, None, {}, ['show', 'images', '1', '2']])
 
 
 class ImagesPluginTest(AbstractImagesTest):

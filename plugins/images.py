@@ -325,6 +325,7 @@ class Images(pluginapi.Plugin):
                 ('cancel', 'images', CancelImagesCommand),
                 ('delete', 'images', DeleteImagesCommand),
                 ('list', 'images', ListImagesCommand),
+                ('show', 'images', ListImagesCommand),
                 ):
             cmd = self.handle.Commands.getCommandClass(command)
             cmd.registerSubCommand(subcommand, commandClass)
