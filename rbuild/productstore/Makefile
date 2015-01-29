@@ -18,7 +18,8 @@
 python_files =  __init__.py \
                 abstract.py \
                 store.py \
-                dirstore.py
+                dirstore.py \
+                decorators.py
 
 
 SUBDIRS = 
