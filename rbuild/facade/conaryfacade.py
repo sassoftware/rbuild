@@ -183,7 +183,7 @@ class ConaryFacade(object):
 
     def _findTrovesFlattened(self, specList, labelPath=None,
                              defaultFlavor=None, allowMissing=False):
-        results = self._findTroves(specList, labelPath=labelPath, 
+        results = self._findTroves(specList, labelPath=labelPath,
                                    defaultFlavor=defaultFlavor,
                                    allowMissing=allowMissing)
         return list(itertools.chain(*results.values()))
@@ -229,7 +229,7 @@ class ConaryFacade(object):
         @param defaultFlavor: Flavor to use for those troves specifying None
         for their flavor.
         @type defaultFlavor: str or None
-        @param allowMissing: if True, allow None as a return value if 
+        @param allowMissing: if True, allow None as a return value if
         the package was not found.
         @return: C{(name, version, flavor)} tuple.
         Note that C{version} and C{flavor} objects are B{opaque}.
@@ -892,7 +892,7 @@ class ConaryFacade(object):
         else:
             packageList = [ x.getNewNameVersionFlavor()
                            for x in cs.iterNewTroveList() ]
-            packageList = [ (str(x[0]), str(x[1]), str(x[2])) 
+            packageList = [ (str(x[0]), str(x[1]), str(x[2]))
                             for x in packageList ]
             if not infoOnly:
                 self._getRepositoryClient().commitChangeSet(cs)
@@ -928,6 +928,13 @@ class ConaryFacade(object):
     @staticmethod
     def parseTroveSpec(troveSpec):
         return cmdline.parseTroveSpec(troveSpec)
+
+    def isValidLabel(self, label):
+        try:
+            versions.Label(label)
+        except conaryerrors.ParseError:
+            return False
+        return True
 
 #pylint: disable-msg=C0103,R0901,W0221,R0904
 # "The creature can't help its ancestry"

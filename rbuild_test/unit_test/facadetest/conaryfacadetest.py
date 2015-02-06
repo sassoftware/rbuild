@@ -86,7 +86,7 @@ class MockConfig(object):
         self.signatureKeyMap = {}
     def includeConfigFile(self, path):
         self.includedConfigFile = path
-    
+
 class MockHandle(object):
     def __init__(self, serverUrl=None):
         self.serverUrl = serverUrl
@@ -96,7 +96,7 @@ class MockHandle(object):
     def _setServerUrl(self, serverUrl):
         self.serverUrl = serverUrl
     def getConfig(self):
-        if self._cfg is None: 
+        if self._cfg is None:
             self._cfg = MockConfig(serverUrl=self.serverUrl)
         return self._cfg
 
@@ -222,6 +222,16 @@ class ConaryFacadeTest(rbuildhelp.RbuildHelper):
         assert facade._getLabel(v2) == labelObject
         assert facade._getLabel(v3) == labelObject
 
+    def testIsValidLabel(self):
+        _, facade = self.prep()
+        assert facade.isValidLabel('a@b:c')
+        assert (facade.isValidLabel('a') == False)
+        assert (facade.isValidLabel('a@b') == False)
+        assert (facade.isValidLabel('a@:c') == False)
+        assert (facade.isValidLabel('b:c') == False)
+        assert (facade.isValidLabel('a@b:c/1') == False)
+        assert (facade.isValidLabel('/a@b:c') == False)
+
     def testGetFlavor(self):
         _, facade = self.prep()
         flavorString = '!bootstrap is:x86'
@@ -273,7 +283,7 @@ class ConaryFacadeTest(rbuildhelp.RbuildHelper):
             raise conaryerrors.LabelPathNeeded
 
         r.findTroves = findTroves
-        self.assertRaises(errors.RbuildError, facade._findTrove, 
+        self.assertRaises(errors.RbuildError, facade._findTrove,
             'foo', '1.2.3-1-1')
 
 
@@ -283,14 +293,14 @@ class ConaryFacadeTest(rbuildhelp.RbuildHelper):
         mock.mockMethod(facade._getRepositoryClient, repos)
         results = facade._findTroves([('foo', None, None)],
                                     ['localhost@rpl:1', 'localhost@rpl:2'])
-        assert(results == {('foo', None, None): 
+        assert(results == {('foo', None, None):
                         [('foo', VFS('/localhost@rpl:1/1.0-1-1'), Flavor(''))]})
         results = facade._findTrovesFlattened([('foo', None, None)],
                                     ['localhost@rpl:1', 'localhost@rpl:2'])
-        assert(results == [('foo', 
+        assert(results == [('foo',
                             VFS('/localhost@rpl:1/1.0-1-1'), Flavor(''))])
         results = facade._findTroves(['foo[ssl]'], 'localhost@rpl:1')
-        assert(results == {('foo[ssl]'): 
+        assert(results == {('foo[ssl]'):
                     [('foo', VFS('/localhost@rpl:1/1.0-1-1'), Flavor('ssl'))]})
         results = facade._findTrovesFlattened(['foo[ssl]'], 'localhost@rpl:1')
         assert(results == [('foo',
@@ -414,15 +424,15 @@ class ConaryFacadeTest(rbuildhelp.RbuildHelper):
         troveSpec = self.makeTroveTuple('foo:source')
         facade.detachPackage(troveSpec, '/targetlabel.rpath.org@rpath:1')
         clone.CloneTrove._mock.assertCalled(mockConaryCfg,
-            '/targetlabel.rpath.org@rpath:1', 
+            '/targetlabel.rpath.org@rpath:1',
             [troveSpec[0]+'='+troveSpec[1].asString()],
             message='Automatic promote by rBuild.')
         facade.detachPackage(troveSpec, '/targetlabel.rpath.org@rpath:1', 'blech')
         clone.CloneTrove._mock.assertCalled(mockConaryCfg,
-            '/targetlabel.rpath.org@rpath:1', 
+            '/targetlabel.rpath.org@rpath:1',
             [troveSpec[0]+'='+troveSpec[1].asString()],
             message='blech')
-    
+
     def testRefresh(self):
         handle, facade = self.prep()
         mockConaryCfg = mock.MockObject()
@@ -634,7 +644,7 @@ class ConaryFacadeTest(rbuildhelp.RbuildHelper):
         output = facade.isConaryCheckoutDirectory('.')
         self.unmock()
         self.assertEquals(output, True)
-        
+
         self.mock(os.path, 'exists', lambda *args: False)
         output = facade.isConaryCheckoutDirectory('.')
         self.unmock()
@@ -709,7 +719,7 @@ class ConaryFacadeTest(rbuildhelp.RbuildHelper):
         trvCs.getNewNameVersionFlavor._mock.setDefaultReturn(troveTup)
         facade._getConaryClient().createShadowChangeSet._mock.setDefaultReturn(
             (None, cs))
-        assert(facade.shadowSource('name', 'version', 'targetLabel') 
+        assert(facade.shadowSource('name', 'version', 'targetLabel')
                 == troveTup)
 
     def testShadowSourceForBinary(self):
@@ -788,7 +798,7 @@ class ConaryFacadeTest(rbuildhelp.RbuildHelper):
                                           groupSpecBar : [groupTupBar]},
                                          None, [groupSpecFoo],
                                          allowMissing = True)
-        repos.getTroves._mock.setReturn([groupTrv], 
+        repos.getTroves._mock.setReturn([groupTrv],
                                         [groupTup2], withFiles=False)
         iterator = mock.MockObject()
         fooTup = self.makeTroveTuple('foo')
@@ -907,7 +917,7 @@ class ConaryFacadeTest(rbuildhelp.RbuildHelper):
 
     def testGetShortFlavorDescriptors(self):
         _, facade = self.prep()
-        results = facade._getShortFlavorDescriptors(['foo is:x86', 
+        results = facade._getShortFlavorDescriptors(['foo is:x86',
                                                      'bar is:x86'])
         assert (results == {'foo is: x86' : 'x86-foo',
                             'bar is: x86' : 'x86-bar'})
