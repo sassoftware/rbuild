@@ -1116,6 +1116,32 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
         err = self.assertRaises(errors.RbuildError, client.createProject, 'title', 'shortname', 'hostname', 'domain.name')
         self.assertIn('conflicting', str(err))
 
+    def testCreateExternalProject(self):
+        client = rbuilderfacade.RbuilderRESTClient('http://localhost', 'foo',
+            'bar', mock.MockObject())
+        mock.mock(client, '_api')
+        class response:
+            project_id = 42
+        client._api.projects.append._mock.setDefaultReturn(response)
+        projectId = client.createProject(
+            'title', 'shortname', 'hostname',
+            'domain.name', 'description', True, ('repo@n:branch',
+                'otherdomain.name', 'auth', 'user', 'secret', 'entitle'))
+        self.assertEqual(projectId, 42)
+        proj = client._api.projects.append._mock.popCall()[0][0].project
+        self.assertEqual(proj.name, 'title')
+        self.assertEqual(proj.hostname, 'hostname')
+        self.assertEqual(proj.short_name, 'shortname')
+        self.assertEqual(proj.domain_name, 'domain.name')
+        self.assertEqual(proj.description, 'description')
+        self.assertEqual(proj.external, 'true')
+        self.assertEqual(proj.label, 'repo@n:branch')
+        self.assertEqual(proj.upstream_url, 'otherdomain.name')
+        self.assertEqual(proj.auth_type, 'auth')
+        self.assertEqual(proj.user_name, 'user')
+        self.assertEqual(proj.password, 'secret')
+        self.assertEqual(proj.entitlement, 'entitle')
+
     def testCreateTarget(self):
         client = rbuilderfacade.RbuilderRESTClient('http://localhost', 'foo',
             'bar', mock.MockObject())

@@ -660,7 +660,10 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
         return address
 
     def createProject(self, title, shortName, hostName=None, domainName=None,
-            description=''):
+            description='', external=False, external_params=None):
+        assert((external and external_params is not None)
+               or (not external and external_params is None))
+
         doc = xobj.Document()
         doc.project = proj = xobj.XObj()
         proj.name = title
@@ -669,7 +672,13 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
         proj.description = description or ''
         if domainName:
             proj.domain_name = domainName
-        proj.external = 'false'
+
+        if external:
+            proj.external = 'true'
+            (proj.label, proj.upstream_url, proj.auth_type, proj.user_name,
+             proj.password, proj.entitlement) = external_params
+        else:
+            proj.external = 'false'
         try:
             return self.api.projects.append(doc).project_id
         except robj.errors.HTTPConflictError:
@@ -969,16 +978,21 @@ class RbuilderFacade(object):
         return client.getWindowsBuildService()
 
     def createProject(self, title, shortName, hostName=None, domainName=None,
-            description=''):
+            description='', external=False, external_params=None):
         if not self.isValidShortName(shortName):
             raise errors.BadParameterError("Invalid project short name")
         if hostName and not self.isValidShortName(hostName):
             raise errors.BadParameterError("Invalid project hostname")
         if not self.isValidDomainName(domainName):
             raise errors.BadParameterError("Invalid project domain name")
+        if external and not self._handle.facade.conary.isValidLabel(
+                external_params[0]):
+            raise errors.BadParameterError("Invalid upstream label")
+        if external and not self.isValidDomainName(external_params[1]):
+            raise errors.BadParameterError("Invalid upstream url")
         client = self._getRbuilderRESTClient()
         return client.createProject(title, shortName, hostName, domainName,
-                description)
+                description, external, external_params)
 
     def getProject(self, shortName):
         client = self._getRbuilderRESTClient()

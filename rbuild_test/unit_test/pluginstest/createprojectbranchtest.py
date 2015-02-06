@@ -25,13 +25,32 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
     def testCreateProjectArgParse(self):
         self.getRbuildHandle()
         self.checkRbuild('create project --name=title --short-name=short '
-                '--domain-name=project.domain',
+                '--domain-name=project.domain --description=description',
             'rbuild_plugins.createprojectbranch.CreateProjectCommand.runCommand',
             [None, None, {
                 'name': 'title',
                 'short-name': 'short',
                 'domain-name': 'project.domain',
-                }, ['create', 'project']])
+                'description': 'description',
+            }, ['create', 'project']])
+
+        self.checkRbuild('create project --name=title --short-name=short '
+                '--domain-name=project.domain --description=description '
+                '--external --upstream-url other.domain --auth-type auth '
+                '--username user --password secret --entitlement entitle',
+            'rbuild_plugins.createprojectbranch.CreateProjectCommand.runCommand',
+            [None, None, {
+                'name': 'title',
+                'short-name': 'short',
+                'domain-name': 'project.domain',
+                'description': 'description',
+                'external': True,
+                'upstream-url': 'other.domain',
+                'auth-type': 'auth',
+                'username': 'user',
+                'password': 'secret',
+                'entitlement': 'entitle',
+            }, ['create', 'project']])
 
     def testCreateProjectCmdline(self):
         handle = self.getRbuildHandle(mock.MockObject())
@@ -49,6 +68,79 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
                 shortName='shortname',
                 domainName='',
                 description='',
+                )
+
+    def testCreateExternalProjectCmdline(self):
+        handle = self.getRbuildHandle(mock.MockObject())
+        handle.Create.registerCommands()
+        handle.CreateProjectBranch.initialize()
+        mock.mockMethod(handle.facade.rbuilder.createProject)
+        cmd = handle.Commands.getCommandClass('create')()
+
+        # no auth
+        cmd.runCommand(handle, {
+            'name': 'project name',
+            'short-name': 'shortname',
+            'domain-name': '',
+            'external': True,
+            'label': 'repo@n:branch',
+            'upstream-url': 'otherdomain.name',
+            'auth-type': 'none',
+            }, ['rbuild', 'create', 'project'])
+        handle.facade.rbuilder.createProject._mock.assertCalled(
+                title='project name',
+                shortName='shortname',
+                domainName='',
+                description='',
+                external=True,
+                external_params=(
+                    'repo@n:branch', 'otherdomain.name', 'none', None,
+                    None, None),
+                )
+
+        # userpass auth
+        cmd.runCommand(handle, {
+            'name': 'project name',
+            'short-name': 'shortname',
+            'domain-name': '',
+            'external': True,
+            'label': 'repo@n:branch',
+            'upstream-url': 'otherdomain.name',
+            'auth-type': 'userpass',
+            'username': 'user',
+            'password': 'secret',
+            }, ['rbuild', 'create', 'project'])
+        handle.facade.rbuilder.createProject._mock.assertCalled(
+                title='project name',
+                shortName='shortname',
+                domainName='',
+                description='',
+                external=True,
+                external_params=(
+                    'repo@n:branch', 'otherdomain.name', 'userpass', 'user',
+                    'secret', None),
+                )
+
+        # entitlement auth
+        cmd.runCommand(handle, {
+            'name': 'project name',
+            'short-name': 'shortname',
+            'domain-name': '',
+            'external': True,
+            'label': 'repo@n:branch',
+            'upstream-url': 'otherdomain.name',
+            'auth-type': 'entitlement',
+            'entitlement': 'entitle',
+            }, ['rbuild', 'create', 'project'])
+        handle.facade.rbuilder.createProject._mock.assertCalled(
+                title='project name',
+                shortName='shortname',
+                domainName='',
+                description='',
+                external=True,
+                external_params=(
+                    'repo@n:branch', 'otherdomain.name', 'entitlement', None,
+                    None, 'entitle'),
                 )
 
     def testCreateProjectInteractive(self):
@@ -76,6 +168,94 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
                 shortName='shortname',
                 domainName='domain.name',
                 description='desc',
+                )
+
+    def testCreateExternalProjectInteractive(self):
+        handle = self.getRbuildHandle(mock.MockObject())
+        handle.Create.registerCommands()
+        handle.CreateProjectBranch.registerCommands()
+        handle.CreateProjectBranch.initialize()
+        mock.mockMethod(handle.facade.rbuilder.createProject)
+        mock.mock(handle, 'ui')
+
+        handle.ui.getResponse._mock.appendReturn(
+                'project name', "Project name (required)", required=True)
+        handle.ui.getResponse._mock.appendReturn(
+                'desc', "Project description (optional)")
+        handle.ui.getResponse._mock.appendReturn(
+                'shortname', "Unique name (required)",
+                validationFn=handle.facade.rbuilder.isValidShortName,
+                required=True)
+        handle.ui.getResponse._mock.appendReturn(
+                'domain.name', "Domain name (blank for default)",
+                validationFn=handle.facade.rbuilder.isValidDomainName)
+        handle.ui.getResponse._mock.appendReturn(
+                'repo@n:branch', 'Upstream label (required)', required=True,
+                validationFn=handle.facade.conary.isValidLabel)
+        handle.ui.getResponse._mock.appendReturn(
+                'otherdomain.name', "URL of upstream repository (optional)",
+                validationFn=handle.facade.rbuilder.isValidDomainName)
+        handle.ui.getResponse._mock.appendReturn(
+                'user', "External username", required=True)
+        handle.ui.getPassword._mock.appendReturn(
+                'secret', "External password")
+        handle.ui.getResponse._mock.appendReturn(
+                'entitle', 'External entitlement', required=True)
+
+        cmd = handle.Commands.getCommandClass('create')()
+
+        # auth-type none
+        handle.ui.getChoice._mock.setReturn(
+                0, "External authentication type",
+                ['none', 'Username and Password', 'Entitlement key'], default=0)
+
+        cmd.runCommand(handle, {'external': True},
+                ['rbuild', 'create', 'project'])
+        handle.facade.rbuilder.createProject._mock.assertCalled(
+                title='project name',
+                shortName='shortname',
+                domainName='domain.name',
+                description='desc',
+                external=True,
+                external_params=(
+                    'repo@n:branch', 'otherdomain.name', 'none', None, None,
+                    None),
+                )
+
+        # auth-type userpass
+        handle.ui.getChoice._mock.setReturn(
+                1, "External authentication type",
+                ['none', 'Username and Password', 'Entitlement key'], default=0)
+
+        cmd.runCommand(handle, {'external': True},
+                ['rbuild', 'create', 'project'])
+        handle.facade.rbuilder.createProject._mock.assertCalled(
+                title='project name',
+                shortName='shortname',
+                domainName='domain.name',
+                description='desc',
+                external=True,
+                external_params=(
+                    'repo@n:branch', 'otherdomain.name', 'userpass', 'user',
+                    'secret', None),
+                )
+
+        # auth-type entitlement
+        handle.ui.getChoice._mock.setReturn(
+                2, "External authentication type",
+                ['none', 'Username and Password', 'Entitlement key'], default=0)
+
+        cmd.runCommand(handle, {'external': True},
+                ['rbuild', 'create', 'project'])
+        handle.facade.rbuilder.createProject._mock.assertCalled(
+                title='project name',
+                shortName='shortname',
+                domainName='domain.name',
+                description='desc',
+                external=True,
+                external_params=(
+                    'repo@n:branch', 'otherdomain.name', 'entitlement', None,
+                    None, 'entitle'),
                 )
 
     def testCreateBranchArgParse(self):

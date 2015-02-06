@@ -14,10 +14,15 @@
 # limitations under the License.
 #
 
-
 from rbuild import errors
 from rbuild import pluginapi
 from rbuild.pluginapi import command
+
+NONE = 'none'
+USERPASS = 'userpass'
+ENTITLEMENT = 'entitlement'
+
+AUTH_TYPES = (NONE, USERPASS, ENTITLEMENT)
 
 
 class CreateProjectCommand(command.BaseCommand):
@@ -27,6 +32,14 @@ class CreateProjectCommand(command.BaseCommand):
             'short-name': 'Short (unique) name of project',
             'domain-name': 'Domain name of project, or default if omitted',
             'description': 'Optional description for the project',
+            'external': 'Externally managed project',
+            'label': 'Upstream label',
+            'upstream-url': 'URL of upstream respoitory (optional)',
+            'auth-type': 'External authentication type'
+                    ' [none, userpass, entitlement]',
+            'username': 'External username',
+            'password': 'External password',
+            'entitlement': 'External entitlement key',
       }
 
     def addLocalParameters(self, argDef):
@@ -34,10 +47,20 @@ class CreateProjectCommand(command.BaseCommand):
         argDef['short-name'] = command.ONE_PARAM
         argDef['domain-name'] = command.ONE_PARAM
         argDef['descrption'] = command.ONE_PARAM
+        argDef['external'] = command.NO_PARAM
+        argDef['label'] = command.ONE_PARAM
+        argDef['upstream-url'] = command.ONE_PARAM
+        argDef['auth-type'] = command.ONE_PARAM
+        argDef['username'] = command.ONE_PARAM
+        argDef['password'] = command.ONE_PARAM
+        argDef['entitlement'] = command.ONE_PARAM
 
     def runCommand(self, handle, argSet, args):
         ui = handle.ui
         rb = handle.facade.rbuilder
+        cf = handle.facade.conary
+
+        # get options used by all projects
         if not argSet.get('name'):
             argSet['name'] = ui.getResponse("Project name (required)",
                 required=True)
@@ -50,12 +73,60 @@ class CreateProjectCommand(command.BaseCommand):
             argSet['domain-name'] = ui.getResponse(
                     "Domain name (blank for default)",
                     validationFn=rb.isValidDomainName)
-        projectId = rb.createProject(
-                title=argSet['name'],
-                shortName=argSet['short-name'],
-                domainName=argSet.get('domain-name'),
-                description=argSet.get('description', ''),
+
+        kwargs = dict(
+            title=argSet['name'],
+            shortName=argSet['short-name'],
+            domainName=argSet.get('domain-name'),
+            description=argSet.get('description', ''),
+            )
+
+        # if external project, ask for relevent authentication information
+        if 'external' in argSet and argSet['external']:
+            if 'label' not in argSet:
+                argSet['label'] = ui.getResponse("Upstream label (required)",
+                        required=True, validationFn=cf.isValidLabel)
+
+            if 'upstream-url' not in argSet:
+                argSet['upstream-url'] = ui.getResponse(
+                    "URL of upstream repository (optional)",
+                    validationFn=rb.isValidDomainName)
+
+            if 'auth-type' not in argSet:
+                response = ui.getChoice(
+                    "External authentication type",
+                    ["none", "Username and Password", "Entitlement key"],
+                    default=0)
+                argSet['auth-type'] = AUTH_TYPES[response]
+            else:
+                if argSet['auth-type'] not in AUTH_TYPES:
+                    raise errors.BadParameterError(
+                        "Unknown authentication type.")
+
+            # collect authentication information based on the user's auth type
+            if argSet['auth-type'] == USERPASS:
+                if 'username' not in argSet:
+                    argSet['username'] = ui.getResponse(
+                        'External username', required=True)
+                if 'password' not in argSet:
+                    argSet['password'] = ui.getPassword(
+                        'External password')
+            elif argSet['auth-type'] == ENTITLEMENT:
+                if 'entitlement' not in argSet:
+                    argSet['entitlement'] = ui.getResponse(
+                        'External entitlement', required=True)
+
+            kwargs['external'] = argSet['external']
+            kwargs['external_params'] = (
+                argSet['label'],
+                argSet['upstream-url'],
+                argSet['auth-type'],
+                argSet.get('username'),
+                argSet.get('password'),
+                argSet.get('entitlement'),
                 )
+
+        projectId = rb.createProject(**kwargs)
         ui.info("Created project %s", projectId)
 
 
