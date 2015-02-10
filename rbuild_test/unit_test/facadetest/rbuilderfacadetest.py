@@ -1125,7 +1125,7 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
         client._api.projects.append._mock.setDefaultReturn(response)
         projectId = client.createProject(
             'title', 'shortname', 'hostname',
-            'domain.name', 'description', True, ('repo@n:branch',
+            'domain.name', 'description', True, (['repo@n:branch'],
                 'otherdomain.name', 'auth', 'user', 'secret', 'entitle'))
         self.assertEqual(projectId, 42)
         proj = client._api.projects.append._mock.popCall()[0][0].project
@@ -1135,7 +1135,7 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
         self.assertEqual(proj.domain_name, 'domain.name')
         self.assertEqual(proj.description, 'description')
         self.assertEqual(proj.external, 'true')
-        self.assertEqual(proj.label, 'repo@n:branch')
+        self.assertEqual(proj.labels, ['repo@n:branch'])
         self.assertEqual(proj.upstream_url, 'otherdomain.name')
         self.assertEqual(proj.auth_type, 'auth')
         self.assertEqual(proj.user_name, 'user')

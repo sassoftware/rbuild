@@ -118,7 +118,7 @@ class CreateProjectCommand(command.BaseCommand):
 
             kwargs['external'] = argSet['external']
             kwargs['external_params'] = (
-                argSet['label'],
+                [argSet['label']],
                 argSet['upstream-url'],
                 argSet['auth-type'],
                 argSet.get('username'),

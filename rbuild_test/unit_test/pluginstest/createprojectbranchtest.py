@@ -94,7 +94,7 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
                 description='',
                 external=True,
                 external_params=(
-                    'repo@n:branch', 'otherdomain.name', 'none', None,
+                    ['repo@n:branch'], 'otherdomain.name', 'none', None,
                     None, None),
                 )
 
@@ -117,7 +117,7 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
                 description='',
                 external=True,
                 external_params=(
-                    'repo@n:branch', 'otherdomain.name', 'userpass', 'user',
+                    ['repo@n:branch'], 'otherdomain.name', 'userpass', 'user',
                     'secret', None),
                 )
 
@@ -139,7 +139,7 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
                 description='',
                 external=True,
                 external_params=(
-                    'repo@n:branch', 'otherdomain.name', 'entitlement', None,
+                    ['repo@n:branch'], 'otherdomain.name', 'entitlement', None,
                     None, 'entitle'),
                 )
 
@@ -218,7 +218,7 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
                 description='desc',
                 external=True,
                 external_params=(
-                    'repo@n:branch', 'otherdomain.name', 'none', None, None,
+                    ['repo@n:branch'], 'otherdomain.name', 'none', None, None,
                     None),
                 )
 
@@ -236,7 +236,7 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
                 description='desc',
                 external=True,
                 external_params=(
-                    'repo@n:branch', 'otherdomain.name', 'userpass', 'user',
+                    ['repo@n:branch'], 'otherdomain.name', 'userpass', 'user',
                     'secret', None),
                 )
 
@@ -254,7 +254,7 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
                 description='desc',
                 external=True,
                 external_params=(
-                    'repo@n:branch', 'otherdomain.name', 'entitlement', None,
+                    ['repo@n:branch'], 'otherdomain.name', 'entitlement', None,
                     None, 'entitle'),
                 )
 

@@ -675,7 +675,7 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
 
         if external:
             proj.external = 'true'
-            (proj.label, proj.upstream_url, proj.auth_type, proj.user_name,
+            (proj.labels, proj.upstream_url, proj.auth_type, proj.user_name,
              proj.password, proj.entitlement) = external_params
         else:
             proj.external = 'false'
@@ -986,7 +986,7 @@ class RbuilderFacade(object):
         if not self.isValidDomainName(domainName):
             raise errors.BadParameterError("Invalid project domain name")
         if external and not self._handle.facade.conary.isValidLabel(
-                external_params[0]):
+                external_params[0][0]):
             raise errors.BadParameterError("Invalid upstream label")
         if external and not self.isValidDomainName(external_params[1]):
             raise errors.BadParameterError("Invalid upstream url")
