@@ -134,7 +134,7 @@ class RbuilderRPCClient(_AbstractRbuilderClient):
         return product.getProductDefinitionLabel()
 
     def startProductBuilds(self, productName, versionName, stageName,
-            buildNames=None, groupSpecs=None):
+            buildNames=None, groupSpecs=None, groupVersion=None):
         versionId = self.getBranchIdFromName(productName, versionName)
         methodArgs = [versionId, stageName, False, buildNames ]
         if groupSpecs is not None:
@@ -142,6 +142,9 @@ class RbuilderRPCClient(_AbstractRbuilderClient):
             # and it causes tracebacks on older rbuilders; only supply
             # it if really needed
             methodArgs.extend([None, groupSpecs])
+        elif groupVersion is not None:
+            methodArgs.append(groupVersion)
+
         error, buildIds = self.server.newBuildsFromProductDefinition(
                 *methodArgs)
         if error:
@@ -790,13 +793,20 @@ class RbuilderFacade(object):
             serverUrl = serverUrl.replace('%s@' %user, '', 1)
         return serverUrl, user, password
 
-    def buildAllImagesForStage(self, buildNames=None, groupSpecs=None):
+    def buildAllImagesForStage(self, buildNames=None, groupSpecs=None,
+                               groupVersion=None):
         client = self._getRbuilderRPCClient()
         stageName = self._handle.productStore.getActiveStageName()
         productName = str(self._handle.product.getProductShortname())
         versionName = str(self._handle.product.getProductVersion())
+        if groupVersion is not None:
+            groupVersion = "%s/%s" % (
+                str(self._handle.product.getLabelForStage(stageName)),
+                groupVersion,
+                )
         buildIds = client.startProductBuilds(productName, versionName,
-                stageName, buildNames=buildNames, groupSpecs=groupSpecs)
+                stageName, buildNames=buildNames, groupSpecs=groupSpecs,
+                groupVersion=groupVersion)
         return buildIds
 
     def configureTarget(self, target, ddata):

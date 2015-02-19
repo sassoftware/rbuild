@@ -23,26 +23,29 @@ from rbuild.pluginapi import command
 class BuildImagesCommand(command.BaseCommand):
     '''
     Builds specified images for the current stage.  If no images are specified,
-    builds all images defined by the product.  
+    builds all images defined by the product.
     '''
     help = 'Build images for this stage'
     paramHelp = '[image name]*'
     docs = {'no-watch' : 'do not wait for the job to complete',
+            'version': 'build image(s) of specific group version'
            }
 
     def addLocalParameters(self, argDef):
         argDef['no-watch'] = command.NO_PARAM
+        argDef['group-version'] = command.ONE_PARAM
 
     #pylint: disable-msg=R0201,R0903
     # could be a function, and too few public methods
     @requiresStage
     def runCommand(self, handle, argSet, args):
         watch = not argSet.pop('no-watch', False)
+        version = argSet.pop('group-version', None)
         _, imageNames = self.requireParameters(args, allowExtra=True)
         if imageNames == []:
             imageNames = None
 
-        buildIds = handle.BuildImages.buildImages(imageNames)
+        buildIds = handle.BuildImages.buildImages(imageNames, version)
         handle.productStore.setImageJobIds(buildIds)
         if watch:
             ok = handle.facade.rbuilder.watchImages(buildIds)
@@ -62,7 +65,7 @@ class BuildImages(pluginapi.Plugin):
         self.handle.Commands.getCommandClass('build').registerSubCommand(
                                     'images', BuildImagesCommand)
 
-    def buildImages(self, names=None):
+    def buildImages(self, names=None, version=None):
         '''
         Build all images, or all images named in C{names}
         @param names: (C{None}) names of images to build (build all
@@ -73,7 +76,7 @@ class BuildImages(pluginapi.Plugin):
         '''
         self.handle.Build.warnIfOldProductDefinition('building images')
         buildIds = self.handle.facade.rbuilder.buildAllImagesForStage(
-                buildNames=names)
+                buildNames=names, groupVersion=version)
         return buildIds
 
     def printImageUrlsForBuild(self, buildId):

@@ -144,9 +144,10 @@ class RbuilderFacadeTest(rbuildhelp.RbuildHelper):
         mock.mockMethod(facade._getRbuilderRPCClient)
         client = facade._getRbuilderRPCClient()
         client.startProductBuilds._mock.setReturn([1], 'shortname', '1.0',
-                'devel', buildNames=None, groupSpecs=None)
+                'devel', buildNames=None, groupSpecs=None, groupVersion=None)
         buildIds = facade.buildAllImagesForStage()
         self.assertEquals(buildIds, [1])
+
 
     def testBuildAllImagesForStage_groupSpecs(self):
         handle, facade = self.prep()
@@ -173,6 +174,42 @@ class RbuilderFacadeTest(rbuildhelp.RbuildHelper):
         groupSpecs = [ 'group-1=cny.org@ex:1', 'group-2=cny.org@ex:2' ]
         buildIds = facade.buildAllImagesForStage(groupSpecs=groupSpecs)
         self.assertEquals(_mock.calls, [((1, 'devel', False, None, None, groupSpecs), ())])
+
+    def testBuildAllImagesForStage_groupVersion(self):
+        handle, facade = self.prep()
+        handle.product.getProductShortname._mock.setReturn('shortname')
+        handle.product.getProductVersion._mock.setReturn('1.0')
+
+        mock.mockMethod(facade._getRbuilderRPCClient)
+        client = facade._getRbuilderRPCClient()
+
+        # Make sure we don't pass in groupVersion if not necessary
+        client.startProductBuilds._mock.setReturn([1], 'shortname', '1.0',
+                'devel', buildNames=None, groupSpecs=None, groupVersion=None)
+        buildIds = facade.buildAllImagesForStage()
+        self.assertEquals(buildIds, [1])
+
+        _mock = client.startProductBuilds._mock
+        self.assertEquals(_mock.calls,
+            [(('shortname', '1.0', 'devel'), (('buildNames', None), ('groupSpecs', None), ('groupVersion', None)))])
+        _mock.popCall()
+        handle.product.getLabelForStage._mock.assertNotCalled()
+
+        # Now invoke with groupVersion
+        handle.product.getLabelForStage._mock.setReturn(
+            'shortname@rpath:shortname-1.0-devel', 'devel')
+        client.startProductBuilds._mock.setReturn([2], 'shortname', '1.0',
+                'devel', buildNames=None, groupSpecs=None,
+                groupVersion="shortname@rpath:shortname-1.0-devel/1.0-1-1")
+        buildIds = facade.buildAllImagesForStage(groupVersion="1.0-1-1")
+        self.assertEquals(buildIds, [2])
+        _mock = client.startProductBuilds._mock
+        self.assertEquals(_mock.calls,
+            [(('shortname', '1.0', 'devel'),
+              (('buildNames', None), ('groupSpecs', None),
+               ('groupVersion', "shortname@rpath:shortname-1.0-devel/1.0-1-1")))
+            ])
+        handle.product.getLabelForStage._mock.assertCalled('devel')
 
     def testWatchImages(self):
         _, facade = self.prep()
@@ -601,6 +638,13 @@ class RbuilderRPCClientTest(rbuildhelp.RbuildHelper):
                 2, 'devel', False, None)
         buildIds = client.startProductBuilds('foo.rpath.org', '2.0', 'devel')
         assert(buildIds == [1, 2, 3, 4, 5])
+
+        server.newBuildsFromProductDefinition._mock.setReturn(
+                [False, [6]],
+                2, 'devel', False, None, '1.0-1-1')
+        buildIds = client.startProductBuilds('foo.rpath.org', '2.0', 'devel',
+                                             groupVersion='1.0-1-1')
+        assert(buildIds == [6])
 
         # now test for error conditions
         server.newBuildsFromProductDefinition._mock.setReturn(

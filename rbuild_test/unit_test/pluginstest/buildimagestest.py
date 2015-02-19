@@ -50,12 +50,17 @@ class BuildImagesTest(rbuildhelp.RbuildHelper):
 
         handle.product = mock.MockObject()
         cmd.runCommand(handle, {}, ['rbuild', 'build', 'images'])
-        handle.BuildImages.buildImages._mock.assertCalled(None)
+        handle.BuildImages.buildImages._mock.assertCalled(None, None)
         handle.facade.rbuilder.watchImages._mock.assertCalled([1])
         handle.BuildImages.printImageUrlsForBuild._mock.assertCalled(1)
 
         cmd.runCommand(handle, {}, ['rbuild', 'build', 'images', 'image 1', 'image 2'])
-        handle.BuildImages.buildImages._mock.assertCalled(['image 1', 'image 2'])
+        handle.BuildImages.buildImages._mock.assertCalled(['image 1', 'image 2'], None)
+
+        cmd.runCommand(handle, {'group-version': '1.0-1-1'},
+                       ['rbuild', 'build', 'images', 'image 1', 'image 2'])
+        handle.BuildImages.buildImages._mock.assertCalled(
+            ['image 1', 'image 2'], '1.0-1-1')
 
         handle.facade.rbuilder.watchImages._mock.setReturn(False, [1])
         rv = cmd.runCommand(handle, {}, ['rbuild', 'build', 'images'])
@@ -75,7 +80,7 @@ class BuildImagesTest(rbuildhelp.RbuildHelper):
         rc = handle.BuildImages.buildImages()
         self.assertEqual(rc, [1])
         handle.facade.rbuilder.buildAllImagesForStage._mock.assertCalled(
-                buildNames=None)
+                buildNames=None, groupVersion=None)
         handle.Build.warnIfOldProductDefinition._mock.assertCalled(
             'building images')
 
