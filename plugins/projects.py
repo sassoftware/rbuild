@@ -27,7 +27,7 @@ class DeleteProjectsCommand(command.BaseCommand):
     paramHelp = '<short name|label>+'
 
     prePrompt = 'This will delete the following branch%s and %s stage(s):'
-    prompt = ('This will permenantly destroy any content in this repository'
+    prompt = ('This will permenantly destroy any content in this repository.'
               ' Confirm by typing DELETE')
 
     def runCommand(self, handle, argSet, args):
