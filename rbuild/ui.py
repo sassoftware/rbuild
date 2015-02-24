@@ -290,7 +290,7 @@ class UserInterface(object):
         @type  choices: list
         @param prePrompt: optional string to display before the list of choices
         @type  prePrompt: str
-        @param default: default response
+        @param default: index of default response
         @type  default: int
         @param pageSize: (optional) number of items per page. Defaults to no pagination.
         @type  pageSize: int

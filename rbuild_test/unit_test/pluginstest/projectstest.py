@@ -49,10 +49,12 @@ class DeleteProjectTest(ProjectTest):
         self.project1._mock.set(
             project_branches=[self.project1_branch1], name='Bar Project')
 
-        self.project2 = mock.MockObject()
-        self.project2._mock.set(
+        self.project2 = mock.MockObject(
             project_branches=[self.project2_branch1, self.project2_branch2],
-            name='Foo Project')
+            name='Foo Project',
+            )
+
+        self.project3 = mock.MockObject(project_branches=[], name="Baz Project")
 
     def testCommandParsing(self):
         handle = self.handle
@@ -74,9 +76,10 @@ class DeleteProjectTest(ProjectTest):
         handle.ui.write._mock.assertCalled("This will delete the following"
             " branch and its stage(s):")
         handle.ui.write._mock.assertCalled("    bar.example.com@sas:bar-1")
-        handle.ui.getResponse._mock.assertCalled("This may lead to issues with"
-            " other projects that refer to this branch.\nConfirm by typing"
-            " DELETE")
+        handle.ui.write._mock.assertCalled("This may lead to issues with"
+            " other projects that refer to this branch.\n")
+        handle.ui.getResponse._mock.assertCalled('This will permenantly destroy'
+              ' any content in this repository Confirm by typing DELETE')
         handle.ui.write._mock.assertCalled(
             "Not deleting project 'Bar Project'")
         self.project1.delete._mock.assertNotCalled()
@@ -103,12 +106,21 @@ class DeleteProjectTest(ProjectTest):
             " branches and their stage(s):")
         handle.ui.write._mock.assertCalled("    foo.example.com@sas:foo-1")
         handle.ui.write._mock.assertCalled("    foo.example.com@sas:foo-2")
-        handle.ui.getResponse._mock.assertCalled("This may lead to issues with"
-            " other projects that refer to these branches.\nConfirm by typing"
-            " DELETE")
+        handle.ui.write._mock.assertCalled("This may lead to issues with"
+            " other projects that refer to these branches.\n")
+        handle.ui.getResponse._mock.assertCalled('This will permenantly destroy'
+              ' any content in this repository Confirm by typing DELETE')
         handle.ui.write._mock.assertCalled("Deleting project 'Foo Project'")
         self.project2.delete._mock.assertCalled()
 
+        # project with no branches
+        handle.facade.rbuilder.getProject._mock.setDefaultReturn(self.project3)
+        cmd.runCommand(handle, {}, ['rbuild', 'delete', 'projects', 'baz'])
+        handle.facade.rbuilder.getProject._mock.assertCalled('baz')
+        handle.ui.getResponse._mock.assertCalled('This will permenantly destroy'
+              ' any content in this repository Confirm by typing DELETE')
+        handle.ui.write._mock.assertCalled("Deleting project 'Baz Project'")
+        self.project3.delete._mock.assertCalled()
 
 class ListProjectsTest(ProjectTest):
     def testCommandParsing(self):

@@ -27,11 +27,11 @@ class DeleteProjectsCommand(command.BaseCommand):
     paramHelp = '<short name|label>+'
 
     prePrompt = 'This will delete the following branch%s and %s stage(s):'
-    prompt = 'This may lead to issues with other projects that refer to %s' + \
-        ' branch%s.\nConfirm by typing DELETE'
+    prompt = ('This will permenantly destroy any content in this repository'
+              ' Confirm by typing DELETE')
 
     def runCommand(self, handle, argSet, args):
-        _, projects = self.requireParameters( args, expected=['PROJECT'],
+        _, projects = self.requireParameters(args, expected=['PROJECT'],
             appendExtra=True)
 
         for project in projects:
@@ -39,16 +39,22 @@ class DeleteProjectsCommand(command.BaseCommand):
                 # project is a label, get the shortname
                 project = project.split('.')[0]
             project = handle.facade.rbuilder.getProject(project)
-            branch_count = len(project.project_branches)
+            if project.project_branches:
+                branch_count = len(project.project_branches)
+            else:
+                branch_count = 0
 
-            handle.ui.write(self.prePrompt %
-                (('es', 'their') if branch_count > 1 else ('', "its")))
-            for branch in project.project_branches:
-                handle.ui.write('    %s' % branch.label)
-            handle.ui.write()
-            response = handle.ui.getResponse(self.prompt %
-                (('these', 'es') if branch_count > 1 else ('this', '')))
+            if branch_count > 0:
+                handle.ui.write(self.prePrompt %
+                    (('es', 'their') if branch_count > 1 else ('', "its")))
+                for branch in project.project_branches:
+                    handle.ui.write('    %s' % branch.label)
+                handle.ui.write()
+                handle.ui.write('This may lead to issues with other projects '
+                    'that refer to %s branch%s.\n' % (
+                    ('these', 'es') if branch_count > 1 else ('this', '')))
 
+            response = handle.ui.getResponse(self.prompt)
             if response.upper() == 'DELETE':
                 handle.ui.write("Deleting project '%s'" % project.name)
                 project.delete()
