@@ -62,6 +62,11 @@ IMAGEDEF_SPECS = {
 }
 
 
+class ListImageTypesCommand(command.BaseCommand):
+    help = "list image types"
+    resource = "image_types"
+    listFields = ("name", "description")
+
 class CreateImageDefCommand(command.BaseCommand):
     help = 'Create a image defintion on a SAS App Engine'
     commands = ['imagedef']
@@ -248,6 +253,8 @@ class ImageDefs(pluginapi.Plugin):
             'imagedef', CreateImageDefCommand)
         self.handle.Commands.getCommandClass('list').registerSubCommand(
             'imagedefs', ListImageDefsCommand)
+        self.handle.Commands.getCommandClass('list').registerSubCommand(
+            'imagetypes', ListImageTypesCommand)
 
     @requiresProduct
     def list(self):

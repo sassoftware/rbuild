@@ -79,7 +79,7 @@ class DeleteProjectTest(ProjectTest):
         handle.ui.write._mock.assertCalled("This may lead to issues with"
             " other projects that refer to this branch.\n")
         handle.ui.getResponse._mock.assertCalled('This will permenantly destroy'
-              ' any content in this repository Confirm by typing DELETE')
+              ' any content in this repository. Confirm by typing DELETE')
         handle.ui.write._mock.assertCalled(
             "Not deleting project 'Bar Project'")
         self.project1.delete._mock.assertNotCalled()
@@ -109,7 +109,7 @@ class DeleteProjectTest(ProjectTest):
         handle.ui.write._mock.assertCalled("This may lead to issues with"
             " other projects that refer to these branches.\n")
         handle.ui.getResponse._mock.assertCalled('This will permenantly destroy'
-              ' any content in this repository Confirm by typing DELETE')
+              ' any content in this repository. Confirm by typing DELETE')
         handle.ui.write._mock.assertCalled("Deleting project 'Foo Project'")
         self.project2.delete._mock.assertCalled()
 
@@ -118,7 +118,7 @@ class DeleteProjectTest(ProjectTest):
         cmd.runCommand(handle, {}, ['rbuild', 'delete', 'projects', 'baz'])
         handle.facade.rbuilder.getProject._mock.assertCalled('baz')
         handle.ui.getResponse._mock.assertCalled('This will permenantly destroy'
-              ' any content in this repository Confirm by typing DELETE')
+              ' any content in this repository. Confirm by typing DELETE')
         handle.ui.write._mock.assertCalled("Deleting project 'Baz Project'")
         self.project3.delete._mock.assertCalled()
 
