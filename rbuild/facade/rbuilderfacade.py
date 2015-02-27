@@ -552,6 +552,9 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
             raise errors.RbuildError(
                 "Project '%s' and version '%s' not found" % (product, version))
 
+    def getImageTypes(self, *args, **kwargs):
+        return self._getResources("image_types", **kwargs)
+
     def getImageTypeDef(self, product, version, imageType, arch):
         client = self.api._client
         uri = ('/products/%s/versions/%s/imageTypeDefinitions' %
@@ -1079,6 +1082,10 @@ class RbuilderFacade(object):
     def getTargetDescriptor(self, targetType):
         client = self._getRbuilderRESTClient()
         return client.getTargetDescriptor(targetType)
+
+    def getImageTypes(self, *args, **kwargs):
+        client = self._getRbuilderRESTClient()
+        return client.getImageTypes(*args, **kwargs)
 
     def getTarget(self, name):
         '''

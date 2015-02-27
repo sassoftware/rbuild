@@ -1,6 +1,5 @@
 #
 # Copyright (c) SAS Institute Inc.
-#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -46,12 +45,16 @@ class CreateImageDefTest(AbstractImageDefsTest):
                 }, ['create', 'imagedef', 'type', 'arch']])
 
     def testCmdLine(self):
-        from rbuild_plugins.imagedefs import IMAGEDEF_SPECS
         handle = self.handle
 
         mock.mockMethod(handle.DescriptorConfig.readConfig)
         mock.mockMethod(handle.DescriptorConfig.writeConfig)
         mock.mockMethod(handle.ImageDefs.create)
+        mock.mockMethod(handle.facade.rbuilder.getImageTypes)
+
+        handle.facade.rbuilder.getImageTypes._mock.setReturn(None, name="foo")
+        handle.facade.rbuilder.getImageTypes._mock.appendReturn(
+            "amiImage", name="amiImage")
 
         cmd = handle.Commands.getCommandClass('create')()
 
@@ -71,18 +74,17 @@ class CreateImageDefTest(AbstractImageDefsTest):
         args = ['rbuild', 'create', 'imagedef', 'foo', 'bar']
         err = self.assertRaises(
             errors.PluginError, cmd.runCommand, handle, argSet, args)
-        self.assertEqual(
-            str(err), "No such image type 'foo'. Valid image types are: " +
-            ', '.join(sorted(IMAGEDEF_SPECS)))
+        self.assertEqual(str(err), "No such image type 'foo'."
+            " Run `rbuild list imagetypes` to see valid image types")
 
-        args = ['rbuild', 'create', 'imagedef', 'ec2', 'bar']
+        args = ['rbuild', 'create', 'imagedef', 'amiImage', 'bar']
         err = self.assertRaises(
             errors.PluginError, cmd.runCommand, handle, argSet, args)
         self.assertEqual(
             str(err), "No such architecture 'bar'. Valid architectures are:"
             " x86 and x86_64")
 
-        args = ['rbuild', 'create', 'imagedef', 'ec2', 'x86']
+        args = ['rbuild', 'create', 'imagedef', 'amiImage', 'x86']
         cmd.runCommand(handle, argSet, args)
         handle.DescriptorConfig.readConfig._mock.assertNotCalled()
         handle.ImageDefs.create._mock.assertCalled(

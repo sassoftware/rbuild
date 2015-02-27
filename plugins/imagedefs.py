@@ -30,37 +30,6 @@ from rbuild.pluginapi import command
 
 DESCRIPTOR_PREFIX = 'options.'
 
-DEFERRED = 'deferredImage'
-ISO = 'applianceIsoImage'
-AMI = 'amiImage'
-XEN_OVA = 'xenOvaImage'
-RAW_FS_IMAGE = 'rawFsImage'
-RAW_HD_IMAGE = 'rawHdImage'
-IMAGELESS = 'imageless'
-TARBALL = 'tarballImage'
-VMWARE_ESX = 'vmwareEsxImage'
-VMWARE = 'vmwareImage'
-
-IMAGEDEF_SPECS = {
-    'iso': ISO,
-    'ec2': AMI,
-    'xen': XEN_OVA,
-    'eucalyptus': RAW_FS_IMAGE,
-    'kvm': RAW_HD_IMAGE,
-    'parallels': RAW_HD_IMAGE,
-    'qemu': RAW_HD_IMAGE,
-    'raw_hd': RAW_HD_IMAGE,
-    'layered': DEFERRED,
-    'online_update': IMAGELESS,
-    'tar': TARBALL,
-    'cd': ISO,
-    'dvd': ISO,
-    'esx': VMWARE_ESX,
-    'vcd': VMWARE_ESX,
-    'vmware': VMWARE,
-    'fusion': VMWARE,
-}
-
 
 class ListImageTypesCommand(command.BaseCommand):
     help = "list image types"
@@ -84,28 +53,23 @@ class CreateImageDefCommand(command.BaseCommand):
 
     def runCommand(self, handle, argSet, args):
         ui = handle.ui
+        rb = handle.facade.rbuilder
 
         message = argSet.pop('message', None)
         listTypes = argSet.pop('list', False)
         fromFile = argSet.pop('from-file', None)
         toFile = argSet.pop('to-file', None)
 
-        if listTypes:
-            ui.write('Available image definition types: %s' %
-                     ', '.join(IMAGEDEF_SPECS))
-            return
-
         if fromFile:
             handle.DescriptorConfig.readConfig(fromFile)
 
-        _, selectedType, arch = self.requireParameters(
+        _, type, arch = self.requireParameters(
             args, expected=['TYPE', 'ARCH'])
-        imageType = IMAGEDEF_SPECS.get(selectedType)
 
+        imageType = rb.getImageTypes(name=type)
         if not imageType:
-            raise errors.PluginError(
-                "No such image type '%s'. Valid image types are: %s" %
-                (selectedType, ', '.join(sorted(IMAGEDEF_SPECS))))
+            raise errors.PluginError("No such image type '%s'."
+                " Run `rbuild list imagetypes` to see valid image types" % type)
 
         if arch not in ['x86', 'x86_64']:
             raise errors.PluginError(

@@ -1219,6 +1219,16 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
             errors.RbuildError, client.createTarget, ddata, 'vmware')
         self.assertTrue(len(_targets) == 1)
 
+    def testGetImageTypes(self):
+        client = rbuilderfacade.RbuilderRESTClient(
+            'http://localhost', 'foo', 'bar', mock.MockObject())
+        mock.mock(client, '_getResources')
+        client._getResources._mock.setReturn(['foo', 'bar'], 'image_types')
+        client._getResources._mock.setReturn(['foo'], 'image_types', name='foo')
+        client._getResources._mock.setReturn(['foo'], 'image_types', name='foo')
+        self.assertEqual(client.getImageTypes(), ['foo', 'bar'])
+        self.assertEqual(client.getImageTypes(name='foo'), ['foo'])
+
     def testGetProject(self):
         client = rbuilderfacade.RbuilderRESTClient('http://localhost', 'foo',
                 'bar', mock.MockObject())
