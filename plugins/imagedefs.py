@@ -35,14 +35,12 @@ class CreateImageDefCommand(command.BaseCommand):
     help = 'Create a image defintion on a SAS App Engine'
     commands = ['imagedef']
     paramHelp = '<TYPE> <ARCH>'
-    docs = {'list': 'List available image types',
-            'from-file': 'Load config from file',
+    docs = {'from-file': 'Load config from file',
             'to-file': 'Write config to file',
             }
 
     def addLocalParameters(self, argDef):
         argDef['message'] = '-m', command.ONE_PARAM
-        argDef['list'] = '-l', command.NO_PARAM
         argDef['from-file'] = '-f', command.ONE_PARAM
         argDef['to-file'] = '-o', command.ONE_PARAM
 
@@ -51,7 +49,6 @@ class CreateImageDefCommand(command.BaseCommand):
         rb = handle.facade.rbuilder
 
         message = argSet.pop('message', None)
-        listTypes = argSet.pop('list', False)
         fromFile = argSet.pop('from-file', None)
         toFile = argSet.pop('to-file', None)
 
