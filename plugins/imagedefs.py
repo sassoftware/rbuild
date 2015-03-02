@@ -61,10 +61,11 @@ class CreateImageDefCommand(command.BaseCommand):
         _, type, arch = self.requireParameters(
             args, expected=['TYPE', 'ARCH'])
 
-        imageType = rb.getImageTypes(name=type)
+        imageType = [i for i in rb.getImageTypes() if i.name == type]
         if not imageType:
             raise errors.PluginError("No such image type '%s'."
                 " Run `rbuild list imagetypes` to see valid image types" % type)
+        imageType = imageType[0]
 
         if arch not in ['x86', 'x86_64']:
             raise errors.PluginError(
@@ -155,7 +156,7 @@ class ImageDefs(pluginapi.Plugin):
             Create an image definition
 
             @param imageType: type of image defintion to create
-            @type imageType: str
+            @type imageType: rObj(image_type)
             @return: image defintion
             @rtype: rObj(...)
         '''
@@ -164,15 +165,15 @@ class ImageDefs(pluginapi.Plugin):
         pd = self.handle.product
         ps = self.handle.productStore
 
-        imageTypeDef = rb.getImageTypeDef(imageType, arch)
+        descriptor = xobj.toxml(imageType.descriptor._root)
+        ddata = dc.createDescriptorData(fromStream=descriptor)
+
+        imageTypeDef = rb.getImageTypeDef(imageType.name, arch)
         containerRef = imageTypeDef.container.name
         flavorSetRef = imageTypeDef.flavorSet.name
         architectureRef = imageTypeDef.architecture.name
 
         self._checkBuildDef(containerRef, architectureRef, flavorSetRef)
-
-        descriptor = xobj.toxml(imageTypeDef.descriptor._root)
-        ddata = dc.createDescriptorData(fromStream=descriptor)
 
         imageFields = {}
         for field in imageTypeDef.options._xobj.attributes:

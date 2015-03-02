@@ -41,8 +41,10 @@ class ImageTypesTest(AbstractImageTypesTest):
     def testList(self):
         handle = self.handle
 
+        _imageType1 = mock.MockObject(name="imagetype1")
+        _imageType2 = mock.MockObject(name="")
         mock.mockMethod(handle.facade.rbuilder.getImageTypes,
-            ["image1", "image2"])
+            [_imageType1, _imageType2])
 
-        self.assertEqual(["image1", "image2"], handle.ImageTypes.list())
+        self.assertEqual([_imageType1], handle.ImageTypes.list())
 

@@ -52,9 +52,10 @@ class CreateImageDefTest(AbstractImageDefsTest):
         mock.mockMethod(handle.ImageDefs.create)
         mock.mockMethod(handle.facade.rbuilder.getImageTypes)
 
-        handle.facade.rbuilder.getImageTypes._mock.setReturn(None, name="foo")
-        handle.facade.rbuilder.getImageTypes._mock.appendReturn(
-            "amiImage", name="amiImage")
+        _amiImage = mock.MockObject(name="amiImage")
+        _vmwareImage = mock.MockObject(name="vmwareImage")
+        handle.facade.rbuilder.getImageTypes._mock.setReturn(
+            [_amiImage, _vmwareImage])
 
         cmd = handle.Commands.getCommandClass('create')()
 
@@ -88,21 +89,21 @@ class CreateImageDefTest(AbstractImageDefsTest):
         cmd.runCommand(handle, argSet, args)
         handle.DescriptorConfig.readConfig._mock.assertNotCalled()
         handle.ImageDefs.create._mock.assertCalled(
-            'amiImage', 'x86', None)
+            _amiImage, 'x86', None)
         handle.DescriptorConfig.writeConfig._mock.assertNotCalled()
 
         argSet = {'from-file': 'inFile'}
         cmd.runCommand(handle, argSet, args)
         handle.DescriptorConfig.readConfig._mock.assertCalled('inFile')
         handle.ImageDefs.create._mock.assertCalled(
-            'amiImage', 'x86', None)
+            _amiImage, 'x86', None)
         handle.DescriptorConfig.writeConfig._mock.assertNotCalled()
 
         argSet = {'from-file': 'inFile', 'to-file': 'outFile'}
         cmd.runCommand(handle, argSet, args)
         handle.DescriptorConfig.readConfig._mock.assertCalled('inFile')
         handle.ImageDefs.create._mock.assertCalled(
-            'amiImage', 'x86', None)
+            _amiImage, 'x86', None)
         handle.DescriptorConfig.writeConfig._mock.assertCalled('outFile')
 
         argSet = {'from-file': 'inFile', 'to-file': 'outFile',
@@ -110,7 +111,7 @@ class CreateImageDefTest(AbstractImageDefsTest):
         cmd.runCommand(handle, argSet, args)
         handle.DescriptorConfig.readConfig._mock.assertCalled('inFile')
         handle.ImageDefs.create._mock.assertCalled(
-            'amiImage', 'x86', 'a message')
+            _amiImage, 'x86', 'a message')
         handle.DescriptorConfig.writeConfig._mock.assertCalled('outFile')
 
 
