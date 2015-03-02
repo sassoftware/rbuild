@@ -39,4 +39,5 @@ class ImageTypes(pluginapi.Plugin):
             cmd.registerSubCommand(subcommand, commandClass)
 
     def list(self):
-        return [type for type in self.handle.facade.rbuilder.getImageTypes() if type.name]
+        rb = self.handle.facade.rbuilder
+        return [type for type in rb.getImageTypes() if type.name]
