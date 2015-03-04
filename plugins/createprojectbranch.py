@@ -90,7 +90,7 @@ class CreateProjectCommand(command.BaseCommand):
             if 'upstream-url' not in argSet:
                 argSet['upstream-url'] = ui.getResponse(
                     "URL of upstream repository (optional)",
-                    validationFn=rb.isValidDomainName)
+                    validationFn=rb.isValidUrl)
 
             if 'auth-type' not in argSet:
                 response = ui.getChoice(

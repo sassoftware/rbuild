@@ -527,6 +527,18 @@ class RbuilderFacadeTest(rbuildhelp.RbuildHelper):
         self.assertFalse(facade.isValidShortName('a%%b'))
         self.assertFalse(facade.isValidShortName('a!b'))
 
+    def testIsValidUrl(self):
+        mock.mock(urllib2, 'urlopen')
+        connection = mock.MockObject()
+        urllib2.urlopen._mock.setReturn(connection, 'http://foo')
+        connection.read._mock.setReturn('data', 1024)
+        handle, facade = self.prep()
+        assert(facade.isValidUrl('http://foo') is True)
+        connection.read._mock.assertCalled(1024)
+        err = RuntimeError('foo')
+        connection.read._mock.raiseErrorOnAccess(err)
+        assert(facade.isValidUrl('http://foo') is False)
+
     def testIsAdmin(self):
         handle, facade = self.prep()
 

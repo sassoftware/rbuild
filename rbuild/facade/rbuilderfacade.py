@@ -1033,6 +1033,16 @@ class RbuilderFacade(object):
     def isValidBranchName(value):
         return value and re.match(r'^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*$', value)
 
+    @staticmethod
+    def isValidUrl(value):
+        try:
+            urllib2.urlopen(value).read(1024)
+            #pylint: disable-msg=W0703
+            # * catch Exception is safe: it displays error to user
+        except Exception:
+            return False
+        return True
+
     def isAdmin(self, userName=None):
         '''
         Check if the user is an rbuilder administrator. If `user` is None,

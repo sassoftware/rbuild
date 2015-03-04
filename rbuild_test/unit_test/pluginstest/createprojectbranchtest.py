@@ -194,7 +194,7 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
                 validationFn=handle.facade.conary.isValidLabel)
         handle.ui.getResponse._mock.appendReturn(
                 'otherdomain.name', "URL of upstream repository (optional)",
-                validationFn=handle.facade.rbuilder.isValidDomainName)
+                validationFn=handle.facade.rbuilder.isValidUrl)
         handle.ui.getResponse._mock.appendReturn(
                 'user', "External username", required=True)
         handle.ui.getPassword._mock.appendReturn(
