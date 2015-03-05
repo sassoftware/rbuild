@@ -1039,6 +1039,9 @@ class RbuilderFacade(object):
             urllib2.urlopen(value).read(1024)
             #pylint: disable-msg=W0703
             # * catch Exception is safe: it displays error to user
+        except urllib2.HTTPError as e:
+            if e.code != 401:
+                return False
         except Exception:
             return False
         return True

@@ -534,8 +534,20 @@ class RbuilderFacadeTest(rbuildhelp.RbuildHelper):
         connection.read._mock.setReturn('data', 1024)
         handle, facade = self.prep()
         assert(facade.isValidUrl('http://foo') is True)
+
+        # False on generic exception
         connection.read._mock.assertCalled(1024)
         err = RuntimeError('foo')
+        connection.read._mock.raiseErrorOnAccess(err)
+        assert(facade.isValidUrl('http://foo') is False)
+
+        # True on unauthorized
+        err = urllib2.HTTPError("http://foo", 401, "Unauthorized", "", StringIO())
+        connection.read._mock.raiseErrorOnAccess(err)
+        assert(facade.isValidUrl('http://foo') is True)
+
+        # False on non 401
+        err = urllib2.HTTPError("http://foo", 404, "Not Found", "", StringIO())
         connection.read._mock.raiseErrorOnAccess(err)
         assert(facade.isValidUrl('http://foo') is False)
 
