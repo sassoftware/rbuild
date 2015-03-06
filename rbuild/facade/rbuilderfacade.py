@@ -1001,7 +1001,7 @@ class RbuilderFacade(object):
             raise errors.BadParameterError("Invalid project hostname")
         if not self.isValidDomainName(domainName):
             raise errors.BadParameterError("Invalid project domain name")
-        if external and not self._handle.facade.conary.isValidLabel(
+        if external and not self._handle.facade.conary.isValidUrl(
                 external_params[0][0]):
             raise errors.BadParameterError("Invalid upstream label")
         if external and not self.isValidDomainName(external_params[1]):
