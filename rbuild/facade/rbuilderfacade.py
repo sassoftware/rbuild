@@ -537,8 +537,14 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
         uri = ('/products/%s/versions/%s/imageDefinitions' %
                (product, version))
         try:
-            imageDefs = []
-            for imageDef in client.do_GET(uri):
+            availableImageDefs = client.do_GET(uri)
+        except robj.errors.HTTPNotFoundError:
+            raise errors.RbuildError(
+                "Project '%s' and version '%s' not found" % (product, version))
+
+        imageDefs = []
+        if availableImageDefs:
+            for imageDef in availableImageDefs:
                 add = True
                 for key, value in kwargs.items():
                     if key == 'id':
@@ -547,10 +553,7 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
                         add = (getattr(imageDef, key) == value)
                 if add:
                     imageDefs.append(imageDef)
-            return imageDefs
-        except robj.errors.HTTPNotFoundError:
-            raise errors.RbuildError(
-                "Project '%s' and version '%s' not found" % (product, version))
+        return imageDefs
 
     def getImageTypes(self, *args, **kwargs):
         return self._getResources("image_types", **kwargs)
