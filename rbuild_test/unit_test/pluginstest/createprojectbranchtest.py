@@ -84,7 +84,7 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
             'domain-name': '',
             'external': True,
             'label': 'repo@n:branch',
-            'upstream-url': 'otherdomain.name',
+            'upstream-url': 'http://foo.com',
             'auth-type': 'none',
             }, ['rbuild', 'create', 'project'])
         handle.facade.rbuilder.createProject._mock.assertCalled(
@@ -94,7 +94,7 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
                 description='',
                 external=True,
                 external_params=(
-                    ['repo@n:branch'], 'otherdomain.name', 'none', None,
+                    ['repo@n:branch'], 'http://foo.com', 'none', None,
                     None, None),
                 )
 
@@ -105,7 +105,7 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
             'domain-name': '',
             'external': True,
             'label': 'repo@n:branch',
-            'upstream-url': 'otherdomain.name',
+            'upstream-url': 'http://foo.com',
             'auth-type': 'userpass',
             'username': 'user',
             'password': 'secret',
@@ -117,7 +117,7 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
                 description='',
                 external=True,
                 external_params=(
-                    ['repo@n:branch'], 'otherdomain.name', 'userpass', 'user',
+                    ['repo@n:branch'], 'http://foo.com', 'userpass', 'user',
                     'secret', None),
                 )
 
@@ -128,7 +128,7 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
             'domain-name': '',
             'external': True,
             'label': 'repo@n:branch',
-            'upstream-url': 'otherdomain.name',
+            'upstream-url': 'http://foo.com',
             'auth-type': 'entitlement',
             'entitlement': 'entitle',
             }, ['rbuild', 'create', 'project'])
@@ -139,7 +139,7 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
                 description='',
                 external=True,
                 external_params=(
-                    ['repo@n:branch'], 'otherdomain.name', 'entitlement', None,
+                    ['repo@n:branch'], 'http://foo.com', 'entitlement', None,
                     None, 'entitle'),
                 )
 
@@ -176,8 +176,10 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
         handle.CreateProjectBranch.registerCommands()
         handle.CreateProjectBranch.initialize()
         mock.mockMethod(handle.facade.rbuilder.createProject)
+        mock.mock(handle.facade.rbuilder, 'isValidUrl')
         mock.mock(handle, 'ui')
 
+        handle.facade.rbuilder.isValidUrl._mock.setReturn(True, "http://foo.com")
         handle.ui.getResponse._mock.appendReturn(
                 'project name', "Project name (required)", required=True)
         handle.ui.getResponse._mock.appendReturn(
@@ -193,8 +195,7 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
                 'repo@n:branch', 'Upstream label (required)', required=True,
                 validationFn=handle.facade.conary.isValidLabel)
         handle.ui.getResponse._mock.appendReturn(
-                'otherdomain.name', "URL of upstream repository (optional)",
-                validationFn=handle.facade.rbuilder.isValidUrl)
+                'http://foo.com', "URL of upstream repository (optional)")
         handle.ui.getResponse._mock.appendReturn(
                 'user', "External username", required=True)
         handle.ui.getPassword._mock.appendReturn(
@@ -218,7 +219,7 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
                 description='desc',
                 external=True,
                 external_params=(
-                    ['repo@n:branch'], 'otherdomain.name', 'none', None, None,
+                    ['repo@n:branch'], 'http://foo.com', 'none', None, None,
                     None),
                 )
 
@@ -236,7 +237,7 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
                 description='desc',
                 external=True,
                 external_params=(
-                    ['repo@n:branch'], 'otherdomain.name', 'userpass', 'user',
+                    ['repo@n:branch'], 'http://foo.com', 'userpass', 'user',
                     'secret', None),
                 )
 
@@ -254,7 +255,7 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
                 description='desc',
                 external=True,
                 external_params=(
-                    ['repo@n:branch'], 'otherdomain.name', 'entitlement', None,
+                    ['repo@n:branch'], 'http://foo.com', 'entitlement', None,
                     None, 'entitle'),
                 )
 

@@ -88,9 +88,13 @@ class CreateProjectCommand(command.BaseCommand):
                         required=True, validationFn=cf.isValidLabel)
 
             if 'upstream-url' not in argSet:
-                argSet['upstream-url'] = ui.getResponse(
-                    "URL of upstream repository (optional)",
-                    validationFn=rb.isValidUrl)
+                while True:
+                    url = ui.getResponse(
+                        "URL of upstream repository (optional)")
+                    if url is None or rb.isValidUrl(url):
+                        break
+                argSet['upstream-url'] = url
+
 
             if 'auth-type' not in argSet:
                 response = ui.getChoice(
