@@ -95,7 +95,7 @@ class CreateProjectCommand(command.BaseCommand):
             if 'auth-type' not in argSet:
                 response = ui.getChoice(
                     "External authentication type",
-                    ["none", "Username and Password", "Entitlement key"],
+                    ["None", "Username and Password", "Entitlement key"],
                     default=0)
                 argSet['auth-type'] = AUTH_TYPES[response]
             else:

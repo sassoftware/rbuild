@@ -207,7 +207,7 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
         # auth-type none
         handle.ui.getChoice._mock.setReturn(
                 0, "External authentication type",
-                ['none', 'Username and Password', 'Entitlement key'], default=0)
+                ['None', 'Username and Password', 'Entitlement key'], default=0)
 
         cmd.runCommand(handle, {'external': True},
                 ['rbuild', 'create', 'project'])
@@ -225,7 +225,7 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
         # auth-type userpass
         handle.ui.getChoice._mock.setReturn(
                 1, "External authentication type",
-                ['none', 'Username and Password', 'Entitlement key'], default=0)
+                ['None', 'Username and Password', 'Entitlement key'], default=0)
 
         cmd.runCommand(handle, {'external': True},
                 ['rbuild', 'create', 'project'])
@@ -243,7 +243,7 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
         # auth-type entitlement
         handle.ui.getChoice._mock.setReturn(
                 2, "External authentication type",
-                ['none', 'Username and Password', 'Entitlement key'], default=0)
+                ['None', 'Username and Password', 'Entitlement key'], default=0)
 
         cmd.runCommand(handle, {'external': True},
                 ['rbuild', 'create', 'project'])
