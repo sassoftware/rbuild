@@ -297,6 +297,11 @@ class RbuilderFacadeTest(rbuildhelp.RbuildHelper):
     def testCreateProject(self):
         handle, facade = self.prep()
         mock.mockMethod(facade._getRbuilderRESTClient)
+        handle.facade.conary.isValidLabel._mock.appendReturn(True, "label")
+        handle.facade.conary.isValidLabel._mock.appendReturn(False, "invalid.label")
+        mock.mock(facade, 'isValidUrl')
+        facade.isValidUrl._mock.appendReturn(True)
+        facade.isValidUrl._mock.appendReturn(False, "illegal.url")
         facade.createProject('title', 'shortname', 'hostname', 'domain.name')
         self.assertRaises(errors.BadParameterError, facade.createProject,
                 'title', 'illegal.short')
@@ -304,6 +309,12 @@ class RbuilderFacadeTest(rbuildhelp.RbuildHelper):
                 'title', 'short', 'illegal.host')
         self.assertRaises(errors.BadParameterError, facade.createProject,
                 'title', 'short', None, 'bad.0.domain')
+        self.assertRaises(errors.BadParameterError, facade.createProject,
+                'title', 'short', 'hostname', 'hostname.domain', external=True,
+                external_params=(['invalid.label'], None))
+        self.assertRaises(errors.BadParameterError, facade.createProject,
+                'title', 'short', 'hostname', 'hostname.domain', external=True,
+                external_params=(['label'], "illegal.url"))
 
     def testCreateBranch(self):
         handle, facade = self.prep()
