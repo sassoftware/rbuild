@@ -69,6 +69,7 @@ class ListProjectsCommand(command.ListCommand):
     showFieldMap = dict(
         members=dict(hidden=True),
         images=dict(hidden=True),
+        password=dict(hidden=True),
         created_by=dict(
             accessor=lambda p: p.created_by.full_name if p.created_by else '',
             ),
