@@ -71,6 +71,32 @@ class UpdateTest(rbuildhelp.RbuildHelper):
         cmd.runCommand(handle, {}, ['rbuild', 'update', 'unknown'])
         update.UpdateCommand.usage._mock.assertCalled()
 
+    def testUpdateCommandNoProductStore(self):
+        mainHandler = main.RbuildMain()
+        handle = self._getHandle()
+        cmd = handle.Commands.getCommandClass('update')()
+        cmd.setMainHandler(mainHandler)
+
+        handle.productStore = None
+
+        for subcommand in (None, 'product', 'packages', 'all', 'stage',
+                           'stage foo'):
+            args = ['rbuild', 'update']
+            if subcommand:
+                args = args + subcommand.split()
+            self.assertRaises(errors.MissingProductStoreError,
+                cmd.runCommand, handle, {}, args)
+
+    def testUpdateCommandNoActiveStage(self):
+        mainHandler = main.RbuildMain()
+        handle = self._getHandle()
+        handle.productStore._mock.set(_currentStage=None)
+
+        cmd = handle.Commands.getCommandClass('update')()
+        cmd.setMainHandler(mainHandler)
+
+        self.assertRaises(errors.MissingActiveStageError,
+            cmd.runCommand, handle, {}, ['rbuild', 'update', 'stage'])
 
     def testUpdateByCurrentDirectory(self):
         realExists = os.path.exists
@@ -116,6 +142,10 @@ class UpdateTest(rbuildhelp.RbuildHelper):
         handle.Update.updateCurrentStage._mock.assertCalled()
         handle.productStore.update._mock.assertNotCalled()
 
+        handle.productStore = None
+        self.assertRaises(errors.MissingProductStoreError,
+            handle.Update.updateByCurrentDirectory)
+
     def testUpdateAllStages(self):
         handle = self._getHandle()
         handle.productStore.iterStageNames._mock.setDefaultReturn(['foo', 'bar'])
@@ -136,6 +166,11 @@ class UpdateTest(rbuildhelp.RbuildHelper):
         self.assertRaises(errors.MissingActiveStageError,
                           handle.Update.updateCurrentStage)
 
+        # no product store
+        handle.productStore = None
+        self.assertRaises(errors.MissingProductStoreError,
+            handle.Update.updateCurrentStage)
+
     def testUpdateStages(self):
         handle = self._getHandle()
         maps = ({'bar': './bar/bar.recipe', 'baz': './baz/baz.recipe'}, {'group-foo': './group-foo/group-foo.recipe'})
@@ -147,10 +182,13 @@ class UpdateTest(rbuildhelp.RbuildHelper):
         handle.facade.conary.updateCheckout._mock.assertCalled('./bar')
         handle.facade.conary.updateCheckout._mock.assertCalled('./group-foo')
 
+        # no product store
+        handle.productStore = None
+        self.assertRaises(errors.MissingProductStoreError,
+            handle.Update.updateStages)
+
     def testUpdateCurrentDirectory(self):
         handle = self._getHandle()
         mock.mockMethod(handle.facade.conary.updateCheckout)
         handle.Update.updateCurrentDirectory()
         handle.facade.conary.updateCheckout._mock.assertCalled(os.getcwd())
-
-

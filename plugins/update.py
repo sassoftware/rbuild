@@ -23,6 +23,8 @@ import os
 from rbuild import errors
 from rbuild import pluginapi
 from rbuild.productstore.decorators import requiresStage
+from rbuild.productstore.decorators import requiresProduct
+
 
 class UpdateCommand(pluginapi.command.CommandWithSubCommands):
     """
@@ -51,6 +53,7 @@ class UpdateProductCommand(pluginapi.command.BaseCommand):
     Updates product directory relative to working directory
     """
     help = 'Update product directory relative to working directory'
+    @requiresProduct
     def runCommand(self, handle, _, args):
         #pylint: disable-msg=C0999,W0613
         #can't have two args both called _ to make them be ignored
@@ -109,6 +112,8 @@ class UpdateAllCommand(pluginapi.command.BaseCommand):
     Updates all contents of checkout, regardless of current directory
     """
     help = 'Updates all checkout contents, from any directory'
+
+    @requiresProduct
     def runCommand(self, handle, _, args):
         #pylint: disable-msg=C0999,W0613
         #can't have two args both called _ to make them be ignored
@@ -141,6 +146,7 @@ class Update(pluginapi.Plugin):
         cmd.registerSubCommand('stage', UpdateStageCommand)
         cmd.registerSubCommand('all', UpdateAllCommand)
 
+    @requiresProduct
     def updateByCurrentDirectory(self):
         """
         Update whatever source checkout directory is appropriate for
@@ -153,12 +159,12 @@ class Update(pluginapi.Plugin):
         else:
             self.updateCurrentStage()
 
+    @requiresProduct
     def updateAllStages(self):
         """
         Update all source packages in all stages in the current product.
         """
-        self.handle.Update.updateStages(
-            self.handle.productStore.iterStageNames())
+        self.updateStages(self.handle.productStore.iterStageNames())
 
     @requiresStage
     def updateCurrentStage(self):
@@ -168,6 +174,7 @@ class Update(pluginapi.Plugin):
         stageName = self.handle.productStore.getActiveStageName()
         self.updateStages([stageName])
 
+    @requiresProduct
     def updateStages(self, stageNames):
         """
         Update all source packages in all listed stages in the current product.
