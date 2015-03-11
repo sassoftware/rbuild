@@ -470,6 +470,9 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
         uri = ('/products/%s/repos/search?type=group&amp;label=%s' %
                (shortName, label))
         try:
+            groups = client.do_GET(uri)
+            if groups:
+                return groups
             return client.do_GET(uri)
         except robj.errors.HTTPNotFoundError:
             raise errors.RbuildError(
@@ -806,10 +809,15 @@ class RbuilderFacade(object):
         productName = str(self._handle.product.getProductShortname())
         versionName = str(self._handle.product.getProductVersion())
         if groupVersion is not None:
-            groupVersion = "%s/%s" % (
-                str(self._handle.product.getLabelForStage(stageName)),
-                groupVersion,
-                )
+            label = self._handle.product.getLabelForStage(stageName)
+            groups = self.getGroups(productName, label)
+            for group in groups:
+                if group.trailingVersion == groupVersion:
+                    break
+            else:
+                raise errors.BadParameterError("No group matching version: %s" %
+                                               groupVersion)
+            groupVersion = "%s/%s" % (label, groupVersion)
         buildIds = client.startProductBuilds(productName, versionName,
                 stageName, buildNames=buildNames, groupSpecs=groupSpecs,
                 groupVersion=groupVersion)
