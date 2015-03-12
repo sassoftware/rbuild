@@ -32,6 +32,7 @@ from rmake.cmdline import helper
 from rmake.cmdline import query
 from rmake import plugins
 from rbuild import errors
+from conary import trovetup
 
 class RmakeFacade(object):
     """
@@ -332,6 +333,10 @@ class RmakeFacade(object):
 
             troveCfg.macros['productDefinitionSearchPath'] = '\n'.join(
                     groupSearchPath)
+            proddefVersion = handle.product.getLoadedTrove()
+            if proddefVersion is not None:
+                proddefVersion = trovetup.TroveSpec(proddefVersion).version
+                troveCfg.macros['productDefinitionVersion'] = proddefVersion
 
             platformInformation = handle.product.getPlatformInformation()
             if (platformInformation and

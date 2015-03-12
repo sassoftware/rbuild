@@ -306,6 +306,7 @@ class RmakeFacadeTest(rbuildhelp.RbuildHelper):
         handle, facade = self.prep()
         handle.productStore.getActiveStageName._mock.setDefaultReturn('QA')
         handle.productStore.getActiveStageLabel._mock.setReturn('localhost@foo:bar')
+        handle.product.getLoadedTrove._mock.setDefaultReturn('product-definition:source=/cny.tv@ns:1/1-1')
         handle.product.getGroupSearchPaths._mock.setReturn([])
 
         # rMake helper setup
@@ -341,6 +342,7 @@ class RmakeFacadeTest(rbuildhelp.RbuildHelper):
         handle.productStore.getActiveStageName._mock.setDefaultReturn('QA')
         handle.product.getLabelForStage._mock.setDefaultReturn('localhost@foo:bar')
         handle.productStore.getActiveStageLabel._mock.setReturn('localhost@foo:bar')
+        handle.product.getLoadedTrove._mock.setDefaultReturn('product-definition:source=/cny.tv@ns:1/1-1')
 
         devTup = ('group-dev', 'example.devenv@rpl:2/5-6-7', None)
         devPathItem = mock.MockObject(
@@ -408,6 +410,9 @@ class RmakeFacadeTest(rbuildhelp.RbuildHelper):
         self.assertEquals(
             macros['productDefinitionSearchPath'],
             '%s=%s\n%s=%s' % (osTup[0:2] + dynTup[0:2]))
+        self.assertEquals(
+            macros['productDefinitionVersion'],
+            '/cny.tv@ns:1/1-1')
 
         # missing troves are an error
         handle.facade.conary._findTroves._mock.setDefaultReturn({})
