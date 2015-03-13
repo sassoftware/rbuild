@@ -112,7 +112,9 @@ class CheckoutProductStore(ProductStore):
 
     def getProduct(self):
         path = self.getProductDefinitionXmlPath()
-        return self.proddef.ProductDefinition(fromStream=open(path))
+        pdef = self.proddef.ProductDefinition(fromStream=open(path))
+        pdef._sourceTrove = self._handle.facade.conary._getRepositoryStateFromDirectory(self.getProductDefinitionDirectory())[1].getNameVersionFlavor().asString()
+        return pdef
 
     def getProductVersion(self):
         return self.getProduct().getProductVersion()
