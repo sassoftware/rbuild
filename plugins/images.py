@@ -167,7 +167,11 @@ class ListImagesCommand(command.ListCommand):
         if resources:
             handle.ui.write('\nLatest:')
             for latest in resources._node.latest_files:
-                handle.ui.write(latest.id.replace('%', '%%'))
+                try:
+                    image_link = latest.id.replace('%', '%%')
+                except AttributeError:
+                    image_link = 'Latest images link not found'
+                handle.ui.write(image_link)
         return resources
 
 
