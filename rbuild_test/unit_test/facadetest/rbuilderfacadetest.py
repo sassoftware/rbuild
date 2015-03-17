@@ -312,13 +312,25 @@ class RbuilderFacadeTest(rbuildhelp.RbuildHelper):
         mock.mock(facade, 'isValidUrl')
         facade.isValidUrl._mock.appendReturn(True)
         facade.isValidUrl._mock.appendReturn(False, "illegal.url")
+        facade.isValidUrl._mock.appendReturn(False, None)
+        # test valid non-external project
         facade.createProject('title', 'shortname', 'hostname', 'domain.name')
+        # test valid external project, no upstream url
+        facade.createProject('title', 'shortname', 'hostname', 'domain.name',
+                             external=True, external_params=(["label"], None))
+        # test valid external project, upstream url
+        facade.createProject('title', 'shortname', 'hostname', 'domain.name',
+                             external=True, external_params=(["label"], "url"))
+        # test invalid shortname
         self.assertRaises(errors.BadParameterError, facade.createProject,
                 'title', 'illegal.short')
+        # test invalid hostname
         self.assertRaises(errors.BadParameterError, facade.createProject,
                 'title', 'short', 'illegal.host')
+        # test invalid domain name
         self.assertRaises(errors.BadParameterError, facade.createProject,
                 'title', 'short', None, 'bad.0.domain')
+        # test invalid upstream label
         self.assertRaises(errors.BadParameterError, facade.createProject,
                 'title', 'short', 'hostname', 'hostname.domain', external=True,
                 external_params=(['invalid.label'], None))

@@ -1012,7 +1012,8 @@ class RbuilderFacade(object):
         if external and not self._handle.facade.conary.isValidLabel(
                 external_params[0][0]):
             raise errors.BadParameterError("Invalid upstream label")
-        if external and not self.isValidUrl(external_params[1]):
+        if (external and external_params[1]
+                and not self.isValidUrl(external_params[1])):
             raise errors.BadParameterError("Invalid upstream url")
         client = self._getRbuilderRESTClient()
         return client.createProject(title, shortName, hostName, domainName,
