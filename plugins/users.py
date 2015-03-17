@@ -211,11 +211,7 @@ class EditUserCommand(command.BaseCommand):
             while password != ui.getPassword('Retype new password'):
                 ui.write('Sorry, passwords do not match.')
                 password = ui.getPassword('New password')
-
-            if password == user.password:
-                handle.ui.write("Same as existing password, not changing")
-            else:
-                kwargs['password'] = password
+            kwargs['password'] = password
         elif password is not None:
             kwargs['password'] = password
 

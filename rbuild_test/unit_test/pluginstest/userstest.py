@@ -368,6 +368,42 @@ class EditUserTest(AbstractUsersTest):
             ['rbuild', 'edit', 'user', 'foo'])
         handle.Users.edit._mock.assertCalled(_user, can_create=False)
 
+    def testAPPENG_3439CheckPassword(self):
+        """
+        Test that we do not attempt to access the password attribute of the
+        user object. The rbuilder strips this element from the xml it sends the
+        client.
+        """
+        handle = self.handle
+
+        mock.mockMethod(handle.facade.rbuilder.getUsers)
+        mock.mockMethod(handle.Users.edit)
+        mock.mockMethod(handle.Users.isEmail)
+        mock.mockMethod(handle.ui.getPassword)
+        mock.mockMethod(handle.ui.getResponse)
+        mock.mockMethod(handle.ui.write)
+
+        class MockUser(mock.MockObject):
+            def __getattribute__(self, key):
+                if key == "password":
+                    raise AttributeError("'%r' has no attribute '%s'" %
+                        (self, key))
+                return super(MockUser, self).__getattribute__(key)
+        _user = MockUser(user_name='foo', full_name='foo', email='foo@com',
+            external=False, is_admin=False, can_create=False)
+
+        handle.facade.rbuilder.getUsers._mock.setReturn([_user],
+            user_name='foo')
+        handle.ui.getPassword._mock.setReturn('secret', 'New password')
+        handle.ui.getPassword._mock.appendReturn('secret',
+            'Retype new password')
+
+        cmd = handle.Commands.getCommandClass('edit')()
+
+        cmd.runCommand(handle, {"password": True},
+            ['rbuild', 'edit', 'user', 'foo'])
+        handle.Users.edit._mock.assertCalled(_user, password="secret")
+
 
 class ListUsersTest(AbstractUsersTest):
     def testCommand(self):
