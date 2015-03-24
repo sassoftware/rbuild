@@ -49,6 +49,8 @@ class EditTest(rbuildhelp.RbuildHelper):
         proddef.serialize(file(prodDefPath, "w"))
 
         productStore = dirstore.CheckoutProductStore(baseDirectory=projDir)
+        mock.mockMethod(productStore._getSourceTroveVersion,
+                returnValue='cny.tv@ns:1/2-3')
         handle = self.getRbuildHandle(productStore=productStore)
         mock.mock(handle.facade, 'conary')
         facade = handle.facade.conary

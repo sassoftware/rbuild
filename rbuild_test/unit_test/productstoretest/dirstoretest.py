@@ -130,6 +130,9 @@ class DirStoreTest(rbuildhelp.RbuildHelper):
         p.setActiveStageName('foo')
         assert(p.getActiveStageName() == 'foo')
 
+        mock.mockMethod(p._getSourceTroveVersion,
+            returnValue='cny.tv@ns:1/2-3')
+
         proddefObj = p.getProduct()
         _, kw = productClass._mock.popCall()
         kw = dict(kw)
@@ -385,6 +388,8 @@ class DirStoreTest(rbuildhelp.RbuildHelper):
         os.chdir('foo/stable')
         handle = self.getRbuildHandle(productStore=mock.MockObject())
         productStore = dirstore.CheckoutProductStore(handle)
+        mock.mockMethod(productStore._getSourceTroveVersion,
+            returnValue='cny.tv@ns:1/2-3')
         prodDef = productStore.getProduct()
         self.assertEqual(prodDef.getProductDescription(), 'More foo')
         # Update the product definition, and make sure save will persist it

@@ -144,16 +144,17 @@ class StatusTest(rbuildhelp.RbuildHelper):
     def testPrintOneDirectoryStatus(self):
         self.initProductDirectory(self.workDir)
         os.chdir(self.workDir)
-        handle = self.getRbuildHandle()
+        handle = self.getRbuildHandle(productStore=mock.MockObject())
         from rbuild_plugins import status
         mock.mockMethod(handle.facade.conary.getCheckoutLog)
-        mock.mock(dirstore, 'getStageNameFromDirectory')
         mock.mock(handle.facade.conary, 'isConaryCheckoutDirectory')
+        mock.mock(dirstore, 'getStageNameFromDirectory')
 
         outputList = []
         def captureOutput(k, msg, *args):
             outputList.append('%s' % (msg % args, ))
         self.mock(ui.UserInterface, 'write', captureOutput)
+        mock.mockMethod(handle.facade.conary._getNewerRepositoryVersions)
 
         # No changes, no product, no noise
         handle.facade.conary.isConaryCheckoutDirectory._mock.setDefaultReturn(
@@ -191,7 +192,6 @@ class StatusTest(rbuildhelp.RbuildHelper):
         del outputList[:]
         self.assertEquals(pendingAnnounce, 'devel')
 
-        mock.mockMethod(handle.facade.conary._getNewerRepositoryVersions)
         handle.facade.conary._getNewerRepositoryVersions._mock.setDefaultReturn(
             ['0.1'])
         handle.facade.conary.getCheckoutLog._mock.setDefaultReturn(
@@ -212,8 +212,6 @@ class StatusTest(rbuildhelp.RbuildHelper):
         # just pretend this is a product checkout...
         handle.facade.conary.getCheckoutStatus._mock.setDefaultReturn(
             [('M', 'product-definition.xml')])
-        mock.mockMethod(handle.product.getProductName)
-        mock.mockMethod(handle.product.getProductVersion)
         handle.product.getProductName._mock.setDefaultReturn('1')
         handle.product.getProductVersion._mock.setDefaultReturn('2')
         handle.Status._printOneDirectoryStatus('.', 'Product Definition',
@@ -227,12 +225,13 @@ class StatusTest(rbuildhelp.RbuildHelper):
     def testMacroInComment(self):
         self.initProductDirectory(self.workDir)
         os.chdir(self.workDir)
-        handle = self.getRbuildHandle()
+        handle = self.getRbuildHandle(productStore=mock.MockObject())
         from rbuild_plugins import status
         mock.mockMethod(handle.facade.conary.getCheckoutLog)
         mock.mock(dirstore, 'getStageNameFromDirectory')
         mock.mock(handle.facade.conary, 'isConaryCheckoutDirectory')
         dirstore.getStageNameFromDirectory._mock.setDefaultReturn('devel')
+        mock.mockMethod(handle.facade.conary._getNewerRepositoryVersions)
 
         outputList = []
         def captureOutput(k, msg, *args):

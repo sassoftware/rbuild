@@ -55,9 +55,10 @@ class BuildTest(rbuildhelp.RbuildHelper):
     def testWarnIfOldProductDefinition(self):
         self.initProductDirectory(self.workDir)
         os.chdir(self.workDir)
-        handle = self.getRbuildHandle()
+        handle = self.getRbuildHandle(productStore=mock.MockObject())
         from rbuild_plugins import build as build_plugin
         proddefDir = self.workDir + '/.rbuild/product-definition'
+        handle.productStore.getProductDefinitionDirectory._mock.setDefaultReturn(proddefDir)
 
         outputList = []
         def captureOutput(k, msg='', *args):
@@ -65,7 +66,6 @@ class BuildTest(rbuildhelp.RbuildHelper):
         self.mock(ui.UserInterface, 'write', captureOutput)
 
         mock.mockMethod(handle.facade.conary._getNewerRepositoryVersions)
-        mock.mockMethod(handle.product.getProductName)
         handle.product.getProductName._mock.setReturn('adsf')
 
         mock.mock(handle.facade.conary, '_getNewerRepositoryVersions')
