@@ -18,6 +18,7 @@
 '''
 images
 '''
+from datetime import datetime
 import os
 import time
 
@@ -25,6 +26,7 @@ from xobj import xobj
 
 from rbuild import errors
 from rbuild import pluginapi
+from rbuild.lib import util
 from rbuild.productstore.decorators import requiresStage
 from rbuild.pluginapi import command
 
@@ -141,10 +143,12 @@ class ListImagesCommand(command.ListCommand):
     help = 'list images'
     resource = 'images'
     listFields = ('image_id', 'name', 'image_type', 'architecture',
-        'trailing_version', 'status', 'status_message',)
+        'trailing_version', 'time_created', 'status', 'status_message',)
     listFieldMap = dict(
         image_type=dict(accessor=lambda i: i.image_type.name),
         trailing_version=dict(display_name='Version'),
+        time_created=dict(display_name="Created",
+                          accessor=lambda i: util.convertTime(i.time_created))
         )
     showFieldMap = dict(
         actions=dict(hidden=True),
