@@ -40,10 +40,9 @@ class AbstractTargetTest(rbuildhelp.RbuildHelper):
 class CreateTargetTest(AbstractTargetTest):
     def testCreateTargetArgParse(self):
         self.checkRbuild(
-            'create target --list --from-file=file --to-file=toFile vmware',
+            'create target --from-file=file --to-file=toFile vmware',
             'rbuild_plugins.targets.CreateTargetCommand.runCommand',
             [None, None, {
-                'list': True,
                 'from-file': 'file',
                 'to-file': 'toFile',
                 }, ['create', 'target', 'vmware']])
@@ -68,7 +67,7 @@ class CreateTargetTest(AbstractTargetTest):
             errors.ParseError,
             cmd.runCommand,
             handle,
-            {'list': False},
+            {},
             ['rbuild', 'create', 'target'],
             )
         self.assertEqual(

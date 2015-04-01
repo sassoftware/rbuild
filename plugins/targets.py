@@ -26,13 +26,11 @@ from rbuild.pluginapi import command
 class CreateTargetCommand(command.BaseCommand):
     help = 'Create a target on a SAS App Engine'
     paramHelp = '<TYPE>'
-    docs = {'list': 'List available target types',
-            'from-file': 'Load config from file',
+    docs = {'from-file': 'Load config from file',
             'to-file': 'Write config to file',
             }
 
     def addLocalParameters(self, argDef):
-        argDef['list'] = '-l', command.NO_PARAM
         argDef['from-file'] = '-f', command.ONE_PARAM
         argDef['to-file'] = '-o', command.ONE_PARAM
 
@@ -40,14 +38,8 @@ class CreateTargetCommand(command.BaseCommand):
         ui = handle.ui
         rb = handle.facade.rbuilder
 
-        list_types = argSet.pop('list', False)
         fromFile = argSet.pop('from-file', None)
         toFile = argSet.pop('to-file', None)
-
-        if list_types:
-            types = rb.getTargetTypes().keys()
-            ui.write("Available target types: %s" % ', '.join(types))
-            return
 
         if fromFile:
             handle.DescriptorConfig.readConfig(fromFile)
