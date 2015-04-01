@@ -34,12 +34,11 @@ class AbstractImageDefsTest(rbuildhelp.RbuildHelper):
 class CreateImageDefTest(AbstractImageDefsTest):
     def testArgParse(self):
         self.checkRbuild(
-            'create imagedef --message=foo --list --from-file=fromFile'
+            'create imagedef --message=foo --from-file=fromFile'
             ' --to-file=toFile type arch',
             'rbuild_plugins.imagedefs.CreateImageDefCommand.runCommand',
             [None, None, {
                 'message': 'foo',
-                'list': True,
                 'from-file': 'fromFile',
                 'to-file': 'toFile',
                 }, ['create', 'imagedef', 'type', 'arch']])
