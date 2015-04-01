@@ -19,6 +19,7 @@
 projects
 '''
 from rbuild import pluginapi
+from rbuild.lib import util
 from rbuild.productstore.decorators import requiresStage
 from rbuild.pluginapi import command
 
@@ -26,10 +27,12 @@ from rbuild.pluginapi import command
 class ListGroupsCommand(command.ListCommand):
     help = 'List groups'
     resource = 'groups'
-    listFields = ('name', 'trailingVersion', 'imageCount')
+    listFields = ('name', 'trailingVersion', 'imageCount', 'timeStamp')
     listFieldMap = {
         'trailingVersion': dict(display_name="Trailing Version"),
         'imageCount': dict(display_name="Image Count"),
+        'timeStamp': dict(display_name="Created",
+                          accessor=lambda g: util.convertTime(g.timeStamp))
         }
 
 
@@ -46,4 +49,5 @@ class Groups(pluginapi.Plugin):
             self.handle.facade.rbuilder.getGroups(
                 shortName=self.handle.product.getProductShortname(),
                 label=self.handle.productStore.getActiveStageLabel(),
-                **kwargs), key=lambda g: g.timeStamp, reverse=True)
+                **kwargs),
+            key=lambda g: g.timeStamp, reverse=True)
