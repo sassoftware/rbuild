@@ -25,7 +25,7 @@ from rbuild.pluginapi import command
 class ListImageTypesCommand(command.ListCommand):
     help = "List image types"
     resource = "imagetypes"
-    listFields = ("description", "name")
+    listFields = ("name", "description")
 
 
 class ImageTypes(pluginapi.Plugin):
