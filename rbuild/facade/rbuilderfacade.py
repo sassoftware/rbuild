@@ -478,7 +478,7 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
             groups = client.do_GET(uri)
             if groups:
                 return groups
-            return client.do_GET(uri)
+            return []
         except robj.errors.HTTPNotFoundError:
             raise errors.RbuildError(
                 "Project '%s' and label '%s' not found" % (shortName, label))
