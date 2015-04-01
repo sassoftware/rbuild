@@ -158,7 +158,7 @@ class RbuilderCallback(object):
         prompt = "Enter %s%s%s%s" % (fieldDescr, reqmsg, defmsg, typmsg)
         while 1:
             if re.search(r'[Pp]assword', prompt):
-                data = self.ui.inputPassword(prompt)
+                data = self.ui.getPassword(prompt)
             else:
                 inputFn = self.ui.input
                 if field.get_constraints():

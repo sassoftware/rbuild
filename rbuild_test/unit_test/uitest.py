@@ -335,14 +335,46 @@ class UserInterfaceTest(rbuildhelp.RbuildHelper):
     def testGetPassword(self):
         h = self.getRbuildHandle()
         mock.mock(getpass, 'getpass')
-        getpass.getpass._mock.setReturn('result', 'foo: ')
         getpass.getpass._mock.setFailOnMismatch()
-        self.assertEquals(h.ui.getPassword('foo'), 'result')
 
+        # test no verification
+        getpass.getpass._mock.setReturn('result', 'foo: ')
+        getpass.getpass._mock.appendReturn('result', 'Retype password: ')
+        self.assertEquals(h.ui.getPassword('foo'), 'result')
+        self.assertEquals(len(getpass.getpass._mock.calls), 1)
+        getpass.getpass._mock.calls = []
+
+        self.assertEquals(h.ui.getPassword('foo', verify=True), 'result')
+        self.assertEquals(len(getpass.getpass._mock.calls), 2)
+        getpass.getpass._mock.calls = []
+
+        # test with default provided
         getpass.getpass._mock.setReturn('result', 'foo (Default: <obscured>): ')
+        getpass.getpass._mock.appendReturn('result', 'Retype password: ')
         self.assertEquals(h.ui.getPassword('foo', default='bar'), 'result')
+        self.assertEquals(len(getpass.getpass._mock.calls), 1)
+        getpass.getpass._mock.calls = []
+
+        self.assertEquals(h.ui.getPassword('foo', default='bar', verify=True), 'result')
+        self.assertEquals(len(getpass.getpass._mock.calls), 2)
+        getpass.getpass._mock.calls = []
+
+        # user accepts the default
         getpass.getpass._mock.setReturn('', 'foo (Default: <obscured>): ')
         self.assertEquals(h.ui.getPassword('foo', default='result'), 'result')
+        self.assertEquals(len(getpass.getpass._mock.calls), 1)
+        getpass.getpass._mock.calls = []
+
+        self.assertEquals(h.ui.getPassword('foo', default='result', verify=True),
+            'result')
+        self.assertEquals(len(getpass.getpass._mock.calls), 1)
+        getpass.getpass._mock.calls = []
+
+        # user mistypes password
+        getpass.getpass._mock.callReturns = []
+        getpass.getpass._mock.setDefaultReturns(["result", "reslt", "result", "result"])
+        self.assertEquals(h.ui.getPassword("foo", verify=True), "result")
+        self.assertEquals(len(getpass.getpass._mock.calls), 4)
 
     def testGetChoice(self):
         h = self.getRbuildHandle()

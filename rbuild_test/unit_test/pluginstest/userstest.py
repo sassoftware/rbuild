@@ -65,9 +65,7 @@ class CreateUserTest(AbstractUsersTest):
             required=True)
         handle.ui.getResponse._mock.setReturn('foo@example.com', 'Email',
             required=True, validationFn=handle.Users.isEmail)
-        handle.ui.getPassword._mock.setReturn('secret', 'Password')
-        handle.ui.getPassword._mock.appendReturn('Secret', 'Retype password')
-        handle.ui.getPassword._mock.appendReturn('secret', 'Retype password')
+        handle.ui.getPassword._mock.setReturn('secret', 'Password', verify=True)
 
         cmd = handle.Commands.getCommandClass('create')()
 
@@ -80,7 +78,6 @@ class CreateUserTest(AbstractUsersTest):
         cmd.runCommand(handle, {}, ['rbuild', 'create', 'user'])
         handle.Users.create._mock.assertCalled(user_name='foo',
             full_name='foo bar', email='foo@example.com', password='secret')
-        handle.ui.write._mock.assertCalled("Sorry, passwords do not match.")
 
         cmd.runCommand(handle, {'user-name': 'bar'},
             ['rbuild', 'create', 'user'])
@@ -289,11 +286,7 @@ class EditUserTest(AbstractUsersTest):
             default='foo')
         handle.ui.getResponse._mock.setReturn('bar@com', 'Email',
             default='foo@com', validationFn=handle.Users.isEmail)
-        handle.ui.getPassword._mock.setReturn('secret', 'New password')
-        handle.ui.getPassword._mock.appendReturn('not secret',
-            'Retype new password')
-        handle.ui.getPassword._mock.appendReturn('secret',
-            'Retype new password')
+        handle.ui.getPassword._mock.setReturn('secret', 'New password', verify=True)
 
         cmd = handle.Commands.getCommandClass('edit')()
 
@@ -301,7 +294,6 @@ class EditUserTest(AbstractUsersTest):
         cmd.runCommand(handle, {}, ['rbuild', 'edit', 'user', 'foo'])
         handle.Users.edit._mock.assertCalled(_user, full_name='bar',
             email='bar@com', password='secret')
-        handle.ui.write._mock.assertCalled("Sorry, passwords do not match.")
 
         # change full name
         cmd.runCommand(handle, {'full-name': 'full name'},
@@ -394,9 +386,7 @@ class EditUserTest(AbstractUsersTest):
 
         handle.facade.rbuilder.getUsers._mock.setReturn([_user],
             user_name='foo')
-        handle.ui.getPassword._mock.setReturn('secret', 'New password')
-        handle.ui.getPassword._mock.appendReturn('secret',
-            'Retype new password')
+        handle.ui.getPassword._mock.setReturn('secret', 'New password', verify=True)
 
         cmd = handle.Commands.getCommandClass('edit')()
 

@@ -170,14 +170,41 @@ class UserInterface(object):
     def inputPassword(self, prompt):
         return getpass.getpass(prompt)
 
-    def getPassword(self, prompt, default=None, validationFn=None):
+    def getPassword(self, prompt, default=None, validationFn=None, verify=False):
+        """Ask the user for a password. If `verify` is true, then the user must
+        type the password in twice.
+
+        :param str prompt: user prompt
+        :param str default: default value of password
+        :param func validationFn: a function to call to validate the password
+        :param bool verify: make the user type in the password twice
+        """
         if default:
             defaultvis = '<obscured>'
         else:
             defaultvis = None
+
         ret = self.getResponse(prompt, default=defaultvis,
-                                validationFn=validationFn,
-                                inputFn=self.inputPassword)
+                               validationFn=validationFn,
+                               inputFn=self.inputPassword)
+
+        while verify:
+            if ret == defaultvis:
+                # user accepted the default, no need to verify
+                break
+
+            verify = self.getResponse("Retype password",
+                                      validationFn=validationFn,
+                                      inputFn=self.inputPassword)
+            if (ret == verify):
+                break
+
+            # reprompt for password
+            self.write("Sorry, passwords do not match.")
+            ret = self.getResponse(prompt, default=defaultvis,
+                                   validationFn=validationFn,
+                                   inputFn=self.inputPassword)
+
         if ret == defaultvis:
             return default
         else:

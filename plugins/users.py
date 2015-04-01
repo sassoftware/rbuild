@@ -84,10 +84,7 @@ class CreateUserCommand(command.BaseCommand):
         else:
             password = argSet.pop('password', None)
             if not password:
-                password = ui.getPassword('Password')
-                while ui.getPassword('Retype password') != password:
-                    handle.ui.write("Sorry, passwords do not match.")
-                    password = ui.getPassword("Password")
+                password = ui.getPassword('Password', verify=True)
             kwargs['password'] = password
 
         if 'admin' in argSet:
@@ -207,10 +204,7 @@ class EditUserCommand(command.BaseCommand):
         if (password is True
                 or kwargs.get('external_auth') is False
                 or query_all):
-            password = ui.getPassword('New password')
-            while password != ui.getPassword('Retype new password'):
-                ui.write('Sorry, passwords do not match.')
-                password = ui.getPassword('New password')
+            password = ui.getPassword('New password', verify=True)
             kwargs['password'] = password
         elif password is not None:
             kwargs['password'] = password

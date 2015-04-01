@@ -199,7 +199,7 @@ class CreateProjectBranchTest(rbuildhelp.RbuildHelper):
         handle.ui.getResponse._mock.appendReturn(
                 'user', "External username", required=True)
         handle.ui.getPassword._mock.appendReturn(
-                'secret', "External password")
+                'secret', "External password", verify=True)
         handle.ui.getResponse._mock.appendReturn(
                 'entitle', 'External entitlement', required=True)
 

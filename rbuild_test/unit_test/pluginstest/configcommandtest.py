@@ -149,7 +149,7 @@ user                      test foo
                ])
             m1._mock.setFailOnMismatch()
             m2 = mock.mockMethod(handle.ui.inputPassword)
-            m2._mock.setDefaultReturns(['testpass','last'])
+            m2._mock.setDefaultReturns(['testpass','testpass'])
             m2._mock.setFailOnMismatch()
             mock.mockMethod(handle.facade.rbuilder.validateUrl) \
                 ._mock.setReturn(True)
@@ -164,7 +164,7 @@ user                      test foo
 
             # make sure all of our mock retruns were consumed correctly
             self.assertEquals(len(m1._mock.calls), 6)
-            self.assertEquals(len(m2._mock.calls), 1)
+            self.assertEquals(len(m2._mock.calls), 2)
             expectedUnconfiguredTxt = '''\
 ********************************************************
 Welcome to rBuild!  Your configuration is incomplete.
@@ -615,7 +615,7 @@ rBuilder authorized successfully.
                ])
             m1._mock.setFailOnMismatch()
             m2 = mock.mockMethod(handle.ui.inputPassword)
-            m2._mock.setDefaultReturns(['testpass','last'])
+            m2._mock.setDefaultReturns(['testpass', 'testpass'])
             m2._mock.setFailOnMismatch()
             mock.mockMethod(handle.facade.rbuilder.validateUrl) \
                 ._mock.setReturn(True)
@@ -630,7 +630,7 @@ rBuilder authorized successfully.
 
             # make sure all of our mock retruns were consumed correctly
             self.assertEquals(len(m1._mock.calls), 6)
-            self.assertEquals(len(m2._mock.calls), 1)
+            self.assertEquals(len(m2._mock.calls), 2)
             expectedUnconfiguredTxt = '''\
 ********************************************************
 Welcome to rBuild!  Your configuration is incomplete.
@@ -703,8 +703,7 @@ name                      Contact
 # repositoryMap (Default: [])
 repositoryMap             []
 # user (Default: [])
-user                      * testuser 
-'''
+user                      * testuser \n'''
             txt = open(self.workDir + '/home/.conaryrc-rbuild').read()
             self.assertEqualsText(txt, expectedTxt)
             self.assertEquals(os.stat(self.workDir + '/home/.conaryrc-rbuild').st_mode & 0777, 0600)
@@ -718,8 +717,7 @@ rbuilderUrl               http://localhost
 # rmakeUrl (Default: unix:///var/lib/rmake/socket)
 rmakeUrl                  https://localhost:9999
 # rmakeUser (Default: None)
-rmakeUser                 testuser 
-'''
+rmakeUser                 testuser \n'''
             txt = open(self.workDir + '/home/.rmakerc-rbuild').read()
             self.assertEqualsText(txt, expectedTxt)
             self.assertEquals(os.stat(self.workDir + '/home/.rmakerc-rbuild').st_mode & 0777, 0600)

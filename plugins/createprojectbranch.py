@@ -114,7 +114,7 @@ class CreateProjectCommand(command.BaseCommand):
                         'External username', required=True)
                 if 'password' not in argSet:
                     argSet['password'] = ui.getPassword(
-                        'External password')
+                        'External password', verify=True)
             elif argSet['auth-type'] == ENTITLEMENT:
                 if 'entitlement' not in argSet:
                     argSet['entitlement'] = ui.getResponse(

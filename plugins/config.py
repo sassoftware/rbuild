@@ -151,22 +151,23 @@ Please answer the following questions to begin using rBuild:
         user =  ui.getResponse('Your rbuilder user name',
                                default=defaultUser)
         passwd = ui.getPassword('Your rbuilder password',
-                                default=defaultPassword)
-        return user, passwd                                
+                                default=defaultPassword,
+                                verify=True)
+        return user, passwd
 
     def promptReEnterUrl(self):
         ui = self.handle.ui
         reEnterUrl = ui.getYn(
             'Would you like to re-enter the rBuilder url? (Y/N)',
             default=False)
-        return reEnterUrl            
+        return reEnterUrl
 
     def promptReEnterUserPasswd(self):
         ui = self.handle.ui
         reEnterUserPasswd = ui.getYn(
             'Would you like to re-enter the user name and '
             'password? (Y/N)', default=False)
-        return reEnterUserPasswd            
+        return reEnterUserPasswd
 
     @_requiresHome
     def updateConfig(self, cfg=None):
@@ -224,8 +225,8 @@ Please answer the following questions to begin using rBuild:
                 reEnterUrl = self.promptReEnterUrl()
                 if reEnterUrl:
                     continue
-                
-            if reEnterUserPasswd:                
+
+            if reEnterUserPasswd:
                 user, passwd = self.getUserPass(defaultUser, defaultPassword)
             validCredentials = self.handle.facade.rbuilder.validateCredentials(
                 user, passwd, serverUrl)
@@ -236,9 +237,9 @@ Please answer the following questions to begin using rBuild:
                          'authorized against the rBuilder at %s.' % serverUrl)
                 reEnterUrl = self.promptReEnterUrl()
 
-                if reEnterUrl:                    
-                    reEnterUserPasswd = False                    
-                else:                    
+                if reEnterUrl:
+                    reEnterUserPasswd = False
+                else:
                     reEnterUserPasswd = self.promptReEnterUserPasswd()
                 if not reEnterUrl and not reEnterUserPasswd:
                     # continue anyway
@@ -291,7 +292,7 @@ Please answer the following questions to begin using rBuild:
         Write a ~/.conaryrc-rbuild file, and possibly a ~/.conaryrc
         referencing it, based on the contents of the rMakeCfg.
         '''
-        # 
+        #
         homeConaryConfig = os.sep.join((os.environ['HOME'], '.conaryrc'))
         cfg = self.handle.getConfig()
         cf = self.handle.facade.conary
