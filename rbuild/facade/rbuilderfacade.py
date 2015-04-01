@@ -340,6 +340,8 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
             @param resource: resource collection name
             @param order_by: field and direction to order results
             @param uri: alternative uri
+            @return: list of resources
+            @rtype: list
         '''
         uri = kwargs.pop('uri', None)
         order_by = kwargs.pop('order_by', None)
@@ -364,7 +366,10 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
 
         client = self.api._client
         try:
-            return client.do_GET(fullUri)
+            results = client.do_GET(fullUri)
+            if results:
+                return results
+            return []
         except robj.errors.HTTPNotFoundError:
             raise errors.RbuildError("Unable to fetch resource '%s' at '%s'" %
                                      (resource, fullUri))
@@ -587,33 +592,8 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
             return targets[0]
         raise errors.RbuildError("Target '%s' not found" % (name,))
 
-    def getTargetDescriptor(self, targetType):
-        '''
-        Get the descriptor for a given target type
-
-        @param targetType: type of target descriptor to get
-        @type targetType: string
-        @return: target descriptor
-        @rtype: ...
-        '''
-        ttype = self.getTargetTypes().get(targetType, None)
-        if ttype:
-            return ttype.descriptor_create_target.read()
-
-    def getTargetTypes(self):
-        '''
-        Return all target types
-
-        @return: mapping of TargetType name to TargetType
-        @rtype: dict
-        '''
-        client = self.api._client
-        uri = self.api._uri + '/target_types'
-        try:
-            return dict((x.name, x) for x in client.do_GET(uri))
-        except robj.errors.HTTPNotFoundError:
-            raise errors.RbuildError(
-                msg='Target types url not found: %s' % uri)
+    def getTargetTypes(self, **kwargs):
+        return self._getResources("target_types", **kwargs)
 
     def getTargets(self, **kwargs):
         '''

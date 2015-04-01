@@ -51,11 +51,16 @@ class CreateTargetTest(AbstractTargetTest):
     def testCreateTargetCmdline(self):
         handle = self.handle
 
+        _vmware = mock.MockObject(name="vmware")
+
         mock.mockMethod(handle.DescriptorConfig.readConfig)
         mock.mockMethod(handle.DescriptorConfig.writeConfig)
+        mock.mockMethod(handle.facade.rbuilder.getTargetTypes)
         mock.mockMethod(handle.Targets.createTarget)
         mock.mockMethod(handle.Targets.configureTargetCredentials)
-        handle.Targets.createTarget._mock.setReturn('target', 'vmware')
+
+        handle.Targets.createTarget._mock.setReturn('target', _vmware)
+        handle.facade.rbuilder.getTargetTypes._mock.setReturn([])
 
         cmd = handle.Commands.getCommandClass('create')()
 
@@ -69,13 +74,24 @@ class CreateTargetTest(AbstractTargetTest):
         self.assertEqual(
             str(err), "'target' missing 1 command parameter(s): TYPE")
 
+        err = self.assertRaises(
+            errors.PluginError,
+            cmd.runCommand,
+            handle,
+            {},
+            ['rbuild', 'create', 'target', 'notype'],
+            )
+        self.assertEqual(str(err), "No such target type 'notype'. Run"
+            " `rbuild list targettypes` to see valid target types")
+
+        handle.facade.rbuilder.getTargetTypes._mock.setReturn([_vmware])
         cmd.runCommand(
             handle,
             {'list': False},
             ['rbuild', 'create', 'target', 'vmware'],
             )
         handle.DescriptorConfig.readConfig._mock.assertNotCalled()
-        handle.Targets.createTarget._mock.assertCalled('vmware')
+        handle.Targets.createTarget._mock.assertCalled(_vmware)
         handle.Targets.configureTargetCredentials\
             ._mock.assertCalled('target')
 
@@ -85,7 +101,7 @@ class CreateTargetTest(AbstractTargetTest):
             ['rbuild', 'create', 'target', 'vmware'],
             )
         handle.DescriptorConfig.readConfig._mock.assertCalled('foo')
-        handle.Targets.createTarget._mock.assertCalled('vmware')
+        handle.Targets.createTarget._mock.assertCalled(_vmware)
         handle.Targets.configureTargetCredentials\
             ._mock.assertCalled('target')
         handle.DescriptorConfig.writeConfig._mock.assertNotCalled()
@@ -96,7 +112,7 @@ class CreateTargetTest(AbstractTargetTest):
             ['rbuild', 'create', 'target', 'vmware'],
             )
         handle.DescriptorConfig.readConfig._mock.assertNotCalled()
-        handle.Targets.createTarget._mock.assertCalled('vmware')
+        handle.Targets.createTarget._mock.assertCalled(_vmware)
         handle.Targets.configureTargetCredentials\
             ._mock.assertCalled('target')
         handle.DescriptorConfig.writeConfig._mock.assertCalled('foo')

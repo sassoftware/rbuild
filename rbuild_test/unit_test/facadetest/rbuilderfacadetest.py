@@ -1302,49 +1302,22 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
         err = self.assertRaises(errors.RbuildError, client.getProject, 'bar')
         self.assertIn('not found', str(err))
 
-    def testGetTargetDescriptor(self):
-        client = rbuilderfacade.RbuilderRESTClient('http://localhost', 'foo',
-            'bar', mock.MockObject())
-        mock.mock(client, '_api')
-        TargetType = namedtuple('TargetType', 'name descriptor_create_target')
-        client._api._mock.set(_uri='http://localhost')
-        client._api._client._mock.set(do_GET=lambda x: [
-            TargetType('vmware', StringIO('descriptor data')),
-            ])
-
-        results = client.getTargetDescriptor('vmware')
-        self.assertEqual(results, 'descriptor data')
-        results = client.getTargetDescriptor('foo')
-        self.assertEqual(results, None)
-
     def testGetTargetTypes(self):
+        TargetType = namedtuple('TargetType', 'name value')
+
         client = rbuilderfacade.RbuilderRESTClient('http://localhost', 'foo',
             'bar', mock.MockObject())
-        mock.mock(client, '_api')
-        TargetType = namedtuple('TargetType', 'name value')
-        client._api._mock.set(_uri='http://localhost')
-        client._api._client._mock.set(do_GET=lambda x: [
+
+        mock.mockMethod(client._getResources, [
             TargetType('vmware', 'VMWare'),
             TargetType('ec2', 'Amazon EC2'),
             ])
+
         results = client.getTargetTypes()
-        self.assertEqual(
-            results,
-            {'vmware': TargetType('vmware', 'VMWare'),
-             'ec2': TargetType('ec2', 'Amazon EC2'),
-             },
-            )
-
-        def f(x):
-            raise robj.errors.HTTPNotFoundError(
-                uri='https://localhost/target_types',
-                status='404',
-                reason='Not Found',
-                response=None,
-                )
-
-        client._api._client._mock.set(do_GET=f)
-        self.assertRaises(errors.RbuildError, client.getTargetTypes)
+        self.assertEqual(results, [
+            TargetType('vmware', 'VMWare'),
+            TargetType('ec2', 'Amazon EC2'),
+            ])
 
     def testCreateBranch(self):
         client = rbuilderfacade.RbuilderRESTClient('http://localhost', 'foo',

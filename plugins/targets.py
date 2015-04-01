@@ -52,8 +52,13 @@ class CreateTargetCommand(command.BaseCommand):
         if fromFile:
             handle.DescriptorConfig.readConfig(fromFile)
 
-        _, targetType = self.requireParameters(args, expected=['TYPE'])
-        target = handle.Targets.createTarget(targetType)
+        _, name = self.requireParameters(args, expected=['TYPE'])
+        targetTypes = [t for t in rb.getTargetTypes() if t.name == name]
+        if not targetTypes:
+            raise errors.PluginError("No such target type '%s'. Run"
+                " `rbuild list targettypes` to see valid target types" % name)
+
+        target = handle.Targets.createTarget(targetTypes[0])
         handle.Targets.configureTargetCredentials(target)
 
         if toFile:
@@ -121,21 +126,18 @@ class Targets(pluginapi.Plugin):
         '''
             Create a target
 
-            @param targetType: type of target to create
-            @type targetType: str
+            @param targetType: target type object
+            @type targetType: rObj(<target_type>)
             @return: configured target
             @rtype: rObj(target)
         '''
         dc = self.handle.DescriptorConfig
         rb = self.handle.facade.rbuilder
 
-        descriptor_xml = rb.getTargetDescriptor(targetType)
-        if descriptor_xml is None:
-            raise errors.PluginError('No such target type: %s' % targetType)
-
+        descriptor_xml = targetType.descriptor_create_target.read()
         ddata = dc.createDescriptorData(fromStream=descriptor_xml)
 
-        target = rb.createTarget(ddata, targetType)
+        target = rb.createTarget(ddata, targetType.name)
         rb.configureTarget(target, ddata)
         return target
 
