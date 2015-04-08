@@ -57,7 +57,7 @@ class CheckoutCommand(command.BaseCommand):
     docs = {'derive' : "Create derived package (based on upstream binary)",
             'shadow' : "Create shadowed package (based on upstream source)",
             'new' : ("Create a new version of the package even if"
-                     " an upstream version exists"), 
+                     " an upstream version exists"),
             'factory' : ("If creating a new package, specify its factory"
                          " (not needed when creating a factory package)."),
             'template' : "If creating a new package, specify a template."}
@@ -164,7 +164,7 @@ class Checkout(pluginapi.Plugin):
                 raise errors.PluginError(
                         'cannot shadow %s: no upstream binary' % packageName)
 
-        name, version, flavor = package            
+        name, version, flavor = package
 
         currentLabel = productStore.getActiveStageLabel()
         conaryFacade.shadowSourceForBinary(name, version, flavor,
@@ -184,7 +184,7 @@ class Checkout(pluginapi.Plugin):
         existingPackage = self._getExistingPackage(packageName)
 
         if existingPackage:
-            if existingPackage[1].isShadow(): 
+            if existingPackage[1].isShadow():
                 confirmDetach = ui.getYn(
                     '%s is shadowed on the current label.\n'
                     'Do you want to detach this package from its '
@@ -195,7 +195,7 @@ class Checkout(pluginapi.Plugin):
                     existingPackage, '/' + currentLabel, message)
                 ui.info('Detached package %s from its parent.' \
                     % packageName)
-            else:                    
+            else:
                 raise errors.PluginError('\n'.join((
                     'This package already exists in the product.',
                     'Use "rbuild checkout %s" to checkout the existing '
@@ -213,6 +213,10 @@ class Checkout(pluginapi.Plugin):
             if packageName.startswith('factory-'):
                 # A package named 'factory-' is required to BE a factory
                 factory = 'factory'
+            elif (packageName.startswith('group-')
+                    and packageName.endswith('-appliance')
+                    and template is None):
+                template = self.handle.getConfig().applianceTemplate
 
             conaryFacade.createNewPackage(packageName, currentLabel,
                                           targetDir=targetDir,
@@ -247,7 +251,7 @@ class Checkout(pluginapi.Plugin):
         if not packageName.endswith(':source'):
             packageName = packageName + ':source'
         troveTup = self.handle.facade.conary._findTrove(packageName,
-                                                        label, 
+                                                        label,
                                                         allowMissing=True)
         return troveTup
 

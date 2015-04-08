@@ -321,6 +321,10 @@ class ConaryFacade(object):
         self._parseRBuilderConfigFile(cfg)
         #pylint: disable-msg=E1101
         # pylint does not understand config objects very well
+        cfg.factoryTemplate = rbuildCfg.factoryTemplate
+        cfg.groupTemplate = rbuildCfg.groupTemplate
+        cfg.recipeTemplate = rbuildCfg.recipeTemplate
+        cfg.recipeTemplateDirs = rbuildCfg.recipeTemplateDirs
         cfg.repositoryMap.update(rbuildCfg.repositoryMap)
         cfg.user.extend(rbuildCfg.repositoryUser)
         cfg.user.append(('*',) + rbuildCfg.user)

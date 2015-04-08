@@ -20,13 +20,22 @@
 import os
 import time
 
-from rbuild_test import rbuildhelp
-from conary_test import recipes
-
 from conary.lib import util
+from conary_test import recipes
+from conary_test import resources as conary_resources
+
+from rbuild_test import rbuildhelp
+from rbuild_test import resources
 
 
 class CheckoutTest(rbuildhelp.CommandTest):
+    def setUp(self):
+        rbuildhelp.CommandTest.setUp(self)
+        self.rbuildCfg.recipeTemplateDirs.extend([
+            conary_resources.get_archive('recipeTemplates'),
+            resources.get_archive('recipeTemplates'),
+            ])
+
     def testCheckoutNoOption(self):
         self.openRepository()
         self.initProductDirectory('foo')
@@ -40,7 +49,7 @@ class CheckoutTest(rbuildhelp.CommandTest):
 
     def testCheckoutShadow(self):
         self.openRepository()
-        self.addComponent('simple:source', 
+        self.addComponent('simple:source',
                          [('simple.recipe', recipes.simpleRecipe)])
         self.addComponent('simple:runtime')
         self.addCollection('simple', [':runtime'])
@@ -72,11 +81,11 @@ class CheckoutTest(rbuildhelp.CommandTest):
 
     def testDerive(self):
         self.openRepository()
-        self.addComponent('simple:source', 
+        self.addComponent('simple:source',
                          [('simple.recipe', recipes.simpleRecipe),
                           ('extrafile', 'foo'),
                           ('subdir/foo', 'bar')])
-        self.addComponent('simple:runtime', 
+        self.addComponent('simple:runtime',
                           [('/some/file', 'contents\n')])
         self.addCollection('simple', [':runtime'])
         trv = self.addCollection('group-dist', ['simple'])
@@ -97,7 +106,7 @@ Edit the recipe to add your changes to the binary package.
 
     def testCheckoutNew(self):
         self.openRepository()
-        self.addComponent('simple:source', 
+        self.addComponent('simple:source',
                          [('simple.recipe', recipes.simpleRecipe)])
         self.addComponent('simple:runtime')
         self.addCollection('simple', [':runtime'])
@@ -111,10 +120,24 @@ Edit the recipe to add your changes to the binary package.
                 "warning: Package simple exists upstream.\n")
         os.chdir('simple')
         assert('@NEW@' in open('CONARY').read())
+        self.assertEquals(open('simple.recipe').read(),'''\
+#
+# Copyright (c) %s Test (http://bugzilla.rpath.com/)
+#
+
+class Simple(PackageRecipe):
+    name = 'simple'
+    version = ''
+
+    buildRequires = []
+
+    def setup(r):
+        pass
+''' % time.localtime().tm_year)
 
     def testCheckoutNewTemplate(self):
         self.openRepository()
-        self.addComponent('simple:source', 
+        self.addComponent('simple:source',
                          [('simple.recipe', recipes.simpleRecipe)])
         self.addComponent('simple:runtime')
         self.addCollection('simple', [':runtime'])
@@ -122,7 +145,7 @@ Edit the recipe to add your changes to the binary package.
         self.initProductDirectory('foo')
         os.chdir('foo/devel')
         #Do templates exist in the environment?
-        txt = self.runCommand('checkout simple --new --template=default',
+        txt = self.runCommand('checkout simple --new --template=rpath',
                                stdin='Y\n')
         self.failUnlessEqual(txt, "Do you want to replace the upstream "
                     "version? (Y/N): (Default: Y): "
@@ -130,8 +153,11 @@ Edit the recipe to add your changes to the binary package.
                 "warning: Package simple exists upstream.\n")
         os.chdir('simple')
         assert('@NEW@' in open('CONARY').read())
-        self.assertEquals(open('simple.recipe').read(),'''#
-# Copyright (c) %s Test (http://bugzilla.rpath.com/)
+        self.assertEquals(open('simple.recipe').read(),'''\
+#
+# Copyright (c) %s rPath, Inc.
+# This file is distributed under the terms of the MIT License.
+# A copy is available at http://www.rpath.com/permanent/mit-license.html
 #
 
 class Simple(PackageRecipe):
@@ -150,12 +176,15 @@ class Simple(PackageRecipe):
         # bogus top level group with nothing relevant in it.
         self.addCollection('group-dist', ['simple:run'])
         os.chdir('foo/devel')
-        txt = self.runCommand('checkout package --template=default')
+        txt = self.runCommand('checkout package --template=rpath')
         self.assertEquals(txt, "Created new package 'package' in './package'\n")
         os.chdir('package')
         assert('@NEW@' in open('CONARY').read())
-        self.assertEquals(open('package.recipe').read(),'''#
-# Copyright (c) %s Test (http://bugzilla.rpath.com/)
+        self.assertEquals(open('package.recipe').read(),'''\
+#
+# Copyright (c) %s rPath, Inc.
+# This file is distributed under the terms of the MIT License.
+# A copy is available at http://www.rpath.com/permanent/mit-license.html
 #
 
 class Package(PackageRecipe):
@@ -168,4 +197,78 @@ class Package(PackageRecipe):
         pass
 ''' % time.localtime().tm_year)
 
+    def testCheckoutGroup(self):
+        self.openRepository()
+        self.initProductDirectory('foo')
+        # bogus top level group with nothing relevant in it.
+        self.addCollection('group-dist', ['simple:run'])
+        os.chdir('foo/devel')
+        txt = self.runCommand('checkout group-foo')
+        self.assertEquals(txt, "Created new package 'group-foo' in './group-foo'\n")
+        os.chdir('group-foo')
+        assert('@NEW@' in open('CONARY').read())
+        self.assertEquals(open('group-foo.recipe').read(),'''\
+#
+# Copyright (c) %s Test (http://bugzilla.rpath.com/)
+#
 
+class GroupFoo(GroupSetRecipe):
+    name = 'group-foo'
+    version = ''
+
+    buildRequires = []
+
+    def setup(r):
+        pass
+''' % time.localtime().tm_year)
+
+    def testCheckoutGroupAppliance(self):
+        self.openRepository()
+        self.initProductDirectory('foo')
+        # bogus top level group with nothing relevant in it.
+        self.addCollection('group-dist', ['simple:run'])
+        os.chdir('foo/devel')
+        txt = self.runCommand('checkout group-foo-appliance')
+        self.assertEquals(txt, "Created new package 'group-foo-appliance' in './group-foo-appliance'\n")
+        os.chdir('group-foo-appliance')
+        assert('@NEW@' in open('CONARY').read())
+        self.assertEquals(open('group-foo-appliance.recipe').read(), '''\
+#
+# Copyright (c) %s Test (http://bugzilla.rpath.com/)
+#
+
+loadSuperClass("group-set-appliance=centos6.rpath.com@rpath:centos-6-common")
+class GroupFooAppliance(GroupSetAppliance):
+    name = "group-foo-appliance"
+    version = ""
+
+    buildRequires = []
+
+    # add additional search path groups here
+    additionalSearchPath = []
+
+    def addPackages(r):
+        """
+        Here is where you define your appliance by manipulating the
+        packages included in the appliance and scripts that are run.
+
+        Packages may be added, removed or replaced
+
+            Add application packages by calling r.add("pkgname")
+
+            Remove packages from the appliance by calling r.remove("pkgname")
+
+            Replace upstream packages by calling r.replace("pkgname")
+
+        Scripts may be added by calling the appropriate method with the
+        text of the script. The available methods are:
+
+            r.addPostInstallScript(txt)
+            r.addPostUpdateScript(txt)
+            r.addPostRollbackScript(txt)
+            r.addPreInstallScript(txt)
+            r.addPreUpdateScript(txt)
+            r.addPreRollbackScript(txt)
+        """
+        pass
+''' % time.localtime().tm_year)

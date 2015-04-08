@@ -49,10 +49,15 @@ class ConfigTest(rbuildhelp.RbuildHelper):
         handle = self.getRbuildHandle(mockOutput=False)
         _, txt = self.captureOutput(handle.Config.displayConfig)
         expectedText = '''\
+applianceTemplate         groupSetAppliance
 contact                   http://bugzilla.rpath.com/
+factoryTemplate           factory
+groupTemplate             groupSet
 name                      Test
 pluginDirs                %s
 quiet                     False
+recipeTemplate            default
+recipeTemplateDirs        ~/.conary/recipeTemplates:/etc/conary/recipeTemplates
 repositoryMap             []
 repositoryUser            []
 rmakePluginDirs           %s
@@ -65,10 +70,15 @@ user                      test <password>
         _, txt = self.captureOutput(handle.Config.displayConfig,
                                     hidePasswords=False)
         expectedPasswordText = '''\
+applianceTemplate         groupSetAppliance
 contact                   http://bugzilla.rpath.com/
+factoryTemplate           factory
+groupTemplate             groupSet
 name                      Test
 pluginDirs                %s
 quiet                     False
+recipeTemplate            default
+recipeTemplateDirs        ~/.conary/recipeTemplates:/etc/conary/recipeTemplates
 repositoryMap             []
 repositoryUser            []
 rmakePluginDirs           %s
@@ -180,14 +190,24 @@ You should now begin working with a product by running 'rbuild init <short name>
             txt = open(self.workDir + '/home/.rbuildrc').read()
             expectedConfiguredTxt = '''\
 # This file will be overwritten by the "rbuild config --ask" command
+# applianceTemplate (Default: groupSetAppliance)
+applianceTemplate         groupSetAppliance
 # contact (Default: None)
 contact                   Display Name
+# factoryTemplate (Default: factory)
+factoryTemplate           factory
+# groupTemplate (Default: groupSet)
+groupTemplate             groupSet
 # name (Default: None)
 name                      Contact
 # pluginDirs (Default: /usr/share/rbuild/plugins:~/.rbuild/plugins.d)
 pluginDirs                %s
 # quiet (Default: False)
 quiet                     False
+# recipeTemplate (Default: default)
+recipeTemplate            default
+# recipeTemplateDirs (Default: ~/.conary/recipeTemplates:/etc/conary/recipeTemplates)
+recipeTemplateDirs        ~/.conary/recipeTemplates:/etc/conary/recipeTemplates
 # repositoryMap (Default: [])
 repositoryMap             []
 # repositoryUser (Default: [])
@@ -316,14 +336,24 @@ You should now begin working with a product by running 'rbuild init <short name>
             txt = open(self.workDir + '/home/.rbuildrc').read()
             expectedConfiguredTxt = '''\
 # This file will be overwritten by the "rbuild config --ask" command
+# applianceTemplate (Default: groupSetAppliance)
+applianceTemplate         groupSetAppliance
 # contact (Default: None)
 contact                   Contact
+# factoryTemplate (Default: factory)
+factoryTemplate           factory
+# groupTemplate (Default: groupSet)
+groupTemplate             groupSet
 # name (Default: None)
 name                      Display Name
 # pluginDirs (Default: /usr/share/rbuild/plugins:~/.rbuild/plugins.d)
 pluginDirs                %s
 # quiet (Default: False)
 quiet                     False
+# recipeTemplate (Default: default)
+recipeTemplate            default
+# recipeTemplateDirs (Default: ~/.conary/recipeTemplates:/etc/conary/recipeTemplates)
+recipeTemplateDirs        ~/.conary/recipeTemplates:/etc/conary/recipeTemplates
 # repositoryMap (Default: [])
 repositoryMap             []
 # repositoryUser (Default: [])
@@ -389,14 +419,24 @@ user                      testuser
             txt = open(self.workDir + '/home/.rbuildrc').read()
             expectedText = '''\
 # This file will be overwritten by the "rbuild config --ask" command
+# applianceTemplate (Default: groupSetAppliance)
+applianceTemplate         groupSetAppliance
 # contact (Default: None)
 contact                   Display Name
+# factoryTemplate (Default: factory)
+factoryTemplate           factory
+# groupTemplate (Default: groupSet)
+groupTemplate             groupSet
 # name (Default: None)
 name                      Contact
 # pluginDirs (Default: /usr/share/rbuild/plugins:~/.rbuild/plugins.d)
 pluginDirs                %s
 # quiet (Default: False)
 quiet                     False
+# recipeTemplate (Default: default)
+recipeTemplate            default
+# recipeTemplateDirs (Default: ~/.conary/recipeTemplates:/etc/conary/recipeTemplates)
+recipeTemplateDirs        ~/.conary/recipeTemplates:/etc/conary/recipeTemplates
 # repositoryMap (Default: [])
 repositoryMap             []
 # repositoryUser (Default: [])
@@ -446,14 +486,24 @@ user                      testuser
             txt = open(self.workDir + '/home/.rbuildrc').read()
             expectedText = '''\
 # This file will be overwritten by the "rbuild config --ask" command
+# applianceTemplate (Default: groupSetAppliance)
+applianceTemplate         groupSetAppliance
 # contact (Default: None)
 contact                   Display Name
+# factoryTemplate (Default: factory)
+factoryTemplate           factory
+# groupTemplate (Default: groupSet)
+groupTemplate             groupSet
 # name (Default: None)
 name                      Contact
 # pluginDirs (Default: /usr/share/rbuild/plugins:~/.rbuild/plugins.d)
 pluginDirs                %s
 # quiet (Default: False)
 quiet                     False
+# recipeTemplate (Default: default)
+recipeTemplate            default
+# recipeTemplateDirs (Default: ~/.conary/recipeTemplates:/etc/conary/recipeTemplates)
+recipeTemplateDirs        ~/.conary/recipeTemplates:/etc/conary/recipeTemplates
 # repositoryMap (Default: [])
 repositoryMap             []
 # repositoryUser (Default: [])
@@ -646,14 +696,24 @@ You should now begin working with a product by running 'rbuild init <short name>
             txt = open(self.workDir + '/home/.rbuildrc').read()
             expectedConfiguredTxt = '''\
 # This file will be overwritten by the "rbuild config --ask" command
+# applianceTemplate (Default: groupSetAppliance)
+applianceTemplate         groupSetAppliance
 # contact (Default: None)
 contact                   Display Name
+# factoryTemplate (Default: factory)
+factoryTemplate           factory
+# groupTemplate (Default: groupSet)
+groupTemplate             groupSet
 # name (Default: None)
 name                      Contact
 # pluginDirs (Default: /usr/share/rbuild/plugins:~/.rbuild/plugins.d)
 pluginDirs                %s
 # quiet (Default: False)
 quiet                     False
+# recipeTemplate (Default: default)
+recipeTemplate            default
+# recipeTemplateDirs (Default: ~/.conary/recipeTemplates:/etc/conary/recipeTemplates)
+recipeTemplateDirs        ~/.conary/recipeTemplates:/etc/conary/recipeTemplates
 # repositoryMap (Default: [])
 repositoryMap             []
 # repositoryUser (Default: [])

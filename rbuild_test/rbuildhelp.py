@@ -20,6 +20,7 @@ import shlex
 import sys
 import StringIO
 from conary.lib import util
+from conary_test import resources as conary_resources
 from proddef_test import resources as proddef_resources
 from rmake_test import resources as rmake_resources
 from rmake_test import rmakehelp

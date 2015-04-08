@@ -1,0 +1,38 @@
+#
+# Copyright (c) %(year)s %(contactName)s (%(contact)s)
+#
+
+loadSuperClass("group-set-appliance=centos6.rpath.com@rpath:centos-6-common")
+class %(className)s(GroupSetAppliance):
+    name = "%(name)s"
+    version = ""
+
+    buildRequires = []
+
+    # add additional search path groups here
+    additionalSearchPath = []
+
+    def addPackages(r):
+        """
+        Here is where you define your appliance by manipulating the
+        packages included in the appliance and scripts that are run.
+
+        Packages may be added, removed or replaced
+
+            Add application packages by calling r.add("pkgname")
+
+            Remove packages from the appliance by calling r.remove("pkgname")
+
+            Replace upstream packages by calling r.replace("pkgname")
+
+        Scripts may be added by calling the appropriate method with the
+        text of the script. The available methods are:
+
+            r.addPostInstallScript(txt)
+            r.addPostUpdateScript(txt)
+            r.addPostRollbackScript(txt)
+            r.addPreInstallScript(txt)
+            r.addPreUpdateScript(txt)
+            r.addPreRollbackScript(txt)
+        """
+        pass

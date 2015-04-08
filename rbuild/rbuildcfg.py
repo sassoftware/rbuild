@@ -82,6 +82,13 @@ class RbuildConfiguration(cfg.SectionedConfigFile):
     signatureKey         = CfgFingerPrint
     signatureKeyMap      = CfgFingerPrintMap
 
+    recipeTemplate        =  (CfgString, 'default')
+    groupTemplate         =  (CfgString, 'groupSet')
+    factoryTemplate       =  (CfgString, 'factory')
+    applianceTemplate     =  (CfgString, 'groupSetAppliance')
+    recipeTemplateDirs    =  (CfgPathList, ('~/.conary/recipeTemplates',
+                                            '/etc/conary/recipeTemplates'))
+
     def __init__(self, readConfigFiles=False, ignoreErrors=False, root=''):
         cfg.SectionedConfigFile.__init__(self)
         self._pluginConfigHandlers = dict()

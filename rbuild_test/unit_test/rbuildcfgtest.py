@@ -55,10 +55,16 @@ class ConfigTest(rbuildhelp.RbuildHelper):
         dumpFile.seek(0)
         dump = dumpFile.read()
 
-        expected = '''# contact (Default: None) (At `rbuild init': mr.user@foo.com)
+        expected = '''\
+# applianceTemplate (Default: groupSetAppliance) (At `rbuild init': groupSetAppliance)
+# contact (Default: None) (At `rbuild init': mr.user@foo.com)
+# factoryTemplate (Default: factory) (At `rbuild init': factory)
+# groupTemplate (Default: groupSet) (At `rbuild init': groupSet)
 # name (Default: None) (At `rbuild init': Mr. User)
 # pluginDirs (Default: /usr/share/rbuild/plugins:~/.rbuild/plugins.d) (At `rbuild init': /usr/share/rbuild/plugins:~/.rbuild/plugins.d)
 # quiet (Default: False) (At `rbuild init': True)
+# recipeTemplate (Default: default) (At `rbuild init': default)
+# recipeTemplateDirs (Default: ~/.conary/recipeTemplates:/etc/conary/recipeTemplates) (At `rbuild init': ~/.conary/recipeTemplates:/etc/conary/recipeTemplates)
 # repositoryMap (Default: [])
 repositoryMap             bar.com                   https://dev.bar.com/conary/
 repositoryMap             foo.com                   https://repo.foo.com/conary/

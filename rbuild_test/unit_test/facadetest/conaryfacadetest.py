@@ -340,6 +340,11 @@ class ConaryFacadeTest(rbuildhelp.RbuildHelper):
         handle, facade = self.prep()
         mockConaryConfig = MockConfig()
         handle.getConfig() # create handle._cfg
+        handle._cfg.applianceTemplate = 'applianceTemplate'
+        handle._cfg.factoryTemplate = 'factoryTemplate'
+        handle._cfg.groupTemplate = 'groupTemplate'
+        handle._cfg.recipeTemplate = 'recipeTemplate'
+        handle._cfg.recipeTemplateDirs = ['recipeTemplateDir', 'recipeTemplateDir2']
         handle._cfg.repositoryMap = {'foo': 'bar'}
         handle._cfg.user = ('rbuildCfgUser', 'rbuildCfgPassword')
         handle._cfg.name = 'rbuildCfgName'
