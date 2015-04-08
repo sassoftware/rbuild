@@ -26,6 +26,7 @@ import sys
 import termios
 import time
 
+from conary.lib import keystore
 from rbuild import errors
 from rbuild.internal import logger
 
@@ -373,28 +374,29 @@ class UserInterface(object):
                 promptDefault.add(response)
 
     def promptPassword(self, keyDesc, prompt, promptDesc, validateCallback):
-        try:
-            import keyutils
-            keyring = keyutils.KEY_SPEC_SESSION_KEYRING
-        except ImportError:
-            keyutils = keyring = None
-        if keyutils:
-            keyId = keyutils.request_key(keyDesc, keyring)
-            if keyId is not None:
-                passwd = keyutils.read_key(keyId)
-                if validateCallback(passwd):
-                    return passwd
-                # Fall through if the cached creds are invalid
+        passwd = keystore.getPassword(keyDesc)
+        if passwd:
+            if validateCallback(passwd):
+                return passwd
+            else:
+                # Invalidate the cached password (if Conary is new enough to
+                # support that)
+                try:
+                    keystore.invalidatePassword(keyDesc)
+                except AttributeError:
+                    pass
         for x in range(3):
             self.write(promptDesc)
-            passwd = self.inputPassword(prompt)
-            if validateCallback(passwd):
-                if keyutils:
-                    keyutils.add_key(keyDesc, passwd, keyring)
-                return passwd
+            try:
+                passwd = self.inputPassword(prompt)
+            except EOFError:
+                break
             if not passwd:
                 # User wants out but getpass eats Ctrl-C
                 break
+            if validateCallback(passwd):
+                keystore.setPassword(keyDesc, passwd)
+                return passwd
             self.write("The specified credentials were not valid.\n")
         return None
 
