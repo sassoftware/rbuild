@@ -842,7 +842,6 @@ class RbuilderFacade(object):
         @return: the created Target
         @rtype: robj.HTTPData
         '''
-        import epdb; epdb.st()  # XXX breakpoint
         client = self._getRbuilderRESTClient()
         return client.createTarget(ddata, ttype)
 
