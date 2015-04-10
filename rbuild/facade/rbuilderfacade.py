@@ -404,7 +404,7 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
         target.description = ddata.getField('description')
         target.name = ddata.getField('name')
         target.zone_name = ddata.getField('zone')
-        target.target_type_name = ttype
+        target.target_type_name = ttype.name
 
         try:
             target = self.api.targets.append(target_doc, tag='target')
@@ -842,6 +842,7 @@ class RbuilderFacade(object):
         @return: the created Target
         @rtype: robj.HTTPData
         '''
+        import epdb; epdb.st()  # XXX breakpoint
         client = self._getRbuilderRESTClient()
         return client.createTarget(ddata, ttype)
 
