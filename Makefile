@@ -22,7 +22,7 @@ all-subdirs:
 
 export TOPDIR = $(shell pwd)
 
-SUBDIRS=commands rbuild plugins pylint
+SUBDIRS=config commands rbuild plugins pylint
 MAKEALLSUBDIRS=commands rbuild plugins
 MANPAGES=$(notdir $(filter %.1,$(wildcard docs/manpages/*.1)))
 
