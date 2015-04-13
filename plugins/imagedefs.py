@@ -31,6 +31,13 @@ from rbuild.pluginapi import command
 DESCRIPTOR_PREFIX = 'options.'
 
 
+class MissingImageDefError(errors.RbuildError):
+    """Raised when we don't find an imagedef"""
+    template = ("Unable to find imagedef with id '%(image)s' on %(stage)s stage"
+        " of %(project)s project")
+    params = ["image", "project", "stage"]
+
+
 class CreateImageDefCommand(command.BaseCommand):
     help = 'Create a image defintion on a SAS App Engine'
     commands = ['imagedef']
@@ -73,6 +80,17 @@ class CreateImageDefCommand(command.BaseCommand):
 
         if toFile:
             handle.DescriptorConfig.writeConfig(toFile)
+
+
+class DeleteImageDefsCommand(command.BaseCommand):
+    help = 'Delete image definitions'
+    paramHelp = '<imagedef id or name>+'
+
+    def runCommand(self, handle, argSet, args):
+        _, imagedefIds = self.requireParameters(
+            args, expected=['ID'], appendExtra=True)
+        for imagedefId in imagedefIds:
+            handle.ImageDefs.delete(imagedefId)
 
 
 class ListImageDefsCommand(command.ListCommand):
@@ -205,11 +223,26 @@ class ImageDefs(pluginapi.Plugin):
         ps.commit(message=message)
         ps.update()
 
+    def delete(self, imageDefId):
+        shortName = self.handle.product.getProductShortname()
+        version = self.handle.product.getProductVersion()
+
+        imageDefs = self.handle.facade.rbuilder.getImageDefs(id=imageDefId, product=shortName,
+            version=version)
+
+        if imageDefs:
+            if self.handle.ui.getYn("Delete {0}?".format(imageDefs[0].name), default=False):
+                imageDefs[0].delete()
+        else:
+            raise MissingImageError(image=imageId, project=shortName, version=version)
+
     def initialize(self):
         self.handle.Commands.getCommandClass('create').registerSubCommand(
             'imagedef', CreateImageDefCommand)
         self.handle.Commands.getCommandClass('list').registerSubCommand(
             'imagedefs', ListImageDefsCommand)
+        self.handle.Commands.getCommandClass('delete').registerSubCommand(
+            'imagedefs', DeleteImageDefsCommand)
 
     @requiresProduct
     def list(self):
