@@ -302,7 +302,8 @@ class Images(pluginapi.Plugin):
         images = self.handle.facade.rbuilder.getImages(image_id=imageId,
             project=shortName, branch=baseLabel, stage=stageName)
         if images:
-            images[0].delete()
+            if self.handle.ui.getYn("Delete {0}?".format(images[0].name), default=False):
+                images[0].delete()
         else:
             raise MissingImageError(image=imageId, project=shortName,
                 stage=stageName)

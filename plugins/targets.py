@@ -158,15 +158,20 @@ class Targets(pluginapi.Plugin):
     def delete(self, targetId):
         target = self.handle.facade.rbuilder.getTargets(target_id=targetId)
         if target:
-            target[0].delete()
+            self._deleteTarget(target[0])
         else:
             # no target found with that ID, check if the ID is really a name
             targets = [ t for t in self.handle.facade.rbuilder.getTargets() if t.name == targetId ]
             if targets:
                 for target in targets:
-                    target.delete()
+                    self._deleteTarget(target)
             else:
                 self.handle.ui.write("No target found with id or name '%s'" % targetId)
+
+    def _deleteTarget(self, target):
+        """ target: rObj representing target """
+        if self.handle.ui.getYn("Delete {0}?".format(target.name), default=False):
+            target.delete()
 
     def edit(self, targetName, targetType=None):
         dc = self.handle.DescriptorConfig

@@ -489,6 +489,7 @@ class ImagesPluginTest(AbstractImagesTest):
         mock.mockMethod(handle.facade.rbuilder.getImages)
         mock.mockMethod(handle.Images._getProductStage,
             ('project', 'branch', 'stage'))
+        mock.mockMethod(handle.ui.getYn)
 
         handle.Images.delete(10)
         handle.facade.rbuilder.getImages._mock.assertCalled(
