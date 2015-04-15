@@ -24,9 +24,11 @@ class AbstractImageDefsTest(rbuildhelp.RbuildHelper):
         rbuildhelp.RbuildHelper.setUp(self)
         self.handle = self.getRbuildHandle()
         self.handle.Create.registerCommands()
+        self.handle.Delete.registerCommands()
         self.handle.List.registerCommands()
         self.handle.ImageDefs.registerCommands()
         self.handle.Create.initialize()
+        self.handle.Delete.initialize()
         self.handle.List.initialize()
         self.handle.ImageDefs.initialize()
 
