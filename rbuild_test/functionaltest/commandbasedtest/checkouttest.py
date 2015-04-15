@@ -15,9 +15,10 @@
 # limitations under the License.
 #
 
-
-
+from StringIO import StringIO
+import difflib
 import os
+import sys
 import time
 
 from conary.lib import util
@@ -32,9 +33,21 @@ class CheckoutTest(rbuildhelp.CommandTest):
     def setUp(self):
         rbuildhelp.CommandTest.setUp(self)
         self.rbuildCfg.recipeTemplateDirs.extend([
-            conary_resources.get_archive('recipeTemplates'),
             resources.get_archive('recipeTemplates'),
             ])
+
+    def assertEquals(self, v1, v2):
+        try:
+            rbuildhelp.CommandTest.assertEquals(self, v1, v2)
+        except AssertionError:
+            for line in difflib.unified_diff(
+                    StringIO(v1).readlines(),
+                    StringIO(v2).readlines(),
+                    "v1",
+                    "v2",
+                    ):
+                sys.stdout.write(line)
+            raise
 
     def testCheckoutNoOption(self):
         self.openRepository()
@@ -207,7 +220,7 @@ class Package(PackageRecipe):
         self.assertEquals(txt, "Created new package 'group-foo' in './group-foo'\n")
         os.chdir('group-foo')
         assert('@NEW@' in open('CONARY').read())
-        self.assertEquals(open('group-foo.recipe').read(),'''\
+        self.assertEquals(open('group-foo.recipe').read(),"""\
 #
 # Copyright (c) %s Test (http://bugzilla.rpath.com/)
 #
@@ -216,11 +229,46 @@ class GroupFoo(GroupSetRecipe):
     name = 'group-foo'
     version = ''
 
-    buildRequires = []
+    checkPathConflicts = True
+    depCheck = True
+    imageGroup = True
+
+    # packages to be added to group
+    packages = []
+
+    def makeSearchPath(r):
+        '''
+        Constructs a search path using the buildLabel and the product
+        definition, if available. If additional search paths are required,
+        add them to the sps list below
+        '''
+        # add additional search paths
+        sps = []
+
+        buildLabel = r.cfg.buildLabel
+        repo = r.Repository(buildLabel, r.flavor)
+        if 'productDefinitionSearchPath' in r.macros:
+            for specs in r.macros.productDefinitionSearchPath.split('\\n'):
+                if isinstance(specs, basestring):
+                    specs = [specs]
+                sps.append(repo.find(*specs))
+        return r.SearchPath(repo, *sps)
 
     def setup(r):
-        pass
-''' % time.localtime().tm_year)
+        sp = r.makeSearchPath()
+
+        packages = sp.find(*r.packages)
+
+        if r.depCheck:
+            # Checks against upstream searchpaths
+            deps = packages.depsNeeded(sp)
+
+            if r.imageGroup:
+                # For a bootable image (hopefully)
+                packages += deps
+
+        r.Group(packages, checkPathConflicts=r.checkPathConflicts)
+""" % time.localtime().tm_year)
 
     def testCheckoutGroupAppliance(self):
         self.openRepository()

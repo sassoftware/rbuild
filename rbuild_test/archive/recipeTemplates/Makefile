@@ -16,7 +16,9 @@
 
 
 template_files = \
-	groupSetAppliance
+	groupSetAppliance \
+	groupSet \
+	factory
 
 dist_files = Makefile $(template_files)
 
