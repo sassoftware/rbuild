@@ -387,14 +387,14 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
             self._api = ver
         return self._api
 
-    def createTarget(self, ddata, ttype):
+    def createTarget(self, ttype, ddata):
         '''
         Create a target using the descriptor data provided
 
-        @param ddata: descriptor data for target
-        @type: DescriptorData
         @param ttype: target type
         @type ttype: string
+        @param ddata: descriptor data for target
+        @type: DescriptorData
         @return: the created Target
         @rtype: robj.HTTPData
         '''
@@ -404,7 +404,7 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
         target.description = ddata.getField('description')
         target.name = ddata.getField('name')
         target.zone_name = ddata.getField('zone')
-        target.target_type_name = ttype.name
+        target.target_type_name = ttype
 
         try:
             target = self.api.targets.append(target_doc, tag='target')

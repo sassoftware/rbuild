@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 
+from StringIO import StringIO
 
 from rbuild import errors
 from testutils import mock
@@ -50,16 +51,13 @@ class CreateTargetTest(AbstractTargetTest):
     def testCreateTargetCmdline(self):
         handle = self.handle
 
-        _vmware = mock.MockObject(name="vmware")
-
         mock.mockMethod(handle.DescriptorConfig.readConfig)
         mock.mockMethod(handle.DescriptorConfig.writeConfig)
         mock.mockMethod(handle.facade.rbuilder.getTargetTypes)
         mock.mockMethod(handle.Targets.createTarget)
         mock.mockMethod(handle.Targets.configureTargetCredentials)
 
-        handle.Targets.createTarget._mock.setReturn('target', _vmware)
-        handle.facade.rbuilder.getTargetTypes._mock.setReturn([])
+        handle.Targets.createTarget._mock.setReturn('target', "vmware")
 
         cmd = handle.Commands.getCommandClass('create')()
 
@@ -73,24 +71,13 @@ class CreateTargetTest(AbstractTargetTest):
         self.assertEqual(
             str(err), "'target' missing 1 command parameter(s): TYPE")
 
-        err = self.assertRaises(
-            errors.PluginError,
-            cmd.runCommand,
-            handle,
-            {},
-            ['rbuild', 'create', 'target', 'notype'],
-            )
-        self.assertEqual(str(err), "No such target type 'notype'. Run"
-            " `rbuild list targettypes` to see valid target types")
-
-        handle.facade.rbuilder.getTargetTypes._mock.setReturn([_vmware])
         cmd.runCommand(
             handle,
             {'list': False},
             ['rbuild', 'create', 'target', 'vmware'],
             )
         handle.DescriptorConfig.readConfig._mock.assertNotCalled()
-        handle.Targets.createTarget._mock.assertCalled(_vmware)
+        handle.Targets.createTarget._mock.assertCalled("vmware")
         handle.Targets.configureTargetCredentials\
             ._mock.assertCalled('target')
 
@@ -100,7 +87,7 @@ class CreateTargetTest(AbstractTargetTest):
             ['rbuild', 'create', 'target', 'vmware'],
             )
         handle.DescriptorConfig.readConfig._mock.assertCalled('foo')
-        handle.Targets.createTarget._mock.assertCalled(_vmware)
+        handle.Targets.createTarget._mock.assertCalled("vmware")
         handle.Targets.configureTargetCredentials\
             ._mock.assertCalled('target')
         handle.DescriptorConfig.writeConfig._mock.assertNotCalled()
@@ -111,7 +98,7 @@ class CreateTargetTest(AbstractTargetTest):
             ['rbuild', 'create', 'target', 'vmware'],
             )
         handle.DescriptorConfig.readConfig._mock.assertNotCalled()
-        handle.Targets.createTarget._mock.assertCalled(_vmware)
+        handle.Targets.createTarget._mock.assertCalled("vmware")
         handle.Targets.configureTargetCredentials\
             ._mock.assertCalled('target')
         handle.DescriptorConfig.writeConfig._mock.assertCalled('foo')
@@ -254,3 +241,33 @@ class TargetsPluginTest(AbstractTargetTest):
 
         handle.Targets.list()
         handle.facade.rbuilder.getTargets._mock.assertCalled()
+
+    def testCreate(self):
+        handle = self.handle
+
+        _ddata = mock.MockObject()
+        _ttype = mock.MockObject(
+            name="type",
+            descriptor_create_target=StringIO("descriptor"),
+            )
+
+        mock.mock(handle, "DescriptorConfig")
+        handle.DescriptorConfig.createDescriptorData._mock.setReturn(
+            _ddata, fromStream="descriptor")
+
+        mock.mock(handle.facade, "rbuilder")
+        handle.facade.rbuilder.getTargetTypes._mock.setReturn([_ttype])
+        handle.facade.rbuilder.createTarget._mock.setReturn(
+            "target", _ttype.name, _ddata)
+
+        err = self.assertRaises(
+            errors.PluginError,
+            handle.Targets.createTarget,
+            "notype"
+            )
+        self.assertEqual(str(err), "No such target type 'notype'. Run"
+            " `rbuild list targettypes` to see valid target types")
+
+        rv = handle.Targets.createTarget("type")
+        self.assertEqual(rv, "target")
+

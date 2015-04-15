@@ -1263,8 +1263,7 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
 
         expected_results = xobj.parse(TARGET_XML)
 
-        _ttype = mock.MockObject(name='vmware')
-        results = client.createTarget(ddata, _ttype)
+        results = client.createTarget("vmware", ddata)
         self.assertEqual(results.toxml(), expected_results.toxml())
         self.assertTrue(len(_targets) == 1)
 
@@ -1274,7 +1273,7 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
 
         client._api.targets._mock.set(append=_append_error)
         self.assertRaises(
-            errors.RbuildError, client.createTarget, ddata, _ttype)
+            errors.RbuildError, client.createTarget, "vmware", ddata)
         self.assertTrue(len(_targets) == 1)
 
     def testGetImageTypes(self):
