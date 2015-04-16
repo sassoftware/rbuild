@@ -168,12 +168,31 @@ class EditTargetTest(AbstractTargetTest):
         handle.Targets.edit._mock.assertCalled('1', None)
         handle.DescriptorConfig.writeConfig._mock.assertCalled('foo')
 
-    def testEditTarget(self):
+
+class ListTargetsTest(AbstractTargetTest):
+    def testCommandParsing(self):
+        handle = self.handle
+        cmd = handle.Commands.getCommandClass('list')()
+
+        mock.mockMethod(handle.Targets.list)
+
+        cmd.runCommand(handle, {}, ['rbuild', 'list', 'targets'])
+        handle.Targets.list._mock.assertCalled()
+
+    def testCommand(self):
+        self.checkRbuild('list targets',
+            'rbuild_plugins.targets.ListTargetsCommand.runCommand',
+            [None, None, {}, ['list', 'targets']])
+
+
+class TargetsPluginTest(AbstractTargetTest):
+    def testEdit(self):
         h = self.handle
 
         mock.mock(h, 'DescriptorConfig')
         mock.mock(h.facade, 'rbuilder')
         mock.mock(h, 'ui')
+
         mock.mockMethod(h.Targets.configureTargetCredentials)
         mock.mockMethod(h.getConfig)
 
@@ -183,14 +202,18 @@ class EditTargetTest(AbstractTargetTest):
         _target = mock.MockObject()
         _target.target_configuration._mock.set(elements=list())
         _target.target_type._mock.set(name='type')
-        rb.getTargets._mock.setReturn([_target], name='foo')
 
         _desc = mock.MockObject()
-        rb.getTargetDescriptor._mock.setReturn(_desc, 'type')
-
         _ddata = mock.MockObject()
+        _ttype = mock.MockObject(
+            name="type",
+            descriptor_create_target=StringIO("descriptor xml"),
+            )
+
+        rb.getTargets._mock.setReturn([_target], name='foo')
+        rb.getTargetTypes._mock.setReturn([_ttype])
         h.DescriptorConfig.createDescriptorData._mock.setReturn(_ddata,
-            fromStream=_desc, defaults={})
+            fromStream="descriptor xml", defaults={})
         rb.configureTarget._mock.setReturn(_target, _target, _ddata)
 
         # no target 'bar'
@@ -216,24 +239,6 @@ class EditTargetTest(AbstractTargetTest):
         rb.configureTarget._mock.assertCalled(_target, _ddata)
         h.Targets.configureTargetCredentials._mock.assertCalled(_target)
 
-
-class ListTargetsTest(AbstractTargetTest):
-    def testCommandParsing(self):
-        handle = self.handle
-        cmd = handle.Commands.getCommandClass('list')()
-
-        mock.mockMethod(handle.Targets.list)
-
-        cmd.runCommand(handle, {}, ['rbuild', 'list', 'targets'])
-        handle.Targets.list._mock.assertCalled()
-
-    def testCommand(self):
-        self.checkRbuild('list targets',
-            'rbuild_plugins.targets.ListTargetsCommand.runCommand',
-            [None, None, {}, ['list', 'targets']])
-
-
-class TargetsPluginTest(AbstractTargetTest):
     def testList(self):
         handle = self.handle
 

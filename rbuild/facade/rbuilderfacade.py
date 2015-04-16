@@ -1084,10 +1084,6 @@ class RbuilderFacade(object):
         client = self._getRbuilderRESTClient()
         return client.getImageDefDescriptor(imageType)
 
-    def getTargetDescriptor(self, targetType):
-        client = self._getRbuilderRESTClient()
-        return client.getTargetDescriptor(targetType)
-
     def getImageTypes(self, *args, **kwargs):
         client = self._getRbuilderRESTClient()
         return client.getImageTypes(*args, **kwargs)

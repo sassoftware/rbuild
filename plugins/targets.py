@@ -202,9 +202,12 @@ class Targets(pluginapi.Plugin):
         if rb.isAdmin(self.handle.getConfig().user[0]):
             currentValues = dict((e, getattr(target.target_configuration, e))
                                  for e in target.target_configuration.elements)
-            descriptor = rb.getTargetDescriptor(target.target_type.name)
+            ttype = [t for t in rb.getTargetTypes()
+                     if t.name == target.target_type.name][0]
             ddata = dc.createDescriptorData(
-                fromStream=descriptor, defaults=currentValues)
+                fromStream=ttype.descriptor_create_target.read(),
+                defaults=currentValues,
+                )
             target = rb.configureTarget(target, ddata)
         self.configureTargetCredentials(target)
 
