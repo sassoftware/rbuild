@@ -39,8 +39,8 @@ class DeleteProjectsCommand(command.BaseCommand):
                 # project is a label, get the shortname
                 project = project.split('.')[0]
             project = handle.facade.rbuilder.getProject(project)
-            if project.project_branches:
-                branch_count = len(project.project_branches)
+            if project.project_branches and project.project_branches.count:
+                branch_count = int(project.project_branches.count)
             else:
                 branch_count = 0
 
