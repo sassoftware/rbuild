@@ -31,6 +31,17 @@ class ProjectTest(rbuildhelp.RbuildHelper):
         self.handle.List.initialize()
         self.handle.Projects.initialize()
 
+class ProjectBranches(object):
+    """ Emulate project_branches robj a little closer than a plain list """
+    def __init__(self, aList):
+        self.internalList = list(aList)
+        self.count = len(self.internalList)
+
+    def __getitem__(self, i):
+        return self.internalList[i]
+
+    def __iter__(self):
+        return self.internalList.__iter__()
 
 class DeleteProjectTest(ProjectTest):
     def setUp(self):
@@ -47,14 +58,14 @@ class DeleteProjectTest(ProjectTest):
 
         self.project1 = mock.MockObject()
         self.project1._mock.set(
-            project_branches=[self.project1_branch1], name='Bar Project')
+            project_branches=ProjectBranches([self.project1_branch1]), name='Bar Project')
 
         self.project2 = mock.MockObject(
-            project_branches=[self.project2_branch1, self.project2_branch2],
+            project_branches=ProjectBranches([self.project2_branch1, self.project2_branch2]),
             name='Foo Project',
             )
 
-        self.project3 = mock.MockObject(project_branches=[], name="Baz Project")
+        self.project3 = mock.MockObject(project_branches=ProjectBranches([]), name="Baz Project")
 
     def testCommandParsing(self):
         handle = self.handle
