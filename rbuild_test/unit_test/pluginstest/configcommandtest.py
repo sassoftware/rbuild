@@ -57,14 +57,16 @@ name                      Test
 pluginDirs                %s
 quiet                     False
 recipeTemplate            default
-recipeTemplateDirs        ~/.conary/recipeTemplates:/etc/conary/recipeTemplates
+recipeTemplateDirs        %s:~/.conary/recipeTemplates:/etc/conary/recipeTemplates
 repositoryMap             []
 repositoryUser            []
 rmakePluginDirs           %s
 serverUrl                 http://example.com
 signatureKeyMap           []
 user                      test <password>
-''' % (resources.get_plugin_dirs()[0], rmake_resources.get_plugin_dirs()[0])
+''' % (resources.get_plugin_dirs()[0],
+        resources.get_test_path('config', 'recipeTemplates'),
+        rmake_resources.get_plugin_dirs()[0])
         self.assertEqualsText(txt, expectedText)
 
         _, txt = self.captureOutput(handle.Config.displayConfig,
@@ -78,14 +80,16 @@ name                      Test
 pluginDirs                %s
 quiet                     False
 recipeTemplate            default
-recipeTemplateDirs        ~/.conary/recipeTemplates:/etc/conary/recipeTemplates
+recipeTemplateDirs        %s:~/.conary/recipeTemplates:/etc/conary/recipeTemplates
 repositoryMap             []
 repositoryUser            []
 rmakePluginDirs           %s
 serverUrl                 http://example.com
 signatureKeyMap           []
 user                      test foo
-''' % (resources.get_plugin_dirs()[0], rmake_resources.get_plugin_dirs()[0])
+''' % (resources.get_plugin_dirs()[0],
+        resources.get_test_path('config', 'recipeTemplates'),
+        rmake_resources.get_plugin_dirs()[0])
         self.assertEqualsText(txt, expectedPasswordText)
 
     def testConfigCommand(self):
@@ -207,7 +211,7 @@ quiet                     False
 # recipeTemplate (Default: default)
 recipeTemplate            default
 # recipeTemplateDirs (Default: ~/.conary/recipeTemplates:/etc/conary/recipeTemplates)
-recipeTemplateDirs        ~/.conary/recipeTemplates:/etc/conary/recipeTemplates
+recipeTemplateDirs        %s:~/.conary/recipeTemplates:/etc/conary/recipeTemplates
 # repositoryMap (Default: [])
 repositoryMap             []
 # repositoryUser (Default: [])
@@ -224,7 +228,9 @@ serverUrl                 http://localhost
 signatureKeyMap           []
 # user (Default: None)
 user                      testuser testpass
-''' % (resources.get_plugin_dirs()[0], rmake_resources.get_plugin_dirs()[0])
+''' % (resources.get_plugin_dirs()[0],
+        resources.get_test_path('config', 'recipeTemplates'),
+        rmake_resources.get_plugin_dirs()[0])
             self.assertEqualsText(txt, expectedConfiguredTxt)
             #Test to see that the permissions are set correctly
             self.assertEquals(os.stat(self.workDir + '/home/.rbuildrc').st_mode & 0777, 0600)
@@ -353,7 +359,7 @@ quiet                     False
 # recipeTemplate (Default: default)
 recipeTemplate            default
 # recipeTemplateDirs (Default: ~/.conary/recipeTemplates:/etc/conary/recipeTemplates)
-recipeTemplateDirs        ~/.conary/recipeTemplates:/etc/conary/recipeTemplates
+recipeTemplateDirs        %s:~/.conary/recipeTemplates:/etc/conary/recipeTemplates
 # repositoryMap (Default: [])
 repositoryMap             []
 # repositoryUser (Default: [])
@@ -370,7 +376,9 @@ serverUrl                 http://localhost
 signatureKeyMap           []
 # user (Default: None)
 user                      testuser
-''' % (resources.get_plugin_dirs()[0], rmake_resources.get_plugin_dirs()[0])
+''' % (resources.get_plugin_dirs()[0],
+        resources.get_test_path('config', 'recipeTemplates'),
+        rmake_resources.get_plugin_dirs()[0])
             self.assertEqualsText(txt, expectedConfiguredTxt)
             #Test to see that the permissions are set correctly
             self.assertEquals(os.stat(self.workDir + '/home/.rbuildrc').st_mode & 0777, 0600)
@@ -436,7 +444,7 @@ quiet                     False
 # recipeTemplate (Default: default)
 recipeTemplate            default
 # recipeTemplateDirs (Default: ~/.conary/recipeTemplates:/etc/conary/recipeTemplates)
-recipeTemplateDirs        ~/.conary/recipeTemplates:/etc/conary/recipeTemplates
+recipeTemplateDirs        %s:~/.conary/recipeTemplates:/etc/conary/recipeTemplates
 # repositoryMap (Default: [])
 repositoryMap             []
 # repositoryUser (Default: [])
@@ -453,7 +461,9 @@ serverUrl                 http://localhost
 signatureKeyMap           []
 # user (Default: None)
 user                      testuser
-''' % (resources.get_plugin_dirs()[0], rmake_resources.get_plugin_dirs()[0])
+''' % (resources.get_plugin_dirs()[0],
+        resources.get_test_path('config', 'recipeTemplates'),
+        rmake_resources.get_plugin_dirs()[0])
             self.assertEqualsText(txt, expectedText)
 
         finally:
@@ -503,7 +513,7 @@ quiet                     False
 # recipeTemplate (Default: default)
 recipeTemplate            default
 # recipeTemplateDirs (Default: ~/.conary/recipeTemplates:/etc/conary/recipeTemplates)
-recipeTemplateDirs        ~/.conary/recipeTemplates:/etc/conary/recipeTemplates
+recipeTemplateDirs        %s:~/.conary/recipeTemplates:/etc/conary/recipeTemplates
 # repositoryMap (Default: [])
 repositoryMap             []
 # repositoryUser (Default: [])
@@ -520,7 +530,9 @@ serverUrl                 http://localhost
 signatureKeyMap           []
 # user (Default: None)
 user                      testuser
-''' % (resources.get_plugin_dirs()[0], rmake_resources.get_plugin_dirs()[0])
+''' % (resources.get_plugin_dirs()[0],
+        resources.get_test_path('config', 'recipeTemplates'),
+        rmake_resources.get_plugin_dirs()[0])
 
             self.assertEqualsText(txt, expectedText)
 
@@ -713,7 +725,7 @@ quiet                     False
 # recipeTemplate (Default: default)
 recipeTemplate            default
 # recipeTemplateDirs (Default: ~/.conary/recipeTemplates:/etc/conary/recipeTemplates)
-recipeTemplateDirs        ~/.conary/recipeTemplates:/etc/conary/recipeTemplates
+recipeTemplateDirs        %s:~/.conary/recipeTemplates:/etc/conary/recipeTemplates
 # repositoryMap (Default: [])
 repositoryMap             []
 # repositoryUser (Default: [])
@@ -730,7 +742,9 @@ serverUrl                 http://localhost
 signatureKeyMap           []
 # user (Default: None)
 user                      testuser
-''' % (resources.get_plugin_dirs()[0], rmake_resources.get_plugin_dirs()[0])
+''' % (resources.get_plugin_dirs()[0],
+        resources.get_test_path('config', 'recipeTemplates'),
+        rmake_resources.get_plugin_dirs()[0])
             self.assertEqualsText(txt, expectedConfiguredTxt)
             #Test to see that the permissions are set correctly
             self.assertEquals(os.stat(self.workDir + '/home/.rbuildrc').st_mode & 0777, 0600)

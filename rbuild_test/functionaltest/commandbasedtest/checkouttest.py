@@ -23,18 +23,11 @@ import time
 
 from conary.lib import util
 from conary_test import recipes
-from conary_test import resources as conary_resources
 
 from rbuild_test import rbuildhelp
-from rbuild_test import resources
 
 
 class CheckoutTest(rbuildhelp.CommandTest):
-    def setUp(self):
-        rbuildhelp.CommandTest.setUp(self)
-        self.rbuildCfg.recipeTemplateDirs.extend([
-            resources.get_archive('recipeTemplates'),
-            ])
 
     def assertEquals(self, v1, v2):
         try:

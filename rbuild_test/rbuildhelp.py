@@ -20,7 +20,6 @@ import shlex
 import sys
 import StringIO
 from conary.lib import util
-from conary_test import resources as conary_resources
 from proddef_test import resources as proddef_resources
 from rmake_test import resources as rmake_resources
 from rmake_test import rmakehelp
@@ -55,10 +54,11 @@ class RbuildHelper(rmakehelp.RmakeHelper):
         self.rbuildCfg.rmakePluginDirs = rmake_resources.get_plugin_dirs()
         self.writeFile(self.cfg.root + '/conaryrc', '')
         self.rbuildCfg.user = ('test', 'foo')
+        self.rbuildCfg.recipeTemplateDirs.insert(0,
+                resources.get_test_path('config', 'recipeTemplates'))
         self.setUpSchemaDir()
 
     def setUpSchemaDir(self):
-        schemaFile = "rpd-%s.xsd" % proddef.ProductDefinition.version
         schemaDir = proddef_resources.get_xsd()
         self.schemaDir = schemaDir
         self.mock(proddef.ProductDefinition, 'schemaDir', schemaDir)
