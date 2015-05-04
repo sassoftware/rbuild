@@ -145,6 +145,7 @@ class RbuildHandle(_PluginProxy):
                 RbuildConfigData = productStore.getRbuildConfigData()
                 if RbuildConfigData is not None:
                     self._cfg.readObject('INTERNAL', RbuildConfigData)
+            self.facade.conary.clearCachedConfig()
 
     def _getFacades(self):
         '''

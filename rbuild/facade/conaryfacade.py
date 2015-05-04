@@ -349,6 +349,12 @@ class ConaryFacade(object):
                                              ignoreErrors = True,
                                              readProxyValuesFirst = True)
 
+    def clearCachedConfig(self):
+        """
+        Purges the cached Conary config object, if any.
+        """
+        self._conaryCfg = None
+
     @staticmethod
     def setFactoryFlag(factoryName, targetDir=None):
         """
