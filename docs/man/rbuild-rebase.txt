@@ -1,0 +1,41 @@
+:orphan:
+
+============================================
+rbuild-rebase rBuild Manual RBUILD-REBASE(1)
+============================================
+
+--------
+Synopsis
+--------
+
+*rbuild* rebase [--interactive] [--test]
+
+-----------
+Description
+-----------
+
+Modifies the version of the upstream platform and platform definition currently
+in use. In normal use, updates to the latest version of the platform
+definition and the latest version of each of the search path elements
+specified in the platform definition. Alternatively, can be used to change the
+upstream platform used by providing the label for the platform definition for
+the new upstream platform. After such a change all packages normally must be
+rebuilt.
+
+-------
+Options
+-------
+
+--interactive
+
+    Allow user to choose whether to apply changes.
+
+--test
+
+    Show what changes would be applied, but do not apply them.
+
+--------
+See Also
+--------
+
+:manpage:`rbuild-promote(1)`

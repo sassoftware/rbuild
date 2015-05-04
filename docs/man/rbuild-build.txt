@@ -1,0 +1,98 @@
+:orphan:
+
+==========================================
+rbuild-build rBuild Manual RBUILD-BUILD(1)
+==========================================
+
+--------
+Synopsis
+--------
+
+*rbuild build* groups [-m <message>] [--no-commit] [--no-watch]
+
+*rbuild build* images [--group-version <version>] [--no-watch] [name]...
+
+*rbuild build* packages [-m <message>] [--no-commit] [--no-recurse] [--no-watch] [--recurse] [--refresh] [name]...
+
+*rbuild build* platform
+
+-----------
+Description
+-----------
+
+Commands for building the various components of a project.
+
+--------
+Commands
+--------
+
+groups
+
+    Build the configured source group. Because it is not possible to detect
+    intrabuild dependencies among groups, a single branch should have only one
+    source group. If multiple image groups or search groups are desired, they
+    should be produced by the single source recipe.
+
+    Requires the caller be in a Stage directory.
+
+images
+
+    Build specified images for the current stage. If no images are specified,
+    builds all images definied by the product definition.
+
+    Requires the caller be in a Stage directory.
+
+packages
+
+    Builds or rebuilds the specified packages, or all checked-out packages imagedef
+    none are specified.
+
+    Additionally, rebuilds any other packages in the project group that depend
+    on the build packages.
+
+platform
+
+    Commits a generic platform definition to the Release stage of the project.
+
+-------
+Options
+-------
+
+--group-version=<version>
+
+    Set the version of the image group used to build the image. If not provided
+    rBuild will pick the latest group.
+
+-m <msg>, --message=<msg>
+
+    Use the given <msg> as the commit message. If not provided, a generic commit
+    message will be used.
+
+--no-commit
+
+    Do not automatically commit successful builds.
+
+--no-recurse
+
+    Do not rebuild dependencies. Default behaviour, left for backwards
+    compatibility.
+
+--no-watch
+
+    Do not watch the build after starting.
+
+--recurse
+
+    Build every package listed on the command line plus all of its
+    dependencies.
+
+--refresh
+
+    Refresh the source of specified packages, or all checked-out packages imagedef
+    none are specified.
+
+--------
+See Also
+--------
+
+:manpage:`rbuild-checkout`

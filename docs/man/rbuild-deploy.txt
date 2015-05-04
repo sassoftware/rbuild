@@ -1,0 +1,48 @@
+:orphan:
+
+============================================
+rbuild-deploy rBuild Manual RBUILD-DEPLOY(1)
+============================================
+
+--------
+Synopsis
+--------
+
+*rbuild* deploy [-f <file>] [-l] [--no-watch] [-o <file>] <name[=version] | id>
+<target>
+
+-----------
+Description
+-----------
+
+Deploys a built image to a configured target.
+
+The caller can specify the image to deploy by name with an optional group
+version, or by id.
+
+-------
+Options
+-------
+
+-f <file>, --from-file=<file>
+
+    Load the deployment configuration from the specified file.
+
+-l, --list
+
+    List the available targets. Deprecated in favor of
+    :program:`rbuild list targets`.
+
+--no-watch
+
+    Do not wait for the deploy job to complete
+
+-o <file>, --to-file=<file>
+
+    Write the deployment configuration to the specified file.
+
+--------
+See Also
+--------
+
+:manpage:`rbuild-launch(1)`

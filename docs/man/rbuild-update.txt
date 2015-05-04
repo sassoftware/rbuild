@@ -1,0 +1,49 @@
+:orphan:
+
+============================================
+rbuild-update rBuild Manual RBUILD-UPDATE(1)
+============================================
+
+--------
+Synopsis
+--------
+
+*rbuild update* all
+
+*rbuild update* product
+
+*rbuild update* packages
+
+*rbuild update* stage [stage]...
+
+-----------
+Description
+-----------
+
+--------
+Commands
+--------
+
+all
+
+    Update all contents of project checkout, regardless of current directory.
+
+packages
+
+    Update all packages in all stages.
+
+product
+
+    Update product directory relative to working directory.
+
+stage
+
+    Updates all packages in current stage if no stage name is given, otherwise
+    updates all packages in the given stage.
+
+--------
+See Also
+--------
+
+:manpage:`rbuild-checkout(1)`
+:manpage:`rbuild-status(1)`

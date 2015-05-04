@@ -1,0 +1,44 @@
+:orphan:
+
+============================================
+rbuild-config rBuild Manual RBUILD-CONFIG(1)
+============================================
+
+Print the rBuild configuration
+
+--------
+Synopsis
+--------
+
+*rbuild* config [--ask] [--conaryrc] [--rmakerc]
+
+-----------
+Description
+-----------
+
+With no options, simply prints the current rBuild configuration.
+
+If --ask is specified, then rBuild will prompt, or re-prompt, the user for
+configuration and write new config files.
+
+If --conaryrc is specified, then rBuild will re-write the ~/.conary-rbuild
+file.
+
+If --rmakerc is specified, then rBuild will re-write the ~/.rmakerc-rbuild
+file.
+
+-------
+Options
+-------
+
+--ask
+
+    Run the interactive config questionaire. Writes all config files.
+
+--conaryrc
+
+    Re-write ~/.conaryrc-rbuild
+
+--rmakerc
+
+    Re-write ~/.rmakerc-rbuild

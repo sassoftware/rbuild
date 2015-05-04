@@ -1,0 +1,51 @@
+:orphan:
+
+============================================
+rbuild-launch rBuild Manual RBUILD-LAUNCH(1)
+============================================
+
+--------
+Synopsis
+--------
+
+*rbuild* launch [-f <file>] [-l] [--no-launch] [-o <file>] <image[=version] | id>
+<target>
+
+-----------
+Description
+-----------
+
+Launch a system on the target from the specified image. Will perform a deploy
+if necessary.
+
+-------
+Options
+-------
+
+-f <file>, --from-file=<file>
+
+    Load launch configuration from given file.
+
+-l, --list
+
+    List available targets. Deprecated in favor of
+    :program:`rbuild list targets`
+
+--no-launch
+
+    Perform the deploy if necessary, but do not launch a system. Deprecated in
+    favor of :program:`rbuild deploy`
+
+--no-watch
+
+    Do not wait for the job to complete.
+
+-o <file>, --to-file=<file>
+
+    Write launch configuration to given file.
+
+--------
+See Also
+--------
+
+:manpage:`rbuild-deploy(1)`

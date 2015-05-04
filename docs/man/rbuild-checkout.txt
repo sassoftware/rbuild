@@ -1,0 +1,61 @@
+:orphan:
+
+================================================
+rbuild-checkout rBuild Manual RBUILD-CHECKOUT(1)
+================================================
+
+--------
+Synopsis
+--------
+
+*rbuild* checkout [--derive] [--factory=<factory>] [--new] [--shadow]
+[--template=<template>] <package>
+
+-----------
+Description
+-----------
+
+Check out a package, creating a new package if necessary.
+
+If the project's platform contains a package by the same name, then you must
+specify whether to shadow or derive from that upstream version, or to create a
+new package by the same name that is not related to the upstream version.
+
+A derived package starts with the contents of the binary package from then
+platform, generally used to make modifications that do no require rebuilding
+binaries.
+
+A shadow allows you to make changes relative to the platform's source package,
+changing how the packages built, and requiring rebuilding binaries.
+
+-------
+Options
+-------
+
+--derived
+
+    Create a derived package, one based on the upstream binary.
+
+--factory=<facotry>
+
+    If creating a new package, specify its factory.
+
+    Not needed when creating a factory package.
+
+--new
+
+    Create a new version of the package even if an upstream version exists.
+
+--shadow
+
+    Create a shadowed package, one based on the upstream source.
+
+--template=<template>
+
+    If creating a new package, specify a template.
+
+--------
+See Also
+--------
+
+:manpage:`rbuild-build(1)`

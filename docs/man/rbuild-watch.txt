@@ -1,0 +1,49 @@
+:orphan:
+
+==========================================
+rbuild-watch rBuild Manual RBUILD-WATCH(1)
+==========================================
+
+--------
+Synopsis
+--------
+
+*rbuild watch* groups
+
+*rbuild watch* images
+
+*rbuild watch* job
+
+*rbuild watch* packages
+
+-----------
+Description
+-----------
+
+Watch ongoing rbuild operations.
+
+--------
+Commands
+--------
+
+groups
+
+    Watch an ongoing group build.
+
+images
+
+    Watch an on going image build.
+
+job
+
+    Watch an arbitrary job type.
+
+packages
+
+    Watch an ongoing package build.
+
+--------
+See Also
+--------
+
+:manpage:`rbuild-show(1)`

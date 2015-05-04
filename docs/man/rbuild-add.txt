@@ -1,0 +1,17 @@
+:orphan:
+
+======================================
+rbuild-add rBuild Manual RBUILD-ADD(1)
+======================================
+
+--------
+Synopsis
+--------
+
+:program:`rbuild add` is an alias of :program:`rbuild create`
+
+--------
+See also
+--------
+
+See :manpage:`rbuild-create(1)`

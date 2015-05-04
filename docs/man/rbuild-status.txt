@@ -1,0 +1,66 @@
+:orphan:
+
+============================================
+rbuild-status rBuild Manual RBUILD-STATUS(1)
+============================================
+
+--------
+Synopsis
+--------
+
+*rbuild* status [--all] [--concise] [--local] [--(no-)product] [--repository]
+[--verbose]
+
+-----------
+Description
+-----------
+
+Prints summary of differences between the local checkout and the repository.
+New local changes that have not been committed to the repository are marked
+with a leading L character; new changes that have been committed to the
+repository but not yet applied to the local checkout are marked with a leading
+R character.
+
+If the --concise options is specified, prints a one-line summary for each
+Conary source component directory checkout. If the --concise option is not
+specified, then all commit messages for versions in the repository that are
+newer than the latest local update are printed, and a one-line-per-file
+summary of changes made locally but not yet committed is printed.
+
+If the --verbose option is specified, differences within files are printed,
+again both for newer changes in the repository and for local changes not yet
+committed to the repository.
+
+-------
+Options
+-------
+
+--all
+
+    Print status for entire project checkout.
+
+--concise
+
+    Print one-line summary for each checkout.
+
+--local
+
+    Print out only local, uncommitted changes.
+
+--(no-)product
+
+    Toggle whether to print status for the product definition.
+
+--repository
+
+    Print out only changes in repository not applied locally.
+
+--verbose
+
+    Print changes within files.
+
+--------
+See Also
+--------
+
+:manpage:`rbuild checkout`

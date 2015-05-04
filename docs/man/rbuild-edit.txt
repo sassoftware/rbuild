@@ -1,0 +1,106 @@
+:orphan:
+
+========================================
+rbuild-edit rBuild Manual RBUILD-EDIT(1)
+========================================
+
+--------
+Synopsis
+--------
+
+*rbuild edit* imagedef <name>
+
+*rbuild edit* product
+
+*rbuild edit* target
+
+*rbuild edit* user
+
+--------
+Commands
+--------
+
+imagedefs
+
+    Edit an image definition.
+
+    If --from-file is specified, then rbuild will use the responses recored in
+    the specified file. The caller will be prompted for any missing responses.
+
+    If --to-file is specified, then rbuild will write the callers responses to
+    the specified file.
+
+    If --message is not specified, then a generic commit message is used.
+
+product
+
+    Edit the product definiton XML. Uses the EDITOR environment variable.
+
+    Using :program:`rbuild edit product` is preferred to editing the
+    source directly, as :program:`rbuild edit product` performs product
+    definiton validation before committing the new XML.
+
+target
+
+user
+
+-------
+Options
+-------
+
+--(no-)admin
+
+    Toggles whether the user is an Administrator.
+
+--(no-)create
+
+    Toggles whether the user has the create resources permission.
+
+--email=<email>
+
+    Change the users email to <email>.
+
+-f <file>, --from-file=<file>
+
+    Read configuration from file
+
+--full-name=<name>
+
+    Change the users full name to <name>
+
+-l, --list
+
+    List available image definitions. Deprecated in favor of
+    :program:`rbuild list imagedefs`.
+
+-m <msg>, --message=<msg>
+
+    Use the given <msg> as the commit message. If not provided, a generic commit
+    message will be used.
+
+
+--(no-)external
+
+    Toggles whether the user is authenticated by an external source, or via the
+    rbuilder's internal user database.
+
+--password=<password>
+
+    Change the users password to <password>.
+
+    WARNING: Using this represents a potetntial security leak, as any other
+    users on the system can poll the list of processes and potentially see the
+    password. Providing the password interactively, or through --from-file,
+    recommended.
+
+-o <file>, --to-file=<file>
+
+    Write configuration to a file.
+
+--------
+See Also
+--------
+
+:manpage:`rbuild-create(1)`
+:manpage:`rbuild-delete(1)`
+:manpage:`rbuild-list(1)`

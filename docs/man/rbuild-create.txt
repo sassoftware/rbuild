@@ -1,0 +1,196 @@
+:orphan:
+
+============================================
+rbuild-create rBuild Manual RBUILD-CREATE(1)
+============================================
+
+--------
+Synopsis
+--------
+
+*rbuild create* branch [--branch=<branch>] [--project=<shortname>]
+[--description=<description>] [--platform=<platform | label>]
+[--namespace=<namespace>]
+
+*rbuild create* imagedef [--from-file=<file>] [--to-file=<file>]
+[--message=<msg>] <type> <arch>
+
+*rbuild create* project [--auth-type=<authtype>]
+[--description=<description>] [--domain-name=<name>]
+[--entitlement=<entitlement>] [--external] [--label=<label>] [--name=<name>]
+[--password=<password>] [--short-name=<shortname>] [--upstream-url=<url>]
+[--username=<user>]
+
+*rbuild create* target [--from-file=<file>] [--to-file=<file>] <type>
+
+*rbuild create* user [--admin] [--external] [--no-create]
+[--full-name=<name>] [--user-name=<user>] [--password=<password>]
+[--email=<email>]
+
+-----------
+Description
+-----------
+
+The :program:`rbuild create` command is used to create new resources.
+
+Any rbuild plugin that needs to create resources can implement a create
+subcommand.
+
+--------
+Commands
+--------
+
+branch
+
+    Create a new branch within an existing project. The user will be prompted
+    for any paramaters that are not provided by command-line options.
+
+imagedef
+
+    Create a new image definition. Two arguments are required, the type of the
+    image defintion, this tells rbuild what type of image is to be produced,
+    and the architecture, whether x86 or x86_64.
+
+    If --to-file is given, then the configuration provided by the caller will
+    be saved to the file specified. Similarly, if --from-file is given, then
+    the configuration will be read from the file specified. :program:`rbuild`
+    will prompt the caller for any fields not in the file.
+
+    Use the --message option to set the commit message used. A generic commit
+    message will be used by default.
+
+    Image definitions tell rbuild how to configure package, group, and image
+    builds. At least one must be created if you intend to use rbuild to build
+    packages, groups, or images.
+
+    This command must be run from within a project checkout.
+
+project
+
+    Create a new project. The user will be prompted for any paramaters that are
+    not provided by command-line options.
+
+    External projects, which are read-only, are created by specifing the
+    --external flag. The --label, --upstream-url, --username, and --password
+    options can then be used to configure the external project. Otherwise,
+    specifing these options is an error.
+
+    Projects are the top-level resource for managing a software stack with the
+    rbuilder. Beyond creating a project, a user must also create a branch using
+    `rbuild create branch`
+
+target
+
+    Create a new target. One argument is required, the type of the target to
+    create.
+
+    Requires that the caller is an Administrator.
+
+user
+
+    Create a new rBuilder user. The user will be prompted for any paramaters
+    that are not provided by command-line options.
+
+    If --admin is given, then an Administrator user is created. If --external
+    is given, then the user will be authenticated against an external
+    authentication source. When --no-create is provided, the user will not be
+    given the Create Resource flag, and will not have a personal queryset
+    created.
+
+    Requires that the caller is an Administrator.
+
+-------
+Options
+-------
+
+--admin
+
+    Create a user that is an Administrator
+
+--branch=<branch>
+
+    Set the name of the branch to create
+
+--description=<description>
+
+    Set the description field on a project or branch
+
+--domain-name=<domain>
+
+    Set project domain name. This is the host portion of the repository name.
+    By default, use the domain set by the rBuilder
+
+--email=<email>
+
+    Set the user's email address
+
+--external
+
+    Create an external project. An external project is one that refers to
+    a project on another rbuilder. The created project will be read-only.
+
+-f <file>, --from-file=<file>
+
+    Read configuration from the file specified
+
+--full-name=<name>
+
+    Set the user's full name
+
+--label=<label>
+
+    The label of the external project.
+
+-m <msg>, --message=<msg>
+
+    Use the given <msg> as the commit message. If not provided, a generic commit
+    message will be used.
+
+--name=<name>
+
+    Set the display name of the project.
+
+--password=<password>
+
+    When used with the :program:`rbuild create project` command, this sets the
+    password used to authenticate with the remote rBuilder.
+
+    When used with the :program:`rbuild create user` command, this sets the
+    password that the user uses to authenticate with the rBuilder.
+
+    WARNING: Using this represents a potetntial security leak, as any other
+    users on the system can poll the list of processes and potentially see the
+    password. Providing the password interactively, or through --from-file is
+    more secure.
+
+--short-name=<shortname>
+
+    Sets the short name of the project. May only contain letters and hyphens
+    (-).
+
+-o <file, --to-file=<file>
+
+    Write configuration to <file>
+
+--upstream-url=<url>
+
+    Sets the upstream URL for an external project. This is the URL of the
+    repository. If the repository is hosted by another rBuilder, you can just
+    use the base URL of the rBuilder, as it will act as a proxy for its own
+    repositories.
+
+--user-name=<user>
+
+    When used with the :program:`rbuild create user` command, this sets the
+    name of the created user. 
+
+    When used with the :program:`rbuild create project` command, this sets the
+    name of the user used to authenticate with the upstream rBuilder or repository
+
+--------
+See also
+--------
+
+:manpage:`rbuild-delete(1)`
+:manpage:`rbuild-edit(1)`
+:manpage:`rbuild-list(1)`

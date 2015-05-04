@@ -1,0 +1,46 @@
+:orphan:
+
+========================================
+rbuild-show rBuild Manual RBUILD-SHOW(1)
+========================================
+
+--------
+Synopsis
+--------
+
+*rbuild show* groups
+
+*rbuild show* images [id]...
+
+*rbuild show* packages
+
+-----------
+Description
+-----------
+
+Show the results of rbuild operations. Only capable of shwoing results of
+builds that were initiated by the caller on the current devimage.
+
+-------
+Caveats
+-------
+
+The **rbuild show** commands rely on state files created in the project working
+directory. Thus, this command is not portable across differnt users, different
+devimages, or even different project checkouts on the same devimage.
+
+--------
+Commands
+--------
+
+groups
+
+    Show result of group builds.
+
+images
+
+    Show the result of image builds
+
+packages
+
+    Show the result of package builds

@@ -1,0 +1,25 @@
+:orphan:
+
+==============================================
+rbuild-promote rBuild Manual RBUILD-PROMOTE(1)
+==============================================
+
+--------
+Synopsis
+--------
+
+*rbuild* promote [--info]
+
+-----------
+Description
+-----------
+
+Promote groups and packages to the next stage.
+
+-------
+Options
+-------
+
+--info
+
+    Show what would be done, but do not actually promote anything.

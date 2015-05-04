@@ -1,0 +1,25 @@
+:orphan:
+
+============================================
+rbuild-cancel rBuild Manual RBUILD-CANCEL(1)
+============================================
+
+--------
+Synopsis
+--------
+
+*rbuild cancel* images <id>...
+
+-----------
+Description
+-----------
+
+Cancels rBuild operations
+
+--------
+Commands
+--------
+
+images
+
+    Cancel image builds.

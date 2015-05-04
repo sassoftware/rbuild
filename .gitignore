@@ -23,3 +23,4 @@ docs/developer/**
 rpath_common
 tags
 NEWS.html
+docs/_build/

@@ -1,0 +1,17 @@
+:orphan:
+
+==========================================
+rbuild-query rBuild Manual RBUILD-QUERY(1)
+==========================================
+
+--------
+Synopsis
+--------
+
+:program:`rbuild query` is an alias of :program:`rbuild list`
+
+--------
+See also
+--------
+
+See :manpage:`rbuild-list(1)`

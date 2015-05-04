@@ -1,0 +1,82 @@
+:orphan:
+
+========================================
+rbuild-list rBuild Manual RBUILD-LIST(1)
+========================================
+
+--------
+Synopsis
+--------
+
+*rbuild list* branches <shortname>
+
+*rbuild list* images [id]...
+
+*rbuild list* imagedefs [id]...
+
+*rbuild list* imagetypes
+
+*rbuild list* platforms
+
+*rbuild list* projects [shortname]...
+
+*rbuild list* groups
+
+*rbuild list* targets
+
+*rbuild list* targettypes
+
+*rbuild list* users [user]...
+
+-----------
+Description
+-----------
+
+Show summary and details about rbuild resources
+
+--------
+Commands
+--------
+
+branches
+
+    List a projects branches.
+
+images
+
+    List image build jobs for a stage.
+
+imagedefs
+
+    List configured image definitions for a project.
+
+imagetypes
+
+    List available image types
+
+platforms
+
+    List configured platforms and whether they are enabled.
+
+projects
+
+    List projects. If project short names are specified, show detailed
+    information about those projects.
+
+groups
+
+    List binary groups on a stage.
+
+targets
+
+    List available targets and whether the caller has provided their
+    credentials.
+
+targettypes
+
+    List available target types.
+
+users
+
+    List users. If user names are specified, then show detailed information
+    about those users.

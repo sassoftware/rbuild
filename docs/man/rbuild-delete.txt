@@ -1,0 +1,55 @@
+:orphan:
+
+============================================
+rbuild-delete rBuild Manual RBUILD-DELETE(1)
+============================================
+
+Delete rBuilder resources
+
+--------
+Synopsis
+--------
+
+*rbuild delete* images <id>...
+
+*rbuild delete* imagedefs <id | name>...
+
+*rbuild delete* projects <shortname | label>...
+
+*rbuild delete* targets <id | target>...
+
+*rbuild delete* users <user>...
+
+--------
+Commands
+--------
+
+images
+
+    Delete images by image id.
+
+imagedefs
+
+    Delete image definitions by id or name.
+
+projects
+
+    Delete a project by short name or label.
+
+    WARNING: This is a potentially damaging and irreversible action. Any other
+    projects that refer to a branch within this project will be broken.
+    Additionally, the project short name cannot be re-used without also
+    resetting the associated rmake build service to remove references to the
+    original project in the internal rmake repository.
+
+targets
+
+    Delete configured targets by id or name.
+
+    Requires the caller to be an Administrator.
+
+users
+
+    Delete rBuilder users by name.
+
+    Requires the caller to be an Administrator.

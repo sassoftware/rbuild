@@ -1,0 +1,30 @@
+:orphan:
+
+========================================
+rbuild-init rBuild Manual RBUILD-INIT(1)
+========================================
+
+--------
+Synopsis
+--------
+
+*rbuild* init <shortname> <version>
+
+*rbuild* init <label>
+
+-----------
+Description
+-----------
+
+Creates a working directory for working with the given product.
+
+Example: rbuild init exampleprod 2
+Assuming that there were a product defined at
+exampleprod.rpath.org@examplens:exampleprod-2, this would create a
+product subdirectory tree representing the contents of that product
+definition.
+
+Example: rbuild init example.rpath.org@ex:example-2
+If your product does not use a standard label layout, or its product
+definition was not created through the rBuilder user interface, you
+will need to use the label to the product definition directly.

@@ -1,0 +1,23 @@
+:orphan:
+
+==============================================
+rbuild-enable rBuild Manual RBUILD-ENABLE(1)
+==============================================
+
+--------
+Synopsis
+--------
+
+*rbuild* enable <label>
+
+-----------
+Description
+-----------
+
+Enable a platform.
+
+--------
+See Also
+--------
+
+:manpage:`rbuild-disable(1)`
