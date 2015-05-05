@@ -43,7 +43,6 @@ install: install-subdirs
 	mkdir -p $(DESTDIR)$(mandir)/man1
 	for M in $$(ls docs/_build/man/); do \
 		install -m 0644 docs/_build/man/$$M $(DESTDIR)$(mandir)/man1/; \
-		gzip $(DESTDIR)$(mandir)/man1/$$M; \
 	done
 
 clean: clean-subdirs default-clean
