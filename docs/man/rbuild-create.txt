@@ -168,7 +168,7 @@ Options
     Sets the short name of the project. May only contain letters and hyphens
     (-).
 
--o <file, --to-file=<file>
+-o <file>, --to-file=<file>
 
     Write configuration to <file>
 

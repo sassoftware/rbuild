@@ -36,7 +36,7 @@ Options
 
     Create a derived package, one based on the upstream binary.
 
---factory=<facotry>
+--factory=<factory>
 
     If creating a new package, specify its factory.
 
