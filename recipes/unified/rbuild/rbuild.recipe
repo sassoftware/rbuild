@@ -25,6 +25,7 @@ class rBuild(BuildPackageRecipe):
         'mercurial',
         'robj:python',
         'smartform:python',
+        'python-sphinx',
     ]
 
     def setup(r):
