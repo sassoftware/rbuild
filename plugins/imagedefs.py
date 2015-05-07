@@ -251,8 +251,8 @@ class ImageDefs(pluginapi.Plugin):
             version=self.handle.product.getProductVersion(),
             )
 
+    @requiresProduct
     def show(self, imageDefId):
-        self.handle.Build.checkProductStore()
         imageDef = self.handle.facade.rbuilder.getImageDefs(
             id=imageDefId,
             product=self.handle.product.getProductShortname(),
