@@ -39,7 +39,7 @@ class DescriptorConfigTest(rbuildhelp.RbuildHelper):
         _ddata = mock.MockObject()
         _descr = mock.MockObject()
         _descr.createDescriptorData._mock.setReturn(
-            _ddata, dc.callbackClass())
+            _ddata, dc.callbackClass(), retry=True)
         dc.descriptorClass._mock.setReturn(_descr, fromStream='bar')
 
         self.assertEqual(

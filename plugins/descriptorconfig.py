@@ -255,7 +255,7 @@ class DescriptorConfig(pluginapi.Plugin):
         descr = self.descriptorClass(fromStream=fromStream)
         cb = self.callbackClass(self.handle.ui, self._config, defaults)
         try:
-            ddata = descr.createDescriptorData(cb)
+            ddata = descr.createDescriptorData(cb, retry=True)
         except ConstraintsValidationError as e:
             raise errors.PluginError('\n'.join(m for m in e[0]))
         self._parseDescriptorData(ddata)
