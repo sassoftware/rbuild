@@ -55,12 +55,18 @@ class CreateTargetCommand(command.BaseCommand):
 class DeleteTargetsCommand(command.BaseCommand):
     help = 'Delete targets'
     paramHelp = '<target id or name>+'
+    docs = {'force': 'Delete targets without prompting',
+            }
+
+    def addLocalParameters(self, argDef):
+        argDef['force'] = '-f', command.NO_PARAM
 
     def runCommand(self, handle, argSet, args):
+        force = argSet.pop("force", False)
         _, targetIds = self.requireParameters(
-            args, expected=['ID'], appendExtra=True)
+            args, expected=['TARGET'], appendExtra=True)
         for targetId in targetIds:
-            handle.Targets.delete(targetId)
+            handle.Targets.delete(targetId, force)
 
 
 class EditTargetCommand(command.BaseCommand):
@@ -156,22 +162,23 @@ class Targets(pluginapi.Plugin):
                 return
         errors.PluginError('Unable to find credentials action on this target')
 
-    def delete(self, targetId):
+    def delete(self, targetId, force=False):
         target = self.handle.facade.rbuilder.getTargets(target_id=targetId)
         if target:
-            self._deleteTarget(target[0])
+            self._deleteTarget(target[0], force)
         else:
             # no target found with that ID, check if the ID is really a name
             targets = [ t for t in self.handle.facade.rbuilder.getTargets() if t.name == targetId ]
             if targets:
                 for target in targets:
-                    self._deleteTarget(target)
+                    self._deleteTarget(target, force)
             else:
                 self.handle.ui.write("No target found with id or name '%s'" % targetId)
 
-    def _deleteTarget(self, target):
+    def _deleteTarget(self, target, force=False):
         """ target: rObj representing target """
-        if self.handle.ui.getYn("Delete {0}?".format(target.name), default=False):
+        if force or self.handle.ui.getYn("Delete {0}?".format(target.name),
+                                         default=False):
             target.delete()
 
     def edit(self, targetName, targetType=None):

@@ -150,8 +150,12 @@ class DeleteImagesTest(AbstractImagesTest):
         self.assertIn('IMAGEID', str(err))
 
         cmd.runCommand(handle, {}, ['rbuild', 'delete', 'images', '10', '11'])
-        handle.Images.delete._mock.assertCalled('10')
-        handle.Images.delete._mock.assertCalled('11')
+        handle.Images.delete._mock.assertCalled('10', False)
+        handle.Images.delete._mock.assertCalled('11', False)
+
+        cmd.runCommand(handle, {"force": True},
+                       ['rbuild', 'delete', 'images', '10'])
+        handle.Images.delete._mock.assertCalled('10', True)
 
         cmd.runCommand(handle, {},
             ['rbuild', 'delete', 'images', '&^%&*%$^&$'])
@@ -166,6 +170,9 @@ class DeleteImagesTest(AbstractImagesTest):
         self.checkRbuild('delete images 1 2',
             'rbuild_plugins.images.DeleteImagesCommand.runCommand',
             [None, None, {}, ['delete', 'images', '1', '2']])
+        self.checkRbuild('delete images --force 1 2',
+            'rbuild_plugins.images.DeleteImagesCommand.runCommand',
+            [None, None, {"force": True}, ['delete', 'images', '1', '2']])
 
 
 class LaunchTest(AbstractImagesTest):
@@ -486,14 +493,29 @@ class ImagesPluginTest(AbstractImagesTest):
     def testDelete(self):
         handle = self.handle
 
+        _image = mock.MockObject(name="foo")
         mock.mockMethod(handle.facade.rbuilder.getImages)
+        handle.facade.rbuilder.getImages._mock.setReturn(
+            [_image], image_id=10, project="project", branch="branch",
+            stage="stage")
+
         mock.mockMethod(handle.Images._getProductStage,
             ('project', 'branch', 'stage'))
-        mock.mockMethod(handle.ui.getYn)
+
+        mock.mockMethod(handle.ui.getYn, False)
+        handle.ui.getYn._mock.appendReturn(True, "Delete foo?", default=False)
+
+        handle.Images.delete(10, force=True)
+        handle.ui.getYn._mock.assertNotCalled()
+        handle.facade.rbuilder.getImages._mock.assertCalled(
+            image_id=10, project='project', branch='branch', stage='stage')
+        _image.delete._mock.assertCalled()
 
         handle.Images.delete(10)
         handle.facade.rbuilder.getImages._mock.assertCalled(
             image_id=10, project='project', branch='branch', stage='stage')
+        _image.delete._mock.assertCalled()
+
 
     def testDeleteMissing(self):
         from rbuild_plugins import images

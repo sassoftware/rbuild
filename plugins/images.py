@@ -76,14 +76,20 @@ class CancelImagesCommand(command.BaseCommand):
 class DeleteImagesCommand(command.BaseCommand):
     help = 'Delete images'
     paramHelp = '<image id>+'
+    docs = {"force": "Delete images without prompting",
+            }
+
+    def addLocalParameters(self, argDef):
+        argDef["force"] = "-f", command.NO_PARAM
 
     def runCommand(self, handle, argSet, args):
+        force = argSet.pop("force", False)
         _, imageIds = self.requireParameters(
             args, expected=['IMAGEID'], appendExtra=True)
         for imageId in imageIds:
             try:
                 int(imageId)
-                handle.Images.delete(imageId)
+                handle.Images.delete(imageId, force)
             except ValueError:
                 handle.ui.warning("Cannot parse image id '%s'" % imageId)
 
@@ -296,13 +302,16 @@ class Images(pluginapi.Plugin):
         '''
         return self._createJob(self.DEPLOY, *args, **kwargs)
 
-    def delete(self, imageId):
+    def delete(self, imageId, force=False):
         shortName, baseLabel, stageName = self._getProductStage()
 
         images = self.handle.facade.rbuilder.getImages(image_id=imageId,
             project=shortName, branch=baseLabel, stage=stageName)
         if images:
-            if self.handle.ui.getYn("Delete {0}?".format(images[0].name), default=False):
+            if force or self.handle.ui.getYn(
+                    "Delete {0}?".format(images[0].name),
+                    default=False,
+                    ):
                 images[0].delete()
         else:
             raise MissingImageError(image=imageId, project=shortName,

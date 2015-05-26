@@ -104,6 +104,38 @@ class CreateTargetTest(AbstractTargetTest):
         handle.DescriptorConfig.writeConfig._mock.assertCalled('foo')
 
 
+class DeleteTargetTest(AbstractTargetTest):
+    def testDeleteTargetArgParse(self):
+        self.checkRbuild(
+            'delete targets --force vmware',
+            'rbuild_plugins.targets.DeleteTargetsCommand.runCommand',
+            [None, None, {"force": True}, ['delete', 'targets', 'vmware']])
+
+    def testDeleteTargetCmdline(self):
+        handle = self.handle
+
+        mock.mockMethod(handle.Targets.delete)
+
+        cmd = handle.Commands.getCommandClass('delete')()
+
+        err = self.assertRaises(
+            errors.ParseError,
+            cmd.runCommand,
+            handle,
+            {},
+            ['rbuild', 'delete', 'targets'],
+            )
+        self.assertEqual(
+            str(err), "'targets' missing 1 command parameter(s): TARGET")
+
+        cmd.runCommand(handle, {"force": True},
+                       ['rbuild', 'delete', 'targets', 'foo'])
+        handle.Targets.delete._mock.assertCalled("foo", True)
+
+        cmd.runCommand(handle, {}, ['rbuild', 'delete', 'targets', 'foo'])
+        handle.Targets.delete._mock.assertCalled("foo", False)
+
+
 class EditTargetTest(AbstractTargetTest):
     def testEditTargetArgParse(self):
         self.checkRbuild(
@@ -276,3 +308,37 @@ class TargetsPluginTest(AbstractTargetTest):
         rv = handle.Targets.createTarget("type")
         self.assertEqual(rv, "target")
 
+    def testDelete(self):
+        handle = self.handle
+
+        _target1 = mock.MockObject(name="foo", id="1")
+        _target2 = mock.MockObject(name="bar", id="2")
+        mock.mockMethod(handle.facade.rbuilder.getTargets)
+        handle.facade.rbuilder.getTargets._mock.setReturn(
+            [_target1, _target2])
+        handle.facade.rbuilder.getTargets._mock.appendReturn(
+            [_target1], target_id="1")
+        handle.facade.rbuilder.getTargets._mock.appendReturn(
+            [], target_id="bar")
+
+        mock.mock(handle, "ui")
+        handle.ui.getYn._mock.setDefaultReturn(False)
+        handle.ui.getYn._mock.setReturn(True, "Delete foo?", default=False)
+        handle.ui.getYn._mock.setReturn(True, "Delete bar?", default=False)
+
+
+        handle.Targets.delete("1", force=True)
+        handle.facade.rbuilder.getTargets._mock.assertCalled(target_id="1")
+        handle.ui.getYn._mock.assertNotCalled()
+        _target1.delete._mock.assertCalled()
+
+        handle.Targets.delete("1")
+        handle.facade.rbuilder.getTargets._mock.assertCalled(target_id="1")
+        handle.ui.getYn._mock.assertCalled("Delete foo?", default=False)
+        _target1.delete._mock.assertCalled()
+
+        handle.Targets.delete("bar")
+        handle.facade.rbuilder.getTargets._mock.assertCalled(target_id="bar")
+        handle.facade.rbuilder.getTargets._mock.assertCalled()
+        handle.ui.getYn._mock.assertCalled("Delete bar?", default=False)
+        _target2.delete._mock.assertCalled()
