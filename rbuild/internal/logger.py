@@ -54,6 +54,9 @@ class Logger(object):
     def __call__(self, msg, *args):
         self.info(msg, *args)
 
+    def debug(self, msg, *args):
+        self._write(msg, 'DEBUG: ', *args)
+
     def info(self, msg, *args):
         self._write(msg, '', *args)
 

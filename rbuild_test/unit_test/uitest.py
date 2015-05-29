@@ -106,6 +106,11 @@ class UserInterfaceTest(rbuildhelp.RbuildHelper):
         h = self.getRbuildHandle()
         h.ui._log = mock.MockObject()
 
+        h.ui.debug("foo %s", "bar")
+        h.ui.errorStream._mock.assertNotCalled()
+        h.ui.outStream._mock.assertNotCalled()
+        h.ui._log.debug._mock.assertCalled("foo %s", "bar")
+
         h.ui.warning('foo %s', 'bar')
         h.ui.errorStream.write._mock.assertCalled('warning: foo bar\n')
         h.ui._log.warn._mock.assertCalled('foo %s', 'bar')

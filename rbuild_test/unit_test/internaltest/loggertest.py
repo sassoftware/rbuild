@@ -70,11 +70,13 @@ class LoggerTest(rbuildhelp.RbuildHelper):
     def testLevels(self):
         l = self.getLogger()
         l('implicit %s', 'info')
+        l.debug('a %s', 'debug')
         l.info('some %s', 'info')
         l.warn('a %s', 'warning')
         l.error('an %s', 'error')
         self.assertContents(
             ('implicit info',),
+            ("DEBUG: a debug",),
             ('some info',),
             ('WARNING: a warning',),
             ('ERROR: an error',),

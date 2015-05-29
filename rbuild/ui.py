@@ -126,6 +126,10 @@ class UserInterface(object):
         if self._log:
             self._log.warn(msg, *args)
 
+    def debug(self, msg, *args):
+        if self._log:
+            self._log.debug(msg, *args)
+
     def progress(self, msg, *args):
         '''
         Writes progress message; used to indicate that a potentially
