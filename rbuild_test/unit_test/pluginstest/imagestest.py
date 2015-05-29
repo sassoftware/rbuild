@@ -472,6 +472,7 @@ class ImagesPluginTest(AbstractImagesTest):
 
     def testCreateJobNoImages(self):
         '''Regression test for APPENG-2803'''
+        from rbuild_plugins import images
         handle = self.handle
         handle.Images.registerCommands()
         handle.Images.initialize()
@@ -481,14 +482,14 @@ class ImagesPluginTest(AbstractImagesTest):
         mock.mockMethod(handle.facade.rbuilder.getImages, None)
 
         err = self.assertRaises(
-            errors.PluginError,
+            images.MissingImageError,
             handle.Images._createJob,
             handle.Images.DEPLOY,
             'none',
             'bar',
             True,
             )
-        self.assertIn('image matching', str(err))
+        self.assertIn('Unable to find', str(err))
 
     def testDelete(self):
         handle = self.handle
@@ -496,8 +497,8 @@ class ImagesPluginTest(AbstractImagesTest):
         _image = mock.MockObject(name="foo")
         mock.mockMethod(handle.facade.rbuilder.getImages)
         handle.facade.rbuilder.getImages._mock.setReturn(
-            [_image], image_id=10, project="project", branch="branch",
-            stage="stage")
+            [_image], image_id="10", project="project", branch="branch",
+            stage="stage", order_by="-time_created")
 
         mock.mockMethod(handle.Images._getProductStage,
             ('project', 'branch', 'stage'))
@@ -505,17 +506,18 @@ class ImagesPluginTest(AbstractImagesTest):
         mock.mockMethod(handle.ui.getYn, False)
         handle.ui.getYn._mock.appendReturn(True, "Delete foo?", default=False)
 
-        handle.Images.delete(10, force=True)
+        handle.Images.delete("10", force=True)
         handle.ui.getYn._mock.assertNotCalled()
         handle.facade.rbuilder.getImages._mock.assertCalled(
-            image_id=10, project='project', branch='branch', stage='stage')
+            image_id="10", project='project', branch='branch', stage='stage',
+            order_by="-time_created")
         _image.delete._mock.assertCalled()
 
-        handle.Images.delete(10)
+        handle.Images.delete("10")
         handle.facade.rbuilder.getImages._mock.assertCalled(
-            image_id=10, project='project', branch='branch', stage='stage')
+            image_id="10", project='project', branch='branch', stage='stage',
+            order_by="-time_created")
         _image.delete._mock.assertCalled()
-
 
     def testDeleteMissing(self):
         from rbuild_plugins import images
@@ -526,9 +528,10 @@ class ImagesPluginTest(AbstractImagesTest):
         mock.mockMethod(handle.Images._getProductStage,
             ('project', 'branch', 'stage'))
 
-        self.assertRaises(images.MissingImageError, handle.Images.delete, 10)
+        self.assertRaises(images.MissingImageError, handle.Images.delete, "10")
         handle.facade.rbuilder.getImages._mock.assertCalled(
-            image_id=10, project='project', branch='branch', stage='stage')
+            image_id="10", project='project', branch='branch', stage='stage',
+            order_by="-time_created")
 
     def testDeleteNoProduct(self):
         handle = self.handle
@@ -757,3 +760,64 @@ class ImagesPluginTest(AbstractImagesTest):
             (('Created system baz with addresses: foo, bar\n',), ()),
             ]
         self.assertEqual(handle.ui.outStream.write._mock.calls, expected_calls)
+
+    def testGetImages(self):
+        handle = self.handle
+
+        kwargs = dict((x, x) for x in ("project", "stage", "branch"))
+        kwargs["order_by"] = "-time_created"
+
+        _image1 = mock.MockObject(name="foo", trailing_version="1-1-1", id="1")
+        _image2 = mock.MockObject(name="foo", trailing_version="2-2-2", id="2")
+
+        rb = handle.facade.rbuilder
+        mock.mockMethod(rb.getImages, None)
+        mock.mockMethod(handle.Images._getProductStage,
+                        ("project", "branch", "stage"))
+        rb.getImages._mock.appendReturn([_image1, _image2], name="foo",
+                                        **kwargs)
+        rb.getImages._mock.appendReturn([_image2], name="foo",
+                                        trailing_version="2-2-2", **kwargs)
+        rb.getImages._mock.appendReturn([_image1], image_id="1", **kwargs)
+
+        self.assertEqual([_image1], handle.Images.getImages("1"))
+        self.assertEqual([_image1, _image2], handle.Images.getImages("foo"))
+        self.assertEqual([_image2], handle.Images.getImages("foo=2-2-2"))
+
+    def testGetImagesMissing(self):
+        from rbuild_plugins import images
+        handle = self.handle
+        rb = handle.facade.rbuilder
+        mock.mockMethod(rb.getImages, None)
+
+        self.assertRaises(images.MissingImageError, handle.Images.getImages,
+                          "10")
+
+    def testGetImage(self):
+        from rbuild_plugins import images
+        handle = self.handle
+        rb = handle.facade.rbuilder
+
+        _image1 = mock.MockObject(name="foo", trailing_version="1-1-1", id="1")
+        _image2 = mock.MockObject(name="foo", trailing_version="2-2-2", id="2")
+
+        kwargs = dict((x, x) for x in ("project", "stage", "branch"))
+        kwargs["order_by"] = "-time_created"
+
+        mock.mockMethod(rb.getImages, None)
+        rb.getImages._mock.appendReturn([_image1, _image2], name="foo",
+                                        **kwargs)
+        rb.getImages._mock.appendReturn([_image2], name="foo",
+                                        trailing_version="2-2-2", **kwargs)
+        rb.getImages._mock.appendReturn([_image1], image_id="1", **kwargs)
+
+        mock.mockMethod(handle.Images._getProductStage,
+                        ("project", "branch", "stage"))
+
+        self.assertRaises(images.MissingImageError, handle.Images.getImage, "5")
+        err = self.assertRaises(errors.PluginError, handle.Images.getImage,
+                                "foo")
+        self.assertIn("Matched more than one image", str(err))
+
+        self.assertEqual(_image1, handle.Images.getImage("1"))
+        self.assertEqual(_image2, handle.Images.getImage("foo=2-2-2"))

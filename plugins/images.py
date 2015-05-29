@@ -194,25 +194,7 @@ class Images(pluginapi.Plugin):
     def _createJob(self, action_type, image_name, target_name, doLaunch):
         rb = self.handle.facade.rbuilder
 
-        project, branch, stage = self._getProductStage()
-        query_params = dict(
-            project=project,
-            branch=branch,
-            stage=stage,
-            order_by='-time_created',
-            )
-        if image_name.isdigit():
-            query_params['image_id'] = image_name
-        else:
-            image_name, _, version = image_name.partition('=')
-            query_params['name'] = image_name
-            if version:
-                query_params['trailing_version'] = version
-
-        images = rb.getImages(**query_params)
-        if not images:
-            raise errors.PluginError("No image matching '%s'" % image_name)
-
+        images = self.getImages(image_name)
         target = rb.getTargets(name=target_name)
         if not target:
             raise errors.PluginError("No target matching '%s'" % target_name)
@@ -305,17 +287,44 @@ class Images(pluginapi.Plugin):
     def delete(self, imageId, force=False):
         shortName, baseLabel, stageName = self._getProductStage()
 
-        images = self.handle.facade.rbuilder.getImages(image_id=imageId,
-            project=shortName, branch=baseLabel, stage=stageName)
-        if images:
-            if force or self.handle.ui.getYn(
-                    "Delete {0}?".format(images[0].name),
-                    default=False,
-                    ):
-                images[0].delete()
+        image = self.getImage(imageId)
+        if force or self.handle.ui.getYn(
+                "Delete {0}?".format(image.name),
+                default=False,
+                ):
+            image.delete()
+
+    def getImage(self, image_name):
+        images = self.getImages(image_name)
+        if len(images) > 1:
+            raise errors.PluginError("Matched more than one image '%s'" %
+                                     image_name)
+        return images[0]
+
+    def getImages(self, image_name):
+        rb = self.handle.facade.rbuilder
+
+        project, branch, stage = self._getProductStage()
+        query_params = dict(
+            project=project,
+            branch=branch,
+            stage=stage,
+            order_by='-time_created',
+            )
+        if image_name.isdigit():
+            query_params['image_id'] = image_name
         else:
-            raise MissingImageError(image=imageId, project=shortName,
-                stage=stageName)
+            image_name, _, version = image_name.partition('=')
+            query_params['name'] = image_name
+            if version:
+                query_params['trailing_version'] = version
+
+        images = rb.getImages(**query_params)
+        if not images:
+            raise MissingImageError(image=image_name, project=project,
+                                    stage=stage)
+
+        return images
 
     def launchImage(self, *args, **kwargs):
         '''
