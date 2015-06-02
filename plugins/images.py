@@ -50,7 +50,6 @@ class CancelImagesCommand(command.BaseCommand):
         _, imageIds = self.requireParameters(args, expected=['id'],
             appendExtra=True)
 
-        project, branch, stage = handle.Images._getProductStage()
         for imageId in imageIds:
             try:
                 int(imageId)
@@ -58,14 +57,11 @@ class CancelImagesCommand(command.BaseCommand):
                 raise errors.BadParameterError(
                     "Cannot parse image id '%s'" % imageId)
 
-            image = handle.facade.rbuilder.getImages(image_id=imageId,
-                project=project, branch=branch, stage=stage)
-
-            if not image:
-                handle.ui.warning(str(MissingImageError(image=imageId,
-                    project=project, stage=stage)))
+            try:
+                image = handle.Images.getImage(imageId)
+            except MissingImageError as err:
+                handle.ui.warning(str(err))
                 continue
-            image = image[0]
 
             try:
                 handle.Images.cancel(image)
