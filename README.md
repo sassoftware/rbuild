@@ -34,13 +34,13 @@ It is currently intended that when version 2.0 is released, public
 interfaces will be kept stable.  The general rule is that API
 stability allows making changes that should be backward-compatible
 in well-formed Python code.  For rBuild, "stable" is defined as:
- o  Adding optional keyword parameters is acceptable.
- o  Adding additional methods, classes, and functions is
+ *  Adding optional keyword parameters is acceptable.
+ *  Adding additional methods, classes, and functions is
     acceptable.
- o  Raising a more specific error class is acceptable, as
+ *  Raising a more specific error class is acceptable, as
     long as the more specific error class is a subclass of
     the error previously raised.
- o  Modifying the semantics of existing arguments is not
+ *  Modifying the semantics of existing arguments is not
     acceptable, except to extend them in ways that are
     generally functionally compatible.
 
