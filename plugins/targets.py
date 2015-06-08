@@ -45,7 +45,12 @@ class CreateTargetCommand(command.BaseCommand):
             handle.DescriptorConfig.readConfig(fromFile)
 
         _, name = self.requireParameters(args, expected=['TYPE'])
-        target = handle.Targets.createTarget(name)
+
+        try:
+            target = handle.Targets.createTarget(name)
+        except TargetNotCreated:
+            return 1
+
         handle.Targets.configureTargetCredentials(target)
 
         if toFile:
@@ -111,6 +116,10 @@ class ListTargetsCommand(command.ListCommand):
         credentials_valid=dict(display_name='Credentials'),
         )
 
+class TargetNotCreated(errors.RbuildInternalError):
+    "Raised when the target was not created and the user didn't want to retry."
+    template = "Target %(target)r not created"
+    params = ['target']
 
 class Targets(pluginapi.Plugin):
     name = 'targets'
@@ -134,10 +143,29 @@ class Targets(pluginapi.Plugin):
         ttype = targetTypes[0]
 
         descriptor_xml = ttype.descriptor_create_target.read()
-        ddata = dc.createDescriptorData(fromStream=descriptor_xml)
+        currentValues = {}
+        config_complete = False
 
-        target = rb.createTarget(str(ttype.name), ddata)
-        rb.configureTarget(target, ddata)
+        while not config_complete:
+            ddata = dc.createDescriptorData(fromStream=descriptor_xml, defaults=currentValues)
+            target = rb.createTarget(str(ttype.name), ddata)
+
+            try:
+                rb.configureTarget(target, ddata)
+                config_complete = True
+            except errors.RbuildError as e:
+                name = target.name
+                # delete target no matter what
+                target.delete()
+
+                self.handle.ui.warning(str(e))
+                if self.handle.ui.getYn("Edit {0} again?".format(name), default=False):
+                    # reprompt using current values
+                    currentValues = dict( (f.getName(), f.getValue()) for f in ddata.getFields() )
+                    dc.clearConfig() 
+                else:
+                    raise TargetNotCreated(name)
+
         return target
 
     def configureTargetCredentials(self, target):

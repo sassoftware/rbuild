@@ -290,7 +290,7 @@ class TargetsPluginTest(AbstractTargetTest):
 
         mock.mock(handle, "DescriptorConfig")
         handle.DescriptorConfig.createDescriptorData._mock.setReturn(
-            _ddata, fromStream="descriptor")
+            _ddata, fromStream="descriptor", defaults=dict())
 
         mock.mock(handle.facade, "rbuilder")
         handle.facade.rbuilder.getTargetTypes._mock.setReturn([_ttype])
@@ -307,6 +307,50 @@ class TargetsPluginTest(AbstractTargetTest):
 
         rv = handle.Targets.createTarget("type")
         self.assertEqual(rv, "target")
+
+    def testConfigurationFailsDuringCreate(self):
+        handle = self.handle
+
+        _ddata = mock.MockObject()
+        _ttype = mock.MockObject(
+            name="type",
+            descriptor_create_target=StringIO("descriptor"),
+            )
+        _target = mock.MockObject(
+            name="target"
+            )
+
+        mock.mock(handle, "DescriptorConfig")
+        handle.DescriptorConfig.createDescriptorData._mock.setReturn(
+            _ddata, fromStream="descriptor", defaults=dict())
+
+        mock.mock(handle.facade, "rbuilder")
+        handle.facade.rbuilder.getTargetTypes._mock.setReturn([_ttype])
+        handle.facade.rbuilder.createTarget._mock.setReturn(
+            _target, _ttype.name, _ddata)
+        def raisesRbuildError(self, target):
+            raise errors.RbuildError("Can't configure target: foo")
+        handle.facade.rbuilder._mock.set(configureTarget=raisesRbuildError)
+        mock.mock(handle.ui, 'warning')
+        mock.mock(handle.ui, 'getYn')
+        # attempt to edit one time, then stop
+        handle.ui.getYn._mock.setReturns([True, False], "Edit target again?", default=False)
+        _ddata.getFields._mock.setReturn(dict())
+
+        from rbuild_plugins import targets # not sure why this can't be imported at the top
+
+        err = self.assertRaises(
+            targets.TargetNotCreated,
+            handle.Targets.createTarget,
+            "type"
+            )
+        self.assertEqual(str(err), "Target 'target' not created")
+        # target deleted twice
+        _target.delete._mock.assertCalled()
+        _target.delete._mock.assertCalled()
+        # warning issued twice
+        handle.ui.warning._mock.assertCalled("Can't configure target: foo")
+        handle.ui.warning._mock.assertCalled("Can't configure target: foo")
 
     def testDelete(self):
         handle = self.handle
