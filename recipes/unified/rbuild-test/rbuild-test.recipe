@@ -25,7 +25,7 @@ class rBuildTest(TestPackageRecipe):
         'rpath-product-definition-test:python',
         'rbuild',
         'rmake:runtime',
-        'rmake-multinode-server:data',
+        'rmake-multinode-server',
         'rmake-test:python',
         'rpath-product-definition:python',
     ]
