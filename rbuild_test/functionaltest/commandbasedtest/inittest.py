@@ -16,10 +16,8 @@
 #
 
 
-import testsuite
-
 from rbuild_test import rbuildhelp
-from testrunner import pathManager
+from rbuild_test import resources
 
 import os
 from testutils import mock
@@ -67,7 +65,7 @@ New tarball at %s/foo-product.tgz.
 Run:
    cp %s/foo-product.tgz %s
 To update the archived product definition
-""" % (os.getcwd(), os.getcwd(), pathManager.getPath("RBUILD_ARCHIVE_PATH"))
+""" % (os.getcwd(), os.getcwd(), resources.get_archive())
             raise RuntimeError(errorStr)
 
     def testInitByParts(self):
