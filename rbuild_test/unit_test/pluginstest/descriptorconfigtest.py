@@ -325,3 +325,34 @@ class DescriptorConfigTest(rbuildhelp.RbuildHelper):
   </vhosts>
 </descriptorData>
 """)
+
+    def testCallbackWarning(self):
+        handle = self.getRbuildHandle(mock.MockObject())
+        callback = handle.DescriptorConfig.callbackClass(handle.ui)
+        dsc = handle.DescriptorConfig.descriptorClass()
+        dsc.setId("apache-configuration")
+        dsc.setDisplayName('Apache Configuration')
+        dsc.addDescription('Apache Configuration')
+
+        dsc.addDataField('port', type="int",
+                required=True, descriptions="Apache Port", 
+                # add a constraint that 8081 is the only legal value
+                constraints=[
+                    dict(constraintName='legalValues', values=[8081])
+                    ]
+                )
+
+        mock.mockMethod(handle.ui.warning)
+        mock.mockMethod(handle.ui.input)
+        i = handle.ui.input
+        # return 80 from the prompt the first time, then 8081
+        i._mock.setReturns(['80', '8081'],
+                'Enter Apache Port [required] (type int): ')
+
+        descriptorData = dsc.createDescriptorData(callback, retry=True)
+        handle.ui.warning._mock.assertCalled("'Apache Port': '80' is not a legal value")
+        self.assertXMLEquals(descriptorData.toxml(), """
+<descriptorData version="1.1">
+  <port>8081</port>
+</descriptorData>
+""")

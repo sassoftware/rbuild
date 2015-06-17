@@ -94,6 +94,9 @@ class RbuilderCallback(object):
         resp = self.ui.getYn(prompt)
         return resp
 
+    def warnValueForField(self, message):
+        self.ui.warning(message)
+
     def _description(cls, description):
         """
             Normally descriptions should always have a "default" empty lang,
