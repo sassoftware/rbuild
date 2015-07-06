@@ -14,7 +14,6 @@
 #
 
 from rbuild import errors
-from plugins import imagedefs
 from testutils import mock
 
 from rbuild_test import rbuildhelp
@@ -178,6 +177,8 @@ class ImageDefsPluginTest(AbstractImageDefsTest):
         handle.productStore.update._mock.assertCalled()
 
     def testDeleteNoImageDefs(self):
+        from rbuild_plugins import imagedefs
+
         handle = self.handle
         mock.mockMethod(handle.facade.rbuilder.getImageDefs)
         mock.mock(handle, 'product')
