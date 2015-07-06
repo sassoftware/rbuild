@@ -14,6 +14,7 @@
 #
 
 from rbuild import errors
+from plugins import imagedefs
 from testutils import mock
 
 from rbuild_test import rbuildhelp
@@ -143,3 +144,59 @@ class ImageDefsPluginTest(AbstractImageDefsTest):
         err = self.assertRaises(errors.MissingProductStoreError,
             handle.ImageDefs.list)
         self.assertIn('rbuild init', str(err))
+
+    def testDelete(self):
+        handle = self.handle
+        mock.mockMethod(handle.facade.rbuilder.getImageDefs)
+        mock.mock(handle, 'product')
+        mock.mock(handle, 'productStore')
+        mock.mock(handle.ui, 'getYn')
+        handle.product.getProductShortname._mock.setReturn('project')
+        handle.product.getProductVersion._mock.setReturn('branch')
+
+        class MockBuildDefinition(object):
+            """ substitutes for both the robj and the product build definitions """
+            def __init__(self, name):
+                self.name = name
+            def export(self, f, level=0, namespace_=''):
+                """ this will create 'IDs' that are md5sums of the name """
+                f.write(self.name)
+        buildDefinitions = [ MockBuildDefinition('one'), MockBuildDefinition('two'), ]
+        handle.product._mock.set(buildDefinition=buildDefinitions)
+        handle.facade.rbuilder.getImageDefs._mock.setReturn(
+                [ buildDefinitions[0] ],
+                id='f97c5d29941bfb1b2fdab0874906ab82', product='project', version='branch')
+        handle.ui.getYn._mock.setReturn(True, "Delete one?", default=False)
+        handle.productStore.getProductDefinitionXmlPath._mock.setReturn(
+                '%s/productstore.xml' % self.workDir)
+
+        handle.ImageDefs.delete('f97c5d29941bfb1b2fdab0874906ab82')
+
+        self.assertEquals(len(buildDefinitions), 1)
+        self.assertEquals(buildDefinitions[0].name, 'two')
+        handle.productStore.commit._mock.assertCalled(message="Remove image def one")
+        handle.productStore.update._mock.assertCalled()
+
+    def testDeleteNoImageDefs(self):
+        handle = self.handle
+        mock.mockMethod(handle.facade.rbuilder.getImageDefs)
+        mock.mock(handle, 'product')
+        mock.mock(handle, 'productStore')
+        mock.mock(handle.ui, 'getYn')
+        handle.product.getProductShortname._mock.setReturn('project')
+        handle.product.getProductVersion._mock.setReturn('branch')
+
+        buildDefinitions = [ ]
+        handle.product._mock.set(buildDefinition=buildDefinitions)
+        handle.facade.rbuilder.getImageDefs._mock.setReturn(
+                [ ],
+                id='f97c5d29941bfb1b2fdab0874906ab82', product='project', version='branch')
+
+        err = self.assertRaises(Exception,
+                handle.ImageDefs.delete, 'f97c5d29941bfb1b2fdab0874906ab82')
+        self.assertEquals(len(buildDefinitions), 0)
+        handle.productStore.update._mock.assertNotCalled()
+        handle.ui.getYn._mock.assertNotCalled()
+        self.assertEquals(str(err), "Unable to find imagedef with id "
+                "'f97c5d29941bfb1b2fdab0874906ab82' on branch version of "
+                "project project")

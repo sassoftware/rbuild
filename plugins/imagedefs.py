@@ -20,6 +20,7 @@ image definitions
 '''
 import itertools
 
+from rpath_proddef import api1 as proddef
 from xobj import xobj
 
 from rbuild import errors
@@ -33,9 +34,9 @@ DESCRIPTOR_PREFIX = 'options.'
 
 class MissingImageDefError(errors.RbuildError):
     """Raised when we don't find an imagedef"""
-    template = ("Unable to find imagedef with id '%(image)s' on %(stage)s stage"
+    template = ("Unable to find imagedef with id '%(image)s' on %(version)s version"
         " of %(project)s project")
-    params = ["image", "project", "stage"]
+    params = ["image", "project", "version"]
 
 
 class CreateImageDefCommand(command.BaseCommand):
@@ -232,9 +233,32 @@ class ImageDefs(pluginapi.Plugin):
 
         if imageDefs:
             if self.handle.ui.getYn("Delete {0}?".format(imageDefs[0].name), default=False):
-                imageDefs[0].delete()
+                self._delete(imageDefId, imageDefs[0].name)
         else:
-            raise MissingImageError(image=imageId, project=shortName, version=version)
+            raise MissingImageDefError(image=imageDefId, project=shortName, version=version)
+
+    def _delete(self, imageDefId, imageDefName):
+        pd = self.handle.product
+        ps = self.handle.productStore
+
+        pd.buildDefinition[:] = [ bd for bd in pd.buildDefinition
+                if self._buildDefinitionId(bd) != imageDefId ]
+
+        with open(ps.getProductDefinitionXmlPath(), 'w') as fh:
+            pd.serialize(fh, validate=True)
+
+        message = 'Remove image def %s' % imageDefName
+        ps.commit(message=message)
+        ps.update()
+
+    def _buildDefinitionId(self, buildDef):
+        """
+        compute the build definition ID the same way
+        computeBuildDefinitionDigest does on the server
+        """
+        digester = proddef.DigesterMd5FLO()
+        buildDef.export(digester, level=0, namespace_='')
+        return digester.hexdigest()
 
     def initialize(self):
         self.handle.Commands.getCommandClass('create').registerSubCommand(
