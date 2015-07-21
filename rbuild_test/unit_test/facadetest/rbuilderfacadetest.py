@@ -756,6 +756,40 @@ class RbuilderRPCClientTest(rbuildhelp.RbuildHelper):
                                 client.watchImages, [1])
         self.assertEqual(str(err), "rBuilder error Error: ''")
 
+    def testWatchImagesWithBuildName(self):
+        client = self._getClient()
+        server = client.server
+        mock.mock(time, 'sleep')
+        server.getBuildStatus._mock.setReturns(
+                            [(False, {'message' : 'foo', 'name' : 'qux', 'status' : 0}),
+                             (False, {'message' : 'bar', 'name' : 'qux', 'status' : 300})],
+                                        1)
+        server.getBuildStatus._mock.setReturns(
+                            [(False, {'message' : 'bam', 'name' : 'baz', 'status' : 200}),
+                             (False, {'message' : 'zap', 'name' : 'baz', 'status' : 500})],
+                                        2)
+        client.watchImages([1, 2])
+        client._handle.ui.info._mock.assertNotCalled()
+        client._handle.ui.warning._mock.assertNotCalled()
+        client._handle.ui.error._mock.assertNotCalled()
+        self.assertEquals(
+            [x[0][0]%x[0][1:] for x in client._handle.ui.write._mock.calls],
+            ['qux 1: Waiting "foo"',
+             'baz 2: Built "bam"',
+             'qux 1: Finished "bar"',
+             'baz 2: Unknown "zap"',
+             'All jobs completed',
+             'Finished builds:',
+             "    Build 1 ended with 'Finished' status: bar",
+             "    Build 2 ended with 'Unknown' status: zap"])
+
+        server.getBuildStatus._mock.setReturns(
+                            [(False, {'message' : 'bam', 'name' : 'baz', 'status' : 200}),
+                             (True, ('Error', ''))], 1)
+        err = self.assertRaises(errors.RbuildError, self.captureOutput,
+                                client.watchImages, [1])
+        self.assertEqual(str(err), "rBuilder error Error: ''")
+
     def testWatchImagesSocketTimeout(self):
         client = self._getClient()
         server = client.server

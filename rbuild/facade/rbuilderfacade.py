@@ -180,8 +180,13 @@ class RbuilderRPCClient(_AbstractRbuilderClient):
                     st = time.time() # reset timeout counter if status changes
                     activeBuilds[buildId] = buildStatus
                     if not quiet:
+                        # try to get build name, fall back to just ID
+                        try:
+                            id = '%s %s' % (buildStatus['name'], buildId)
+                        except KeyError:
+                            id = buildId
                         self._handle.ui.write('%s: %s "%s"',
-                            buildId, self.statusNames.get(buildStatus['status'],
+                            id, self.statusNames.get(buildStatus['status'],
                             self.statusNames[-1]), buildStatus['message'])
                     if activeBuilds[buildId]['status'] > 200:
                         finalStatus[buildId] = activeBuilds.pop(buildId)
