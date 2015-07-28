@@ -299,6 +299,15 @@ class UserInterfaceTest(rbuildhelp.RbuildHelper):
         rc, txt = self.captureOutput(h.ui.getYn, 'prompt')
         self.assertEquals(rc, True)
 
+    def testGetYN_APPENG_3615(self):
+        h = self.getRbuildHandle(mockOutput=False)
+        mock.mockMethod(h.ui.input)
+
+        h.ui.input._mock.setReturns(['yu', 'N'],
+                                    'prompt (Default: Y): ')
+        rc, txt = self.captureOutput(h.ui.getYn, 'prompt')
+        self.assertEquals(rc, False)
+
     def testGetResponse(self):
         h = self.getRbuildHandle(mockOutput=False)
         mock.mockMethod(h.ui.input)

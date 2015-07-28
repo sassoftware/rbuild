@@ -235,9 +235,12 @@ class UserInterface(object):
         else:
             defaultChar = 'N'
 
-        validationFn = lambda r : r[0].upper() in ['Y', 'N', ]
-        response = self.getResponse(prompt, default=defaultChar, validationFn=validationFn)
-        return response[0].upper() == 'Y'
+        response = self.getResponse(
+            prompt,
+            default=defaultChar,
+            validationFn=lambda r: r.lower() in ('y', 'n', 'yes', 'no'),
+            )
+        return response.lower() in ('y', 'yes')
 
     def getResponse(self, prompt, default=None, validationFn=None,
                     inputFn=None, required=False):
