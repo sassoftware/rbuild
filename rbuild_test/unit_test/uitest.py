@@ -313,7 +313,7 @@ class UserInterfaceTest(rbuildhelp.RbuildHelper):
         h.ui.input._mock.setReturns(['', 'valid'], 'prompt: ')
         rc, txt = self.captureOutput(h.ui.getResponse, 'prompt', required=True)
         assert(rc == 'valid')
-        assert(txt == 'Empty response not allowed.\n')
+        assert(txt == 'warning: Empty response not allowed.\n')
 
         # validation function
         h.ui.input._mock.setReturns(['invalid', '', 'valid'], 'prompt: ')
@@ -328,7 +328,7 @@ class UserInterfaceTest(rbuildhelp.RbuildHelper):
         rc, txt = self.captureOutput(h.ui.getResponse, 'prompt', required=True,
                                      validationFn=validationFn)
         assert(rc == 'valid')
-        self.assertEqual('Empty response not allowed.\n', txt)
+        self.assertEqual('warning: Empty response not allowed.\n', txt)
 
         # default
         h.ui.input._mock.setReturns([''], 'prompt (Default: default): ')

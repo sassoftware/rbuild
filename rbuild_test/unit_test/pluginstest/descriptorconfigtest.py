@@ -299,9 +299,9 @@ class DescriptorConfigTest(rbuildhelp.RbuildHelper):
         i._mock.setReturn('8081',
                 'Enter Apache Port [required] (type int): ')
         i._mock.setReturn('nobody',
-                'Enter User [required] [default apache] (type str) (Default: apache): ')
+                'Enter User [required] (type str) (Default: apache): ')
         i._mock.setReturn('nobody',
-                'Enter Group [required] [default apache] (type str) (Default: apache): ')
+                'Enter Group [required] (type str) (Default: apache): ')
         i._mock.setReturn('a.org',
                 'Enter Virtual Host Name [required] (type str): ')
         i._mock.setReturn('/srv/www/a',
@@ -335,7 +335,7 @@ class DescriptorConfigTest(rbuildhelp.RbuildHelper):
         dsc.addDescription('Apache Configuration')
 
         dsc.addDataField('port', type="int",
-                required=True, descriptions="Apache Port", 
+                required=True, descriptions="Apache Port",
                 # add a constraint that 8081 is the only legal value
                 constraints=[
                     dict(constraintName='legalValues', values=[8081])
@@ -354,5 +354,24 @@ class DescriptorConfigTest(rbuildhelp.RbuildHelper):
         self.assertXMLEquals(descriptorData.toxml(), """
 <descriptorData version="1.1">
   <port>8081</port>
+</descriptorData>
+""")
+
+    def testBooleanInput(self):
+        handle = self.getRbuildHandle(mock.MockObject())
+        callback = handle.DescriptorConfig.callbackClass(handle.ui)
+        fDef = handle.DescriptorConfig.descriptorClass()
+        fDef.addDataField('boolValue', type="bool", descriptions="Bool Value")
+        mock.mockMethod(handle.ui.warning)
+        mock.mockMethod(handle.ui.input)
+
+        handle.ui.input._mock.setReturns(["aaa", "true"],
+            "Enter Bool Value (type bool): ")
+        ddata = fDef.createDescriptorData(callback)
+        handle.ui.warning._mock.assertCalled(
+            "Input must be in the form yes, no, true, or false")
+        self.assertXMLEquals(ddata.toxml(), """
+<descriptorData version="1.1">
+  <boolValue>True</boolValue>
 </descriptorData>
 """)

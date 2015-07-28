@@ -252,7 +252,7 @@ class UserInterface(object):
             if not response:
                 if not default:
                     if required:
-                        self.write('Empty response not allowed.')
+                        self.warning('Empty response not allowed.')
                         continue
                     response = None
                 elif default:

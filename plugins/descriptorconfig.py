@@ -150,11 +150,6 @@ class RbuilderCallback(object):
         if field.enumeratedType:
             return self._enumeratedType(field, fieldDescr)
 
-        # for non enumerated types ...
-        # if there is a default, say what it is
-        if field.default:
-            defmsg = " [default %s]" % str(field.default[0])
-
         # FIXME: refactor into subfunction
         # TODO: nicer entry on the same line, try on certain failures
         #       in casting, etc
@@ -184,7 +179,8 @@ class RbuilderCallback(object):
             try:
                 # convert true/yes/etc to booleans and so on
                 return self.cast(data, field.type)
-            except ValueError:
+            except ValueError as e:
+                self.warnValueForField(str(e))
                 continue
 
     def cast(self, value, typename):
@@ -192,14 +188,23 @@ class RbuilderCallback(object):
         if typename == 'str':
             return value
         elif typename == 'int':
-            return int(value)
+            try:
+                return int(value)
+            except ValueError:
+                raise ValueError("Input must be a number")
         elif typename == 'float':
-            return float(value)
+            try:
+                return float(value)
+            except ValueError:
+                raise ValueError("Input must be a number")
         elif typename == 'bool':
             if value.lower() in ["yes", "yup", "y", "true", "1"]:
                 return True
-            else:
+            elif value.lower() in ["no", "nope", "n", "false", "0"]:
                 return False
+            else:
+                raise ValueError(
+                    "Input must be in the form yes, no, true, or false")
         else:
             return value
 
