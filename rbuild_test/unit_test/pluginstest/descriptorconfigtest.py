@@ -375,3 +375,18 @@ class DescriptorConfigTest(rbuildhelp.RbuildHelper):
   <boolValue>True</boolValue>
 </descriptorData>
 """)
+
+    def test_appeng_3650_invalid_xml_characters(self):
+        handle = self.getRbuildHandle(mock.MockObject())
+        callback = handle.DescriptorConfig.callbackClass(handle.ui)
+        fDef = handle.DescriptorConfig.descriptorClass()
+        fDef.addDataField('input', type="str", descriptions="User Input")
+
+        mock.mockMethod(handle.ui.warning)
+        mock.mockMethod(handle.ui.input)
+        handle.ui.input._mock.setReturns(["foo" + chr(0x18) + "bar", "foobar"],
+            "Enter User Input (type str): ")
+
+        fDef.createDescriptorData(callback)
+        handle.ui.warning._mock.assertCalled(
+            "Input must be XML compatible: Unicode or ASCII characters only")

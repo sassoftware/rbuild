@@ -30,6 +30,21 @@ from rbuild import errors
 from rbuild import pluginapi
 
 
+def valid_xml_char_ordinal(c):
+    """Return True if character `c` is a valid xml character
+
+    Cribbed from http://stackoverflow.com/questions/8733233/filtering-out-certain-bytes-in-python
+    """
+    codepoint = ord(c)
+    # conditions ordered by presumed frequency
+    return (
+        0x20 <= codepoint <= 0xD7FF or
+        codepoint in (0x9, 0xA, 0xD) or
+        0xE000 <= codepoint <= 0xFFFD or
+        0x10000 <= codepoint <= 0x10FFFF
+        )
+
+
 class RbuilderCallback(object):
     def __init__(self, ui, config=None, defaults=None):
         self.ui = ui
@@ -184,6 +199,10 @@ class RbuilderCallback(object):
                 continue
 
     def cast(self, value, typename):
+        if any(c for c in value if not valid_xml_char_ordinal(c)):
+            raise ValueError("Input must be XML compatible: Unicode or ASCII"
+                             " characters only")
+
         # FIXME: we can probably do a getattr on the core namespace here
         if typename == 'str':
             return value
