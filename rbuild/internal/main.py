@@ -30,6 +30,7 @@ import sys
 
 from conary.build import explain
 from conary.lib import cfg
+from conary.lib import cfgtypes
 from conary.lib import log
 from conary.lib import mainhandler
 from conary import errors as conaryerrors
@@ -267,7 +268,8 @@ service rmake restart''')
     except (errors.RbuildBaseError, errors.UnauthorizedActionError,
             robjerrors.HTTPError, conaryerrors.ConaryError,
             conaryerrors.ParseError, conaryerrors.CvcError,
-            rmakeerrors.RmakeError, cfg.ParseError), err:
+            rmakeerrors.RmakeError, cfg.ParseError,
+            cfgtypes.CfgEnvironmentError), err:
         log.error(err)
         return 1
     except robjerrors.HTTPUnauthorizedError as err:
