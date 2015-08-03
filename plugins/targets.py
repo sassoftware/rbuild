@@ -115,11 +115,22 @@ class ListTargetsCommand(command.ListCommand):
         is_configured=dict(display_name='Configred'),
         credentials_valid=dict(display_name='Credentials'),
         )
+    showFieldMap = dict(
+        actions=dict(hidden=True),
+        jobs=dict(hidden=True),
+        target_configuration=dict(hidden=True),
+        target_user_credentials=dict(hidden=True),
+        target_type=dict(accessor=lambda t: t.target_type.description),
+        zone=dict(accessor=lambda t: t.zone.name),
+        **listFieldMap
+        )
+
 
 class TargetNotCreated(errors.RbuildInternalError):
     "Raised when the target was not created and the user didn't want to retry."
     template = "Target %(target)r not created"
     params = ['target']
+
 
 class Targets(pluginapi.Plugin):
     name = 'targets'
@@ -162,7 +173,7 @@ class Targets(pluginapi.Plugin):
                 if self.handle.ui.getYn("Edit {0} again?".format(name), default=False):
                     # reprompt using current values
                     currentValues = dict( (f.getName(), f.getValue()) for f in ddata.getFields() )
-                    dc.clearConfig() 
+                    dc.clearConfig()
                 else:
                     raise TargetNotCreated(name)
 
@@ -258,3 +269,6 @@ class Targets(pluginapi.Plugin):
 
     def list(self, *args, **kwargs):
         return self.handle.facade.rbuilder.getTargets()
+
+    def show(self, *args, **kwargs):
+        return self.handle.facade.rbuilder.getTarget(*args, **kwargs)
