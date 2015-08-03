@@ -123,7 +123,7 @@ class BaseCommand(command.AbstractCommand):
         @param cfgMap: legacy option - ignore
         @param argSet: dictionary of option : value mapping based on options
         passed in at the command line.
-        """ 
+        """
 
         configFileList = argSet.pop('config-file', [])
 
@@ -332,7 +332,7 @@ class ListCommand(BaseCommand):
                 # use the element name
                 display_name = ' '.join(
                     w[0].upper() + w[1:] for w in field.split('_'))
-            return display_name
+            return display_name.upper()
 
     def _getResourceData(self, resource, fields, mapping, row_major=True):
         for field in fields:
