@@ -17,13 +17,18 @@
 """
 List image types
 """
+from collections import namedtuple
 
+from rbuild import errors
 from rbuild import pluginapi
 from rbuild.pluginapi import command
 
 
+ImageTypeProxy = namedtuple("ImageTypeProxy", ("name", "description"))
+
+
 class ListImageTypesCommand(command.ListCommand):
-    help = "List image types"
+    help = "List available image types"
     resource = "imagetypes"
     listFields = ("name", "description")
 
@@ -38,6 +43,17 @@ class ImageTypes(pluginapi.Plugin):
             cmd = self.handle.Commands.getCommandClass(command)
             cmd.registerSubCommand(subcommand, commandClass)
 
-    def list(self):
+    def list(self, showAll=False):
         rb = self.handle.facade.rbuilder
-        return [type for type in rb.getImageTypes() if type.name]
+        if self.handle.product is not None:
+            # update the productdef so we have latest platform
+            self.handle.productStore.update()
+            availableTypes = set(
+                bt.containerTemplateRef for bt in
+                self.handle.product.getPlatformBuildTemplates())
+        else:
+            availableTypes = None
+        types = (type for type in rb.getImageTypes() if type.name)
+        if availableTypes:
+            types = (type for type in types if type.name in availableTypes)
+        return sorted(types, key=lambda t: (t.name, t.description))

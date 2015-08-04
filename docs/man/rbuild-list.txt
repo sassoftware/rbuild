@@ -52,7 +52,8 @@ imagedefs
 
 imagetypes
 
-    List available image types
+    List the available image types. The list is filtered based on the platform
+    for the branch if the caller is in a branch checkout.
 
 platforms
 

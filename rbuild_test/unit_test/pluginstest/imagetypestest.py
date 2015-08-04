@@ -41,10 +41,20 @@ class ImageTypesTest(AbstractImageTypesTest):
     def testList(self):
         handle = self.handle
 
+        # no proddef test
         _imageType1 = mock.MockObject(name="imagetype1")
         _imageType2 = mock.MockObject(name="")
+        _imageType3 = mock.MockObject(name="imagetype2")
         mock.mockMethod(handle.facade.rbuilder.getImageTypes,
-            [_imageType1, _imageType2])
+            [_imageType3, _imageType1, _imageType2])
 
-        self.assertEqual([_imageType1], handle.ImageTypes.list())
+        self.assertEqual([_imageType1, _imageType3], handle.ImageTypes.list())
 
+        # set proddefs
+        mock.mock(handle, "product")
+        mock.mock(handle, "productStore")
+        handle.product.getPlatformBuildTemplates._mock.setReturn(
+            [mock.MockObject(containerTemplateRef="imagetype1")])
+        actual = handle.ImageTypes.list()
+        self.assertEqual(len(actual), 1)
+        self.assertEqual(actual[0].name, "imagetype1")
