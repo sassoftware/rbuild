@@ -719,7 +719,7 @@ class RbuilderRESTClient(_AbstractRbuilderClient):
 
     def listPlatforms(self):
         ret = []
-        for platform in self.api.platforms.platform:
+        for platform in self.api.platforms:
             if platform.enabled.lower() == 'false':
                 continue
             if platform.hidden.lower() == 'true':

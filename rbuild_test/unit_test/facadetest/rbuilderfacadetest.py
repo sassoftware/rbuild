@@ -1424,7 +1424,7 @@ class RbuilderRESTClientTest(rbuildhelp.RbuildHelper):
         mock.mock(client, '_api')
         Platform = namedtuple('Platform',
                 'enabled hidden abstract platformName label')
-        client._api.platforms._mock.set(platform=[
+        client._api._mock.set(platforms=[
             Platform('true',  'false', 'false', 'plat1', 'plat@1'),
             Platform('false', 'false', 'false', 'plat2', 'plat@2'),
             Platform('true',  'true',  'false', 'plat3', 'plat@3'),
