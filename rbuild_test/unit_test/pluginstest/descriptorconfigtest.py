@@ -390,3 +390,10 @@ class DescriptorConfigTest(rbuildhelp.RbuildHelper):
         fDef.createDescriptorData(callback)
         handle.ui.warning._mock.assertCalled(
             "Input must be XML compatible: Unicode or ASCII characters only")
+
+        handle.ui.input._mock.setReturns(["foo" + chr(0x18) + "bar", None],
+            "Enter User Input (type str): ")
+
+        fDef.createDescriptorData(callback)
+        handle.ui.warning._mock.assertCalled(
+            "Input must be XML compatible: Unicode or ASCII characters only")

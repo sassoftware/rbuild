@@ -199,7 +199,7 @@ class RbuilderCallback(object):
                 continue
 
     def cast(self, value, typename):
-        if any(c for c in value if not valid_xml_char_ordinal(c)):
+        if value and any(c for c in value if not valid_xml_char_ordinal(c)):
             raise ValueError("Input must be XML compatible: Unicode or ASCII"
                              " characters only")
 
